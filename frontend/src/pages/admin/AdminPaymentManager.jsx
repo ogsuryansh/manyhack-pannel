@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { API } from "../api";
-
+import { API } from "../../api";
 export default function AdminPaymentManager() {
   const [payments, setPayments] = useState([]);
   const [filter, setFilter] = useState("all");

@@ -6,6 +6,7 @@ import {
   getToken,
 } from "../services/authService";
 
+// eslint-disable-next-line react-refresh/only-export-components
 export const AuthContext = createContext();
 
 export function AuthProvider({ children }) {
@@ -16,7 +17,7 @@ export function AuthProvider({ children }) {
     const token = getToken();
     if (!token) return;
     try {
-      const res = await fetch(`${API}/auth/me"`, {
+      const res = await fetch(`${API}/auth/me`, { // <-- fixed typo here
         headers: { Authorization: `Bearer ${token}` },
       });
       if (res.ok) {

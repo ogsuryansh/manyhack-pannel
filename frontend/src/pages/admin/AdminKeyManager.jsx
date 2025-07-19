@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { API } from "../api";
+import { API } from "../../api";
 export default function AdminKeyManager() {
   const [products, setProducts] = useState([]);
   const [selectedProduct, setSelectedProduct] = useState("");
