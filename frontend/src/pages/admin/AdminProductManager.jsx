@@ -22,7 +22,7 @@ export default function AdminProductManager() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch("http://localhost:5000/api/products")
+    fetch(`${API}/products`)
       .then((res) => res.json())
       .then((data) => {
         setProducts(data);
@@ -67,8 +67,8 @@ export default function AdminProductManager() {
 
     // Create or update product
     const url = editingId
-      ? `http://localhost:5000/api/products/${editingId}`
-      : "http://localhost:5000/api/products";
+      ? `${API}/products/${editingId}`
+      : `${API}/products`;
     const method = editingId ? "PUT" : "POST";
     const res = await fetch(url, {
       method,
@@ -93,7 +93,7 @@ export default function AdminProductManager() {
         .map((k) => k.trim())
         .filter((k) => k);
       for (const price of form.prices) {
-        await fetch("http://localhost:5000/api/keys/bulk", {
+        await fetch(`${API}/keys/bulk`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
@@ -131,7 +131,7 @@ export default function AdminProductManager() {
 
   const handleDelete = async (id) => {
     if (!window.confirm("Delete this product?")) return;
-    await fetch(`http://localhost:5000/api/products/${id}`, {
+    await fetch(`${API}/products/${id}`, {
       method: "DELETE",
     });
     setProducts(products.filter((p) => p._id !== id));
