@@ -1,9 +1,18 @@
-// frontend/vite.config.js
-import { defineConfig } from 'vite'
+import { defineConfig } from 'vite';
+import react from '@vitejs/plugin-react';
 
 export default defineConfig({
-  base: '/', // or '/subdir/' if deploying under a sub-path
+  plugins: [react()],
+  server: {
+    proxy: {
+      '/api': {
+        target: 'http://localhost:5000', // for dev only
+        changeOrigin: true,
+      },
+    },
+  },
+  base: '/',
   build: {
-    outDir: 'dist'
-  }
-})
+    outDir: 'dist',
+  },
+});
