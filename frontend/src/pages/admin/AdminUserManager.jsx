@@ -6,8 +6,8 @@ export default function AdminUserManager() {
   const [loading, setLoading] = useState(true);
   const [editingUser, setEditingUser] = useState(null);
   const [customPrices, setCustomPrices] = useState([]);
-  const [addAmount, setAddAmount] = useState(""); // For adding money
-  const [userPurchases, setUserPurchases] = useState({}); // userId -> [product names]
+  const [addAmount, setAddAmount] = useState(""); 
+  const [userPurchases, setUserPurchases] = useState({}); 
 
   // Fetch users and products
   useEffect(() => {
