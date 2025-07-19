@@ -20,7 +20,7 @@ function AddMoneyModal({ upiId, onClose, onSuccess }) {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const res = await fetch("http://localhost:5000/api/payments/add-money", {
+    const res = await fetch(`${API}/api/payments/add-money`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -134,13 +134,13 @@ export default function BuyKeyPage() {
   const inputRef = useRef();
 
   useEffect(() => {
-    fetch("http://localhost:5000/api/products")
+    fetch(`${API}/api/products`)
       .then((res) => res.json())
       .then((data) => setProducts(data));
   }, []);
 
   useEffect(() => {
-    fetch("http://localhost:5000/api/settings/upi")
+    fetch(`${API}/api/settings/upi`)
       .then((res) => res.json())
       .then((data) => setUpiId(data.upiId?.trim() || ""));
   }, []);
@@ -201,7 +201,7 @@ export default function BuyKeyPage() {
 
   const handleBuyWithWallet = async () => {
     const selected = products.find((p) => p.name === product);
-    const res = await fetch("http://localhost:5000/api/keys/buy", {
+    const res = await fetch(`${API}/api/keys/buy`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

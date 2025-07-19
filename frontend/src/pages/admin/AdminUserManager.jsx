@@ -12,8 +12,8 @@ export default function AdminUserManager() {
   // Fetch users and products
   useEffect(() => {
     Promise.all([
-      fetch("http://localhost:5000/api/admin/users").then((res) => res.json()),
-      fetch("http://localhost:5000/api/products").then((res) => res.json()),
+      fetch(`${API}/admin/users`).then((res) => res.json()),
+      fetch(`${API}/products`).then((res) => res.json()),
     ]).then(([usersData, productsData]) => {
       setUsers(usersData);
       setProducts(productsData);
@@ -24,7 +24,7 @@ export default function AdminUserManager() {
   // Fetch purchases for each user
   useEffect(() => {
     users.forEach((user) => {
-      fetch(`http://localhost:5000/api/keys/user/${user._id}`)
+      fetch(`${API}/keys/user/${user._id}`)
         .then((res) => (res.ok ? res.json() : []))
         .then((keys) => {
           setUserPurchases((prev) => ({
@@ -67,7 +67,7 @@ export default function AdminUserManager() {
       (p) => p.price !== "" && p.price !== null && p.price !== undefined
     );
     await fetch(
-      `http://localhost:5000/api/admin/users/${editingUser._id}/custom-prices`,
+      `${API}/admin/users/${editingUser._id}/custom-prices`,
       {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
@@ -79,7 +79,7 @@ export default function AdminUserManager() {
     );
     setEditingUser(null);
     // Refresh users
-    fetch("http://localhost:5000/api/admin/users")
+    fetch(`${API}/admin/users`)
       .then((res) => res.json())
       .then((data) => setUsers(data));
   };
@@ -87,7 +87,7 @@ export default function AdminUserManager() {
   // Delete a user
   const handleDeleteUser = async (userId) => {
     if (!window.confirm("Are you sure you want to delete this user?")) return;
-    await fetch(`http://localhost:5000/api/admin/users/${userId}`, {
+    await fetch(`${API}/admin/users/${userId}`, {
       method: "DELETE",
     });
     setUsers(users.filter((u) => u._id !== userId));

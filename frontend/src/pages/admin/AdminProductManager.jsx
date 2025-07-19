@@ -113,7 +113,7 @@ export default function AdminProductManager() {
       keys: "",
     });
     setEditingId(null);
-    fetch("http://localhost:5000/api/products")
+    fetch(`${API}/products`)
       .then((res) => res.json())
       .then((data) => setProducts(data));
   };

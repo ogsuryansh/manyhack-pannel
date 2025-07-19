@@ -9,7 +9,7 @@ export default function WalletHistoryPage() {
 
   useEffect(() => {
     if (!user) return;
-    fetch("http://localhost:5000/api/payments/user", {
+    fetch(`${API}/payments/user`, {
       headers: {
         Authorization: `Bearer ${localStorage.getItem("token")}`,
       },

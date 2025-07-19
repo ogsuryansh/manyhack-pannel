@@ -18,7 +18,7 @@ export default function AdminKeyManager() {
 
   // Fetch products
   useEffect(() => {
-    fetch("http://localhost:5000/api/products")
+    fetch(`${API}/products`)
       .then((res) => res.json())
       .then((data) => setProducts(data));
   }, []);
@@ -34,12 +34,12 @@ export default function AdminKeyManager() {
     setLoading(true);
     Promise.all([
       fetch(
-        `http://localhost:5000/api/keys?productId=${selectedProduct}&duration=${encodeURIComponent(
+        `${API}/keys?productId=${selectedProduct}&duration=${encodeURIComponent(
           selectedDuration
         )}`
       ).then((res) => res.json()),
       fetch(
-        `http://localhost:5000/api/keys/stats?productId=${selectedProduct}&duration=${encodeURIComponent(
+        `${API}/keys/stats?productId=${selectedProduct}&duration=${encodeURIComponent(
           selectedDuration
         )}`
       ).then((res) => res.json()),
@@ -66,7 +66,7 @@ export default function AdminKeyManager() {
       .split("\n")
       .map((k) => k.trim())
       .filter((k) => k);
-    const res = await fetch("http://localhost:5000/api/keys/bulk", {
+    const res = await fetch(`${API}/keys/bulk`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -80,12 +80,12 @@ export default function AdminKeyManager() {
       setLoading(true);
       Promise.all([
         fetch(
-          `http://localhost:5000/api/keys?productId=${selectedProduct}&duration=${encodeURIComponent(
+          `${API}/keys?productId=${selectedProduct}&duration=${encodeURIComponent(
             selectedDuration
           )}`
         ).then((res) => res.json()),
         fetch(
-          `http://localhost:5000/api/keys/stats?productId=${selectedProduct}&duration=${encodeURIComponent(
+          `${API}/keys/stats?productId=${selectedProduct}&duration=${encodeURIComponent(
             selectedDuration
           )}`
         ).then((res) => res.json()),
@@ -102,7 +102,7 @@ export default function AdminKeyManager() {
   // Delete key
   const handleDelete = async (id) => {
     if (!window.confirm("Delete this key?")) return;
-    await fetch(`http://localhost:5000/api/keys/${id}`, { method: "DELETE" });
+    await fetch(`${API}/keys/${id}`, { method: "DELETE" });
     setKeys(keys.filter((k) => k._id !== id));
   };
 
@@ -114,7 +114,7 @@ export default function AdminKeyManager() {
 
   // Save edited key
   const handleSaveEditKey = async (id) => {
-    await fetch(`http://localhost:5000/api/keys/${id}`, {
+    await fetch(`${API}/keys/${id}`, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ key: editKeyValue }),

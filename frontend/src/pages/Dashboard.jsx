@@ -15,7 +15,7 @@ export default function Dashboard() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    fetch("http://localhost:5000/api/products")
+    fetch(`${API}/products`)
       .then((res) => res.json())
       .then((data) => {
         setProducts(data);
@@ -25,7 +25,7 @@ export default function Dashboard() {
   }, []);
 
   useEffect(() => {
-    fetch("http://localhost:5000/api/settings/upi")
+    fetch(`${API}/api/settings/upi`)
       .then((res) => res.json())
       .then((data) => setUpiId(data.upiId?.trim() || ""));
   }, []);

@@ -7,7 +7,7 @@ export default function AdminPaymentManager() {
 
   const fetchPayments = () => {
     setLoading(true);
-    fetch("http://localhost:5000/api/payments")
+    fetch(`${API}/payments`)
       .then((res) => res.ok ? res.json() : [])
       .then((data) => {
         setPayments(Array.isArray(data) ? data : []);
@@ -24,14 +24,14 @@ export default function AdminPaymentManager() {
   }, []);
 
   const handleApprove = async (id) => {
-    await fetch(`http://localhost:5000/api/payments/${id}/approve`, {
+    await fetch(`${API}/payments/${id}/approve`, {
       method: "PUT",
     });
     fetchPayments();
   };
 
   const handleReject = async (id) => {
-    await fetch(`http://localhost:5000/api/payments/${id}/reject`, {
+    await fetch(`${API}/payments/${id}/reject`, {
       method: "PUT",
     });
     fetchPayments();

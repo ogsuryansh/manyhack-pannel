@@ -5,7 +5,7 @@ export default function AdminDashboard() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch("http://localhost:5000/api/admin/stats")
+    fetch(`${API}/admin/stats`)
       .then(res => res.json())
       .then(data => {
         setStats(data);

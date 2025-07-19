@@ -34,7 +34,7 @@ export default function MyKeyPage() {
 
   useEffect(() => {
     if (!user) return;
-    fetch("http://localhost:5000/api/keys/user", {
+    fetch(`${API}/keys/user`, {
       headers: {
         Authorization: `Bearer ${localStorage.getItem("token")}`,
       },

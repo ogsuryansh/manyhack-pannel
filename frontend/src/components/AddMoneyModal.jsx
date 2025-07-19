@@ -18,7 +18,7 @@ export default function AddMoneyModal({ upiId, onClose, onSuccess }) {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const res = await fetch("http://localhost:5000/api/payments/add-money", {
+    const res = await fetch(`${API}/payments/add-money`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
