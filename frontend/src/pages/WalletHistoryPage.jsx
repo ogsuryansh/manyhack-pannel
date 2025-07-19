@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useAuth } from "../context/useAuth";
+import { API } from "../api";
 
 export default function WalletHistoryPage() {
   const { user } = useAuth();

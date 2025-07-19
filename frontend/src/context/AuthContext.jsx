@@ -1,5 +1,5 @@
-/* eslint-disable react-refresh/only-export-components */
 import React, { createContext, useState, useEffect } from "react";
+import { API } from "../api";
 import {
   getCurrentUser,
   logout as doLogout,

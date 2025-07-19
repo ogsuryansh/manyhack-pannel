@@ -3,7 +3,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/useAuth";
 import { QRCodeCanvas } from "qrcode.react";
 import { Link } from "react-router-dom";
-
+import { API } from "../api";
 function AddMoneyModal({ upiId, onClose, onSuccess }) {
   const [amount, setAmount] = useState("");
   const [utr, setUtr] = useState("");

@@ -3,6 +3,7 @@ import BalanceCard from "../components/BalanceCard";
 import ProductCard from "../components/ProductCard";
 import { useAuth } from "../context/useAuth";
 import { useNavigate } from "react-router-dom";
+import { API } from "../api";
 import AddMoneyModal from "../components/AddMoneyModal";
 
 export default function Dashboard() {
@@ -25,7 +26,7 @@ export default function Dashboard() {
   }, []);
 
   useEffect(() => {
-    fetch(`${API}/api/settings/upi`)
+    fetch(`${API}settings/upi`)
       .then((res) => res.json())
       .then((data) => setUpiId(data.upiId?.trim() || ""));
   }, []);
