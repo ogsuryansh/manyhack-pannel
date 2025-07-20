@@ -4,7 +4,6 @@ import { API } from "../../api";
 export default function AdminDashboard() {
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [notice, setNotice] = useState("");
   const [noticeInput, setNoticeInput] = useState("");
   const [noticeMsg, setNoticeMsg] = useState("");
 
@@ -16,11 +15,10 @@ export default function AdminDashboard() {
         setLoading(false);
       })
       .catch(() => setLoading(false));
-    // Fetch current notice
+    // Fetch current notice (to prefill the textarea on first load)
     fetch(`${API}/notice`)
       .then(res => res.json())
       .then(data => {
-        setNotice(data.text || "");
         setNoticeInput(data.text || "");
       });
   }, []);
@@ -33,7 +31,7 @@ export default function AdminDashboard() {
     });
     if (res.ok) {
       setNoticeMsg("Notice updated!");
-      setNotice(noticeInput);
+      setNoticeInput(""); // Clear the textarea after saving
       setTimeout(() => setNoticeMsg(""), 2000);
     } else {
       setNoticeMsg("Failed to update notice.");
@@ -43,12 +41,6 @@ export default function AdminDashboard() {
   return (
     <div className="admin-dashboard">
       <h2 className="section-title admin-dashboard-title">Admin Dashboard</h2>
-      {/* Show the current notice as a moving marquee */}
-      {notice && (
-        <div className="dashboard-notice-marquee">
-          <span>{notice}</span>
-        </div>
-      )}
       <div className="admin-notice-editor">
         <label>
           <b>Notice (shown to all users):</b>
