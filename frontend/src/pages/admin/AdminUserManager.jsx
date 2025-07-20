@@ -10,6 +10,7 @@ export default function AdminUserManager() {
   const [addAmount, setAddAmount] = useState("");
   const [userPurchases, setUserPurchases] = useState({});
   const [userContacts, setUserContacts] = useState({});
+  const [hiddenProducts, setHiddenProducts] = useState([]);
 
   // Fetch users and products
   useEffect(() => {
@@ -26,7 +27,6 @@ export default function AdminUserManager() {
   // Fetch purchases and contact for each user
   useEffect(() => {
     users.forEach((user) => {
-      // Purchases
       fetch(`${API}/keys/user/${user._id}`)
         .then((res) => (res.ok ? res.json() : []))
         .then((keys) => {
@@ -37,7 +37,6 @@ export default function AdminUserManager() {
               : [],
           }));
         });
-      // Contact detail (latest approved add_money payment)
       fetch(`${API}/payments/user/${user._id}`)
         .then((res) => (res.ok ? res.json() : []))
         .then((payments) => {
@@ -60,7 +59,8 @@ export default function AdminUserManager() {
   // Open price editor for a user (per product+duration)
   const handleEditPrices = (user) => {
     setEditingUser(user);
-    setAddAmount(""); // Reset add money input
+    setAddAmount("");
+    setHiddenProducts(user.hiddenProducts || []);
     const priceList = [];
     products.forEach((prod) => {
       prod.prices.forEach((pr) => {
@@ -87,7 +87,16 @@ export default function AdminUserManager() {
     );
   };
 
-  // Save custom prices and add/deduct money to wallet
+  // Toggle product visibility for the user
+  const handleToggleProduct = (productId) => {
+    setHiddenProducts((prev) =>
+      prev.includes(productId)
+        ? prev.filter((id) => id !== productId)
+        : [...prev, productId]
+    );
+  };
+
+  // Save custom prices, add/deduct money, and hidden products
   const handleSave = async () => {
     const customPricesToSave = customPrices.filter(
       (p) => p.price !== "" && p.price !== null && p.price !== undefined
@@ -100,11 +109,11 @@ export default function AdminUserManager() {
         body: JSON.stringify({
           customPrices: customPricesToSave,
           balance: addAmount ? Number(addAmount) : 0,
+          hiddenProducts,
         }),
       }
     );
     setEditingUser(null);
-    // Refresh users
     fetch(`${API}/admin/users`)
       .then((res) => res.json())
       .then((data) => setUsers(data));
@@ -196,17 +205,18 @@ export default function AdminUserManager() {
         </div>
       )}
 
-      {/* Modal for editing prices and wallet */}
+      {/* Modal for editing prices, wallet, and product visibility */}
       {editingUser && (
         <div className="admin-modal">
           <div className="admin-modal-content">
-            <h4>Edit Prices & Wallet for {editingUser.username}</h4>
+            <h4>Edit Prices, Wallet & Product Visibility for {editingUser.username}</h4>
             <table className="admin-user-table">
               <thead>
                 <tr>
                   <th>Product</th>
                   <th>Duration</th>
                   <th>Custom Price (₹)</th>
+                  <th>Hide</th>
                 </tr>
               </thead>
               <tbody>
@@ -220,6 +230,13 @@ export default function AdminUserManager() {
                         value={p.price}
                         onChange={(e) => handlePriceChange(idx, e.target.value)}
                         style={{ width: 80 }}
+                      />
+                    </td>
+                    <td>
+                      <input
+                        type="checkbox"
+                        checked={hiddenProducts.includes(p.productId)}
+                        onChange={() => handleToggleProduct(p.productId)}
                       />
                     </td>
                   </tr>
