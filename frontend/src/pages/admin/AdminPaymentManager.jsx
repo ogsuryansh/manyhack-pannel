@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { API } from "../../api";
+
 export default function AdminPaymentManager() {
   const [payments, setPayments] = useState([]);
   const [filter, setFilter] = useState("all");
@@ -24,23 +25,31 @@ export default function AdminPaymentManager() {
   }, []);
 
   const handleApprove = async (id) => {
-    await fetch(`${API}/payments/${id}/approve`, {
-      method: "PUT",
-    });
+    await fetch(`${API}/payments/${id}/approve`, { method: "PUT" });
     fetchPayments();
   };
 
   const handleReject = async (id) => {
-    await fetch(`${API}/payments/${id}/reject`, {
-      method: "PUT",
-    });
+    await fetch(`${API}/payments/${id}/reject`, { method: "PUT" });
     fetchPayments();
   };
 
-  const filteredPayments =
-    Array.isArray(payments)
-      ? (filter === "all" ? payments : payments.filter((p) => p.status === filter))
-      : [];
+  // Separate wallet and purchase transactions
+  const walletTx = payments.filter(
+    (p) => p.type === "add_money" || p.type === "deduct_money"
+  );
+  const purchaseTx = payments.filter((p) => p.type === "buy_key");
+
+  // Filter by status
+  const filteredWalletTx =
+    filter === "all"
+      ? walletTx
+      : walletTx.filter((p) => p.status === filter);
+
+  const filteredPurchaseTx =
+    filter === "all"
+      ? purchaseTx
+      : purchaseTx.filter((p) => p.status === filter);
 
   return (
     <div>
@@ -63,13 +72,13 @@ export default function AdminPaymentManager() {
           Refresh
         </button>
       </div>
+
+      <h4>Wallet Transactions (Add/Deduct Money)</h4>
       <table className="admin-user-table">
         <thead>
           <tr>
             <th>User</th>
             <th>Type</th>
-            <th>Product</th>
-            <th>Duration</th>
             <th>Amount</th>
             <th>UTR</th>
             <th>Contact Detail</th>
@@ -81,35 +90,33 @@ export default function AdminPaymentManager() {
         <tbody>
           {loading ? (
             <tr>
-              <td colSpan={10} className="admin-payment-loading">
+              <td colSpan={8} className="admin-payment-loading">
                 Loading...
               </td>
             </tr>
-          ) : filteredPayments.length === 0 ? (
+          ) : filteredWalletTx.length === 0 ? (
             <tr>
-              <td colSpan={10} className="admin-payment-empty">
-                No payments found.
+              <td colSpan={8} className="admin-payment-empty">
+                No wallet transactions found.
               </td>
             </tr>
           ) : (
-            filteredPayments.map((p) => (
+            filteredWalletTx.map((p) => (
               <tr key={p._id}>
                 <td>
                   {p.userId?.username || p.userId?.email || (
                     <span className="admin-payment-deleted">Deleted</span>
                   )}
                 </td>
-                <td>{p.type === "add_money" ? "Add Money" : "Buy Key"}</td>
                 <td>
-                  {p.type === "buy_key"
-                    ? p.productId?.name || (
-                        <span className="admin-payment-deleted">Deleted</span>
-                      )
-                    : "-"}
+                  {p.type === "add_money"
+                    ? "Add Money"
+                    : p.type === "deduct_money"
+                    ? "Deduct Money"
+                    : ""}
                 </td>
-                <td>{p.type === "buy_key" ? p.duration || "-" : "-"}</td>
                 <td>₹{p.amount}</td>
-                <td>{p.utr}</td>
+                <td>{p.utr || "-"}</td>
                 <td>{p.payerName || "NA"}</td>
                 <td>
                   <span className={`admin-payment-status ${p.status}`}>
@@ -118,7 +125,7 @@ export default function AdminPaymentManager() {
                 </td>
                 <td>{new Date(p.createdAt).toLocaleString()}</td>
                 <td>
-                  {p.status === "pending" && (
+                  {p.status === "pending" && p.type === "add_money" && (
                     <>
                       <button
                         className="admin-key-edit-btn"
@@ -135,6 +142,58 @@ export default function AdminPaymentManager() {
                     </>
                   )}
                 </td>
+              </tr>
+            ))
+          )}
+        </tbody>
+      </table>
+
+      <h4 style={{ marginTop: 32 }}>Key Purchases</h4>
+      <table className="admin-user-table">
+        <thead>
+          <tr>
+            <th>User</th>
+            <th>Product</th>
+            <th>Duration</th>
+            <th>Amount</th>
+            <th>Status</th>
+            <th>Time</th>
+          </tr>
+        </thead>
+        <tbody>
+          {loading ? (
+            <tr>
+              <td colSpan={6} className="admin-payment-loading">
+                Loading...
+              </td>
+            </tr>
+          ) : filteredPurchaseTx.length === 0 ? (
+            <tr>
+              <td colSpan={6} className="admin-payment-empty">
+                No key purchases found.
+              </td>
+            </tr>
+          ) : (
+            filteredPurchaseTx.map((p) => (
+              <tr key={p._id}>
+                <td>
+                  {p.userId?.username || p.userId?.email || (
+                    <span className="admin-payment-deleted">Deleted</span>
+                  )}
+                </td>
+                <td>
+                  {p.productId?.name || (
+                    <span className="admin-payment-deleted">Deleted</span>
+                  )}
+                </td>
+                <td>{p.duration || "-"}</td>
+                <td>₹{p.amount}</td>
+                <td>
+                  <span className={`admin-payment-status ${p.status}`}>
+                    {p.status.charAt(0).toUpperCase() + p.status.slice(1)}
+                  </span>
+                </td>
+                <td>{new Date(p.createdAt).toLocaleString()}</td>
               </tr>
             ))
           )}
