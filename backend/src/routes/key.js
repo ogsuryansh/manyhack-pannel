@@ -13,7 +13,10 @@ router.get("/", async (req, res) => {
     const filter = {};
     if (productId) filter.productId = productId;
     if (duration) filter.duration = duration;
-    const keys = await Key.find(filter).populate("assignedTo", "username email");
+    const keys = await Key.find(filter).populate(
+      "assignedTo",
+      "username email"
+    );
     res.json(keys);
   } catch (err) {
     console.error("Error in GET /api/keys:", err);
@@ -31,8 +34,14 @@ router.get("/stats", async (req, res) => {
 
     const total = await Key.countDocuments(filter);
     const available = await Key.countDocuments({ ...filter, assignedTo: null });
-    const assigned = await Key.countDocuments({ ...filter, assignedTo: { $ne: null } });
-    const expired = await Key.countDocuments({ ...filter, expiresAt: { $lt: new Date() } });
+    const assigned = await Key.countDocuments({
+      ...filter,
+      assignedTo: { $ne: null },
+    });
+    const expired = await Key.countDocuments({
+      ...filter,
+      expiresAt: { $lt: new Date() },
+    });
 
     res.json({ total, available, assigned, expired });
   } catch (err) {
@@ -71,17 +80,49 @@ router.get("/user/:userId", async (req, res) => {
 router.post("/bulk", async (req, res) => {
   try {
     const { productId, duration, keys } = req.body;
-    console.log("Bulk add keys:", { productId, duration, keys });
-    if (!productId || !duration || !Array.isArray(keys) || keys.length === 0) {
+    console.log("Bulk add keys request:", { productId, duration, keys });
+
+    // Validate productId
+    if (!productId) {
+      console.error("Missing productId");
+      return res.status(400).json({ message: "Missing productId" });
+    }
+    // Validate duration
+    if (!duration) {
+      console.error("Missing duration");
+      return res.status(400).json({ message: "Missing duration" });
+    }
+    // Validate keys
+    if (!Array.isArray(keys) || keys.length === 0) {
+      console.error("Keys array is missing or empty");
       return res
         .status(400)
-        .json({ message: "Missing productId, duration, or keys" });
+        .json({ message: "Keys array is missing or empty" });
     }
+
+    // Check if product exists
+    const product = await Product.findById(productId);
+    if (!product) {
+      console.error("Product not found:", productId);
+      return res.status(400).json({ message: "Product not found" });
+    }
+
+    // Check if duration is valid for this product
+    const validDuration = product.prices.some((pr) => pr.duration === duration);
+    if (!validDuration) {
+      console.error("Invalid duration for this product:", duration);
+      return res
+        .status(400)
+        .json({ message: "Invalid duration for this product" });
+    }
+
+    // Prepare key docs
     const keyDocs = keys.map((key) => ({
       key,
       productId,
       duration,
     }));
+
     await Key.insertMany(keyDocs, { ordered: false }); // skip duplicates
     res.json({ message: "Keys added" });
   } catch (err) {
