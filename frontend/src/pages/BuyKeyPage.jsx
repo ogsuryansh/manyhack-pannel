@@ -46,10 +46,7 @@ function AddMoneyModal({ upiId, onClose, onSuccess }) {
   return (
     <div className="upi-modal">
       <div className="upi-modal-content">
-        <button
-          className="buykey-btn buykey-btn-cancel upi-modal-close"
-          onClick={onClose}
-        >
+        <button className="buykey-btn buykey-btn-cancel upi-modal-close" onClick={onClose}>
           Cancel
         </button>
         <h3>Add Money to Wallet</h3>
@@ -59,7 +56,7 @@ function AddMoneyModal({ upiId, onClose, onSuccess }) {
           min={1}
           placeholder="Enter amount"
           value={amount}
-          onChange={(e) => setAmount(e.target.value)}
+          onChange={e => setAmount(e.target.value)}
           required
         />
         {upiLink && (
@@ -68,12 +65,7 @@ function AddMoneyModal({ upiId, onClose, onSuccess }) {
               <QRCodeCanvas value={upiLink} size={200} />
             </div>
             <div className="upi" style={{ textAlign: "center" }}>
-              <a
-                href={upiLink}
-                className="upi-link"
-                target="_blank"
-                rel="noopener noreferrer"
-              >
+              <a href={upiLink} className="upi-link" target="_blank" rel="noopener noreferrer">
                 👉 Pay ₹{amount} via UPI
               </a>
             </div>
@@ -85,7 +77,7 @@ function AddMoneyModal({ upiId, onClose, onSuccess }) {
             <input
               className="buykey-input"
               value={utr}
-              onChange={(e) => setUtr(e.target.value)}
+              onChange={e => setUtr(e.target.value)}
               placeholder="Enter UTR/Txn ID"
               required
             />
@@ -96,7 +88,7 @@ function AddMoneyModal({ upiId, onClose, onSuccess }) {
               type="tel"
               className="buykey-input"
               value={contactDetail}
-              onChange={(e) => setContactDetail(e.target.value)}
+              onChange={e => setContactDetail(e.target.value)}
               placeholder="Enter your mobile number"
               inputMode="numeric"
               pattern="[0-9]{10}"
@@ -108,16 +100,12 @@ function AddMoneyModal({ upiId, onClose, onSuccess }) {
             <input
               type="checkbox"
               checked={agreed}
-              onChange={(e) => setAgreed(e.target.checked)}
+              onChange={e => setAgreed(e.target.checked)}
               style={{ width: 18, height: 18 }}
             />
             <span>
               I agree to the{" "}
-              <Link
-                to="/terms-policy"
-                target="_blank"
-                style={{ color: "var(--primary)" }}
-              >
+              <Link to="/terms-policy" target="_blank" style={{ color: "var(--primary)" }}>
                 Terms & Policy
               </Link>
             </span>
@@ -177,7 +165,9 @@ export default function BuyKeyPage() {
       let userPrice = null;
       if (user && user.customPrices && user.customPrices.length > 0) {
         const custom = user.customPrices.find(
-          (cp) => String(cp.productId) === String(selected._id)
+          (cp) =>
+            String(cp.productId) === String(selected._id) &&
+            cp.duration === duration
         );
         if (custom) userPrice = custom.price;
       }
@@ -213,8 +203,12 @@ export default function BuyKeyPage() {
     products.find((p) => p.name === product)?.prices.map((pr) => pr.duration) ||
     [];
 
+  // Hide products for this user
+  const hiddenProducts = user?.hiddenProducts?.map(id => String(id)) || [];
+
   const filteredProducts = products.filter((p) =>
-    p.name.toLowerCase().includes(search.toLowerCase())
+    p.name.toLowerCase().includes(search.toLowerCase()) &&
+    (!user || !hiddenProducts.includes(String(p._id)))
   );
 
   const handleProductSelect = (name) => {
@@ -226,6 +220,7 @@ export default function BuyKeyPage() {
   };
 
   const canBuy =
+    user &&
     userBalance >= price * quantity &&
     price > 0 &&
     duration &&
@@ -336,33 +331,22 @@ export default function BuyKeyPage() {
           )}
         </div>
 
-        {product &&
-          duration &&
-          quantity > 0 &&
-          price > 0 &&
-          available === 0 && (
-            <div className="buykey-error">
-              OUT OF STOCK for this product/duration.
-            </div>
-          )}
+        {user && product && duration && quantity > 0 && price > 0 && available === 0 && (
+          <div className="buykey-error">
+            OUT OF STOCK for this product/duration.
+          </div>
+        )}
 
-        {product &&
-          duration &&
-          quantity > 0 &&
-          price > 0 &&
-          userBalance < price * quantity &&
-          available > 0 && (
-            <div className="buykey-error">
-              Low balance! Please add at least ₹{price * quantity - userBalance}
-            </div>
-          )}
+        {user && product && duration && quantity > 0 && price > 0 && userBalance < price * quantity && available > 0 && (
+          <div className="buykey-error">
+            Low balance! Please add at least ₹{price * quantity - userBalance}
+          </div>
+        )}
 
         {success && <div className="buykey-success">{success}</div>}
 
         <button
-          className={`buykey-btn buykey-btn-primary${
-            available === 0 ? " out-of-stock" : ""
-          }`}
+          className={`buykey-btn buykey-btn-primary${available === 0 ? " out-of-stock" : ""}`}
           type="button"
           disabled={!canBuy}
           style={{
