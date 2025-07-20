@@ -13,10 +13,7 @@ router.get("/", async (req, res) => {
     const filter = {};
     if (productId) filter.productId = productId;
     if (duration) filter.duration = duration;
-    const keys = await Key.find(filter).populate(
-      "assignedTo",
-      "username email"
-    );
+    const keys = await Key.find(filter).populate("assignedTo", "username email");
     res.json(keys);
   } catch (err) {
     console.error("Error in GET /api/keys:", err);
@@ -34,14 +31,8 @@ router.get("/stats", async (req, res) => {
 
     const total = await Key.countDocuments(filter);
     const available = await Key.countDocuments({ ...filter, assignedTo: null });
-    const assigned = await Key.countDocuments({
-      ...filter,
-      assignedTo: { $ne: null },
-    });
-    const expired = await Key.countDocuments({
-      ...filter,
-      expiresAt: { $lt: new Date() },
-    });
+    const assigned = await Key.countDocuments({ ...filter, assignedTo: { $ne: null } });
+    const expired = await Key.countDocuments({ ...filter, expiresAt: { $lt: new Date() } });
 
     res.json({ total, available, assigned, expired });
   } catch (err) {
@@ -80,7 +71,7 @@ router.get("/user/:userId", async (req, res) => {
 router.post("/bulk", async (req, res) => {
   try {
     const { productId, duration, keys } = req.body;
-    console.log("Bulk add keys:", { productId, duration, keys }); // <-- Add this
+    console.log("Bulk add keys:", { productId, duration, keys });
     if (!productId || !duration || !Array.isArray(keys) || keys.length === 0) {
       return res
         .status(400)
