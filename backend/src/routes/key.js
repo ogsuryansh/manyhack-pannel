@@ -16,6 +16,7 @@ router.get("/", async (req, res) => {
     const keys = await Key.find(filter).populate("assignedTo", "username email");
     res.json(keys);
   } catch (err) {
+    console.error("Error in GET /api/keys:", err);
     res.status(500).json({ message: "Server error" });
   }
 });
@@ -35,6 +36,7 @@ router.get("/stats", async (req, res) => {
 
     res.json({ total, available, assigned, expired });
   } catch (err) {
+    console.error("Error in GET /api/keys/stats:", err);
     res.status(500).json({ message: "Server error" });
   }
 });
@@ -47,6 +49,7 @@ router.get("/user", auth, async (req, res) => {
       .sort({ createdAt: -1 });
     res.json(keys);
   } catch (err) {
+    console.error("Error in GET /api/keys/user:", err);
     res.status(500).json({ message: "Server error" });
   }
 });
@@ -59,6 +62,7 @@ router.get("/user/:userId", async (req, res) => {
       .sort({ createdAt: -1 });
     res.json(keys);
   } catch (err) {
+    console.error("Error in GET /api/keys/user/:userId:", err);
     res.status(500).json({ message: "Server error" });
   }
 });
@@ -80,6 +84,7 @@ router.post("/bulk", async (req, res) => {
     await Key.insertMany(keyDocs, { ordered: false }); // skip duplicates
     res.json({ message: "Keys added" });
   } catch (err) {
+    console.error("Error in POST /api/keys/bulk:", err);
     res.status(400).json({ message: err.message });
   }
 });
@@ -95,6 +100,7 @@ router.put("/:id", async (req, res) => {
     );
     res.json(updated);
   } catch (err) {
+    console.error("Error in PUT /api/keys/:id:", err);
     res.status(400).json({ message: err.message });
   }
 });
@@ -105,89 +111,95 @@ router.delete("/:id", async (req, res) => {
     await Key.findByIdAndDelete(req.params.id);
     res.json({ message: "Key deleted" });
   } catch (err) {
+    console.error("Error in DELETE /api/keys/:id:", err);
     res.status(400).json({ message: err.message });
   }
 });
 
 // Buy key with wallet
 router.post("/buy", auth, async (req, res) => {
-  const { productId, duration, quantity } = req.body;
-  const user = await User.findById(req.user.id);
-  const now = new Date();
+  try {
+    const { productId, duration, quantity } = req.body;
+    const user = await User.findById(req.user.id);
+    const now = new Date();
 
-  // Calculate available balance (not expired)
-  let availableBalance = 0;
-  user.wallet = user.wallet.filter((entry) => {
-    if (!entry.expiresAt || new Date(entry.expiresAt) > now) {
-      availableBalance += entry.amount;
-      return true;
+    // Calculate available balance (not expired)
+    let availableBalance = 0;
+    user.wallet = user.wallet.filter((entry) => {
+      if (!entry.expiresAt || new Date(entry.expiresAt) > now) {
+        availableBalance += entry.amount;
+        return true;
+      }
+      return false;
+    });
+
+    // Get price for product+duration
+    const product = await Product.findById(productId);
+    if (!product) return res.status(404).json({ message: "Product not found" });
+    const priceObj = product.prices.find((pr) => pr.duration === duration);
+    if (!priceObj) return res.status(400).json({ message: "Invalid duration" });
+    const totalPrice = priceObj.price * quantity;
+
+    if (availableBalance < totalPrice) {
+      return res.status(400).json({ message: "Insufficient balance" });
     }
-    return false;
-  });
 
-  // Get price for product+duration
-  const product = await Product.findById(productId);
-  if (!product) return res.status(404).json({ message: "Product not found" });
-  const priceObj = product.prices.find((pr) => pr.duration === duration);
-  if (!priceObj) return res.status(400).json({ message: "Invalid duration" });
-  const totalPrice = priceObj.price * quantity;
-
-  if (availableBalance < totalPrice) {
-    return res.status(400).json({ message: "Insufficient balance" });
-  }
-
-  // Deduct from wallet (FIFO)
-  let toDeduct = totalPrice;
-  for (const entry of user.wallet) {
-    if (toDeduct <= 0) break;
-    if (entry.amount <= toDeduct) {
-      toDeduct -= entry.amount;
-      entry.amount = 0;
-    } else {
-      entry.amount -= toDeduct;
-      toDeduct = 0;
+    // Deduct from wallet (FIFO)
+    let toDeduct = totalPrice;
+    for (const entry of user.wallet) {
+      if (toDeduct <= 0) break;
+      if (entry.amount <= toDeduct) {
+        toDeduct -= entry.amount;
+        entry.amount = 0;
+      } else {
+        entry.amount -= toDeduct;
+        toDeduct = 0;
+      }
     }
+    user.wallet = user.wallet.filter((entry) => entry.amount > 0);
+
+    // Assign keys
+    const availableKeys = await Key.find({
+      productId,
+      duration,
+      assignedTo: null,
+    }).limit(quantity);
+
+    if (availableKeys.length < quantity) {
+      return res.status(400).json({ message: "Not enough keys available" });
+    }
+
+    for (let i = 0; i < quantity; i++) {
+      availableKeys[i].assignedTo = user._id;
+      availableKeys[i].assignedAt = now;
+      availableKeys[i].expiresAt = new Date(
+        now.getTime() + parseDuration(duration)
+      );
+      await availableKeys[i].save();
+    }
+
+    await user.save();
+
+    // Record the debit in Payment history
+    await Payment.create({
+      userId: user._id,
+      productId,
+      duration,
+      amount: totalPrice,
+      status: "approved",
+      type: "buy_key",
+      meta: {
+        quantity,
+        assignedKeyIds: availableKeys.map((k) => k._id),
+      },
+      createdAt: now,
+    });
+
+    res.json({ message: "Key(s) assigned", keys: availableKeys });
+  } catch (err) {
+    console.error("Error in POST /api/keys/buy:", err);
+    res.status(500).json({ message: "Server error" });
   }
-  user.wallet = user.wallet.filter((entry) => entry.amount > 0);
-
-  // Assign keys
-  const availableKeys = await Key.find({
-    productId,
-    duration,
-    assignedTo: null,
-  }).limit(quantity);
-
-  if (availableKeys.length < quantity) {
-    return res.status(400).json({ message: "Not enough keys available" });
-  }
-
-  for (let i = 0; i < quantity; i++) {
-    availableKeys[i].assignedTo = user._id;
-    availableKeys[i].assignedAt = now;
-    availableKeys[i].expiresAt = new Date(
-      now.getTime() + parseDuration(duration)
-    );
-    await availableKeys[i].save();
-  }
-
-  await user.save();
-
-  // Record the debit in Payment history
-  await Payment.create({
-    userId: user._id,
-    productId,
-    duration,
-    amount: totalPrice,
-    status: "approved",
-    type: "buy_key",
-    meta: {
-      quantity,
-      assignedKeyIds: availableKeys.map((k) => k._id),
-    },
-    createdAt: now,
-  });
-
-  res.json({ message: "Key(s) assigned", keys: availableKeys });
 });
 
 // Helper to parse duration string to ms
