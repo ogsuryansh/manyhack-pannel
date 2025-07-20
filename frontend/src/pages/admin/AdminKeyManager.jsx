@@ -16,7 +16,7 @@ export default function AdminKeyManager() {
   const [editKeyId, setEditKeyId] = useState(null);
   const [editKeyValue, setEditKeyValue] = useState("");
   const [loading, setLoading] = useState(false);
-  const [message, setMessage] = useState({ type: "", text: "" }); // {type: "success"|"error", text: string}
+  const [message, setMessage] = useState({ type: "", text: "" });
 
   // Fetch products
   useEffect(() => {

@@ -8,14 +8,31 @@ exports.register = async (req, res) => {
     if (!email || !username || !password) {
       return res.status(400).json({ message: "All fields are required." });
     }
-    const existing = await User.findOne({ $or: [{ email }, { username }] });
-    if (existing) {
-      return res.status(400).json({ message: "Email or username already exists." });
+
+    // Check for existing user by email or username
+    const existingEmail = await User.findOne({ email });
+    if (existingEmail) {
+      return res.status(400).json({ message: "Email already exists." });
     }
+    const existingUsername = await User.findOne({ username });
+    if (existingUsername) {
+      return res.status(400).json({ message: "Username already exists." });
+    }
+
     const hash = await bcrypt.hash(password, 10);
     const user = await User.create({ email, username, password: hash });
     res.status(201).json({ message: "User registered successfully." });
   } catch (err) {
+    // Handle duplicate key error from MongoDB unique index
+    if (err.code === 11000) {
+      if (err.keyPattern?.email) {
+        return res.status(400).json({ message: "Email already exists." });
+      }
+      if (err.keyPattern?.username) {
+        return res.status(400).json({ message: "Username already exists." });
+      }
+      return res.status(400).json({ message: "Duplicate field." });
+    }
     res.status(500).json({ message: "Server error." });
   }
 };

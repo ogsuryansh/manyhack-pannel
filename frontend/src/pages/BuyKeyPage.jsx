@@ -4,6 +4,7 @@ import { useAuth } from "../context/useAuth";
 import { QRCodeCanvas } from "qrcode.react";
 import { Link } from "react-router-dom";
 import { API } from "../api";
+
 function AddMoneyModal({ upiId, onClose, onSuccess }) {
   const [amount, setAmount] = useState("");
   const [utr, setUtr] = useState("");
@@ -45,10 +46,7 @@ function AddMoneyModal({ upiId, onClose, onSuccess }) {
   return (
     <div className="upi-modal">
       <div className="upi-modal-content">
-        <button
-          className="buykey-btn buykey-btn-cancel upi-modal-close"
-          onClick={onClose}
-        >
+        <button className="buykey-btn buykey-btn-cancel upi-modal-close" onClick={onClose}>
           Cancel
         </button>
         <h3>Add Money to Wallet</h3>
@@ -58,7 +56,7 @@ function AddMoneyModal({ upiId, onClose, onSuccess }) {
           min={1}
           placeholder="Enter amount"
           value={amount}
-          onChange={(e) => setAmount(e.target.value)}
+          onChange={e => setAmount(e.target.value)}
           required
         />
         {upiLink && (
@@ -67,12 +65,7 @@ function AddMoneyModal({ upiId, onClose, onSuccess }) {
               <QRCodeCanvas value={upiLink} size={200} />
             </div>
             <div className="upi" style={{ textAlign: "center" }}>
-              <a
-                href={upiLink}
-                className="upi-link"
-                target="_blank"
-                rel="noopener noreferrer"
-              >
+              <a href={upiLink} className="upi-link" target="_blank" rel="noopener noreferrer">
                 👉 Pay ₹{amount} via UPI
               </a>
             </div>
@@ -84,7 +77,7 @@ function AddMoneyModal({ upiId, onClose, onSuccess }) {
             <input
               className="buykey-input"
               value={utr}
-              onChange={(e) => setUtr(e.target.value)}
+              onChange={e => setUtr(e.target.value)}
               placeholder="Enter UTR/Txn ID"
               required
             />
@@ -94,7 +87,7 @@ function AddMoneyModal({ upiId, onClose, onSuccess }) {
             <input
               className="buykey-input"
               value={contactDetail}
-              onChange={(e) => setContactDetail(e.target.value)}
+              onChange={e => setContactDetail(e.target.value)}
               placeholder="Enter your contact detail"
               required
             />
@@ -103,16 +96,12 @@ function AddMoneyModal({ upiId, onClose, onSuccess }) {
             <input
               type="checkbox"
               checked={agreed}
-              onChange={(e) => setAgreed(e.target.checked)}
+              onChange={e => setAgreed(e.target.checked)}
               style={{ width: 18, height: 18 }}
             />
             <span>
               I agree to the{" "}
-              <Link
-                to="/terms-policy"
-                target="_blank"
-                style={{ color: "var(--primary)" }}
-              >
+              <Link to="/terms-policy" target="_blank" style={{ color: "var(--primary)" }}>
                 Terms & Policy
               </Link>
             </span>
@@ -142,6 +131,8 @@ export default function BuyKeyPage() {
   const [upiId, setUpiId] = useState("");
   const [showAddMoney, setShowAddMoney] = useState(false);
   const [success, setSuccess] = useState("");
+  const [buying, setBuying] = useState(false);
+  const [available, setAvailable] = useState(null);
 
   const inputRef = useRef();
 
@@ -180,8 +171,13 @@ export default function BuyKeyPage() {
         const priceObj = selected.prices.find((pr) => pr.duration === duration);
         setPrice(priceObj ? priceObj.price : 0);
       }
+      // Fetch available keys for this product+duration
+      fetch(`${API}/keys/stats?productId=${selected._id}&duration=${encodeURIComponent(duration)}`)
+        .then(res => res.json())
+        .then(stats => setAvailable(stats.available || 0));
     } else {
       setPrice(0);
+      setAvailable(null);
     }
   }, [product, duration, products, user]);
 
@@ -209,12 +205,15 @@ export default function BuyKeyPage() {
     inputRef.current.blur();
   };
 
-  const canBuy = userBalance >= price * quantity && price > 0 && duration;
-
-  const [buying, setBuying] = useState(false);
+  const canBuy =
+    userBalance >= price * quantity &&
+    price > 0 &&
+    duration &&
+    available > 0 &&
+    !buying;
 
   const handleBuyWithWallet = async () => {
-    setBuying(true); // Disable the button immediately
+    setBuying(true);
     const selected = products.find((p) => p.name === product);
     const res = await fetch(`${API}/keys/buy`, {
       method: "POST",
@@ -233,12 +232,12 @@ export default function BuyKeyPage() {
       await refreshUser();
       setTimeout(() => {
         setSuccess("");
-        setBuying(false); // Re-enable after redirect
+        setBuying(false);
         navigate("/my-key");
       }, 2500);
     } else {
       setSuccess("Failed to purchase key(s).");
-      setBuying(false); // Re-enable on error
+      setBuying(false);
     }
   };
 
@@ -321,7 +320,18 @@ export default function BuyKeyPage() {
           duration &&
           quantity > 0 &&
           price > 0 &&
-          userBalance < price * quantity && (
+          available === 0 && (
+            <div className="buykey-error">
+              OUT OF STOCK for this product/duration.
+            </div>
+          )}
+
+        {product &&
+          duration &&
+          quantity > 0 &&
+          price > 0 &&
+          userBalance < price * quantity &&
+          available > 0 && (
             <div className="buykey-error">
               Low balance! Please add at least ₹{price * quantity - userBalance}
             </div>
@@ -330,15 +340,15 @@ export default function BuyKeyPage() {
         {success && <div className="buykey-success">{success}</div>}
 
         <button
-          className="buykey-btn buykey-btn-primary"
+          className={`buykey-btn buykey-btn-primary${available === 0 ? " out-of-stock" : ""}`}
           type="button"
-          disabled={!canBuy || buying}
+          disabled={!canBuy}
           style={{
-            cursor: buying ? "not-allowed" : "pointer",
+            cursor: !canBuy ? "not-allowed" : "pointer",
           }}
           onClick={handleBuyWithWallet}
         >
-          {buying ? "Processing..." : "Buy with Wallet"}
+          {available === 0 ? "OUT OF STOCK" : buying ? "Processing..." : "Buy with Wallet"}
         </button>
         <button
           className="buykey-btn buykey-btn-cancel"

@@ -57,19 +57,25 @@ export default function AdminUserManager() {
     });
   }, [users]);
 
-  // Open price editor for a user
+  // Open price editor for a user (per product+duration)
   const handleEditPrices = (user) => {
     setEditingUser(user);
     setAddAmount(""); // Reset add money input
-    const priceList = products.map((prod) => {
-      const custom = user.customPrices?.find(
-        (p) => String(p.productId) === String(prod._id)
-      );
-      return {
-        productId: prod._id,
-        name: prod.name,
-        price: custom ? custom.price : prod.prices?.[0]?.price ?? 0,
-      };
+    const priceList = [];
+    products.forEach((prod) => {
+      prod.prices.forEach((pr) => {
+        const custom = user.customPrices?.find(
+          (p) =>
+            String(p.productId) === String(prod._id) &&
+            p.duration === pr.duration
+        );
+        priceList.push({
+          productId: prod._id,
+          name: prod.name,
+          duration: pr.duration,
+          price: custom ? custom.price : pr.price,
+        });
+      });
     });
     setCustomPrices(priceList);
   };
@@ -81,7 +87,7 @@ export default function AdminUserManager() {
     );
   };
 
-  // Save custom prices and add money to wallet
+  // Save custom prices and add/deduct money to wallet
   const handleSave = async () => {
     const customPricesToSave = customPrices.filter(
       (p) => p.price !== "" && p.price !== null && p.price !== undefined
@@ -165,8 +171,7 @@ export default function AdminUserManager() {
                   </td>
                   <td>₹{getWalletBalance(user)}</td>
                   <td>
-                    {userPurchases[user._id] &&
-                    userPurchases[user._id].length > 0
+                    {userPurchases[user._id] && userPurchases[user._id].length > 0
                       ? userPurchases[user._id].join(", ")
                       : "NA"}
                   </td>
@@ -200,13 +205,15 @@ export default function AdminUserManager() {
               <thead>
                 <tr>
                   <th>Product</th>
+                  <th>Duration</th>
                   <th>Custom Price (₹)</th>
                 </tr>
               </thead>
               <tbody>
                 {customPrices.map((p, idx) => (
-                  <tr key={p.productId}>
+                  <tr key={p.productId + p.duration}>
                     <td>{p.name}</td>
+                    <td>{p.duration}</td>
                     <td>
                       <input
                         type="number"

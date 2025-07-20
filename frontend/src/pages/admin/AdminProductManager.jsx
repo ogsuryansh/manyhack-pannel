@@ -8,7 +8,6 @@ export default function AdminProductManager() {
     description: "",
     prices: [{ duration: "", price: "" }],
     hot: false,
-    keys: "",
   });
   const [editingId, setEditingId] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -52,72 +51,42 @@ export default function AdminProductManager() {
     }));
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    let productId = editingId;
-    let isNew = !editingId;
-    let newProduct = null;
+ const handleSubmit = async (e) => {
+  e.preventDefault();
 
-    // Create or update product
-    const url = editingId
-      ? `${API}/products/${editingId}`
-      : `${API}/products`;
-    const method = editingId ? "PUT" : "POST";
-    const res = await fetch(url, {
-      method,
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        name: form.name,
-        description: form.description,
-        prices: form.prices,
-        hot: form.hot,
-      }),
-    });
+  // Create or update product
+  const url = editingId
+    ? `${API}/products/${editingId}`
+    : `${API}/products`;
+  const method = editingId ? "PUT" : "POST";
+  await fetch(url, {
+    method,
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      name: form.name,
+      description: form.description,
+      prices: form.prices,
+      hot: form.hot,
+    }),
+  });
 
-    if (isNew && res.ok) {
-      newProduct = await res.json();
-      productId = newProduct._id;
-    }
-
-    // Bulk add keys for each duration
-    if (form.keys.trim() && productId) {
-      const keysArray = form.keys
-        .split(/\r?\n|\r/g)
-        .map((k) => k.trim())
-        .filter((k) => k);
-      for (const price of form.prices) {
-        await fetch(`${API}/keys/bulk`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            productId,
-            duration: price.duration,
-            keys: keysArray,
-          }),
-        });
-      }
-    }
-
-    setForm({
-      name: "",
-      description: "",
-      prices: [{ duration: "", price: "" }],
-      hot: false,
-      keys: "",
-    });
-    setEditingId(null);
-    fetch(`${API}/products`)
-      .then((res) => res.json())
-      .then((data) => setProducts(data));
-  };
-
+  setForm({
+    name: "",
+    description: "",
+    prices: [{ duration: "", price: "" }],
+    hot: false,
+  });
+  setEditingId(null);
+  fetch(`${API}/products`)
+    .then((res) => res.json())
+    .then((data) => setProducts(data));
+};
   const handleEdit = (product) => {
     setForm({
       name: product.name,
       description: product.description,
       prices: product.prices,
       hot: product.hot,
-      keys: "",
     });
     setEditingId(product._id);
   };
@@ -196,17 +165,6 @@ export default function AdminProductManager() {
             + Add Duration
           </button>
         </div>
-        <label>
-          <b>Bulk Add Keys (one per line):</b>
-          <textarea
-            className="admin-product-input"
-            rows={4}
-            name="keys"
-            value={form.keys}
-            onChange={handleFormChange}
-            placeholder="Paste keys here, one per line"
-          />
-        </label>
         <button className="admin-product-btn" type="submit">
           {editingId ? "Update Product" : "Add Product"}
         </button>
@@ -220,7 +178,6 @@ export default function AdminProductManager() {
                 description: "",
                 prices: [{ duration: "", price: "" }],
                 hot: false,
-                keys: "",
               });
               setEditingId(null);
             }}
