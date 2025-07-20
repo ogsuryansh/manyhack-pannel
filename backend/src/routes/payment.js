@@ -13,6 +13,7 @@ router.get("/", async (req, res) => {
       .sort({ createdAt: -1 });
     res.json(payments);
   } catch (err) {
+    console.error("Error in /api/payments:", err);
     res.status(500).json({ message: "Server error" });
   }
 });
@@ -125,6 +126,18 @@ router.put("/:id/reject", async (req, res) => {
 router.get("/user", auth, async (req, res) => {
   try {
     const payments = await Payment.find({ userId: req.user.id })
+      .populate({ path: "productId", select: "name", strictPopulate: false })
+      .sort({ createdAt: -1 });
+    res.json(payments);
+  } catch (err) {
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
+// Get all payments for a specific user (for admin)
+router.get("/user/:userId", async (req, res) => {
+  try {
+    const payments = await Payment.find({ userId: req.params.userId })
       .populate({ path: "productId", select: "name", strictPopulate: false })
       .sort({ createdAt: -1 });
     res.json(payments);
