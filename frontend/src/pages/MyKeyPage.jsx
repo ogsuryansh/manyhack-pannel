@@ -61,17 +61,26 @@ export default function MyKeyPage() {
       <h2 className="section-title" style={{ textAlign: "center" }}>My Keys</h2>
       <div className="mykey-telegram-box">
         <div>
-          <b>JOIN THIS TELEGRAM CHANNEL</b> for your loader APK and search the loader you purchased.<br />
-          <a href={TELEGRAM_CHANNEL_URL} target="_blank" rel="noopener noreferrer" className="mykey-telegram-link">
-            {TELEGRAM_CHANNEL_URL}
-          </a>
+          <b>JOIN THIS TELEGRAM CHANNEL</b> for your loader APK and search the loader you purchased.
+          <br />
+          <button
+            className="mykey-telegram-btn"
+            onClick={() => window.open(TELEGRAM_CHANNEL_URL, "_blank")}
+          >
+            <TelegramIcon />
+            <span style={{ marginLeft: 8 }}>Join Channel</span>
+          </button>
         </div>
         <div style={{ marginTop: 8 }}>
           Everything is uploaded there: <b>setup, loader APK, process</b>.<br />
           For any queries, DM me on Telegram:{" "}
-          <a href={TELEGRAM_DM_URL} target="_blank" rel="noopener noreferrer" className="mykey-telegram-link">
-            {TELEGRAM_DM_URL.replace("https://", "")}
-          </a>
+          <button
+            className="mykey-telegram-btn"
+            onClick={() => window.open(TELEGRAM_DM_URL, "_blank")}
+          >
+            <TelegramIcon />
+            <span style={{ marginLeft: 8 }}>t.me/legitsells66</span>
+          </button>
         </div>
       </div>
       <div className="mykey-list">
@@ -86,21 +95,13 @@ export default function MyKeyPage() {
                 <span className="mykey-product">{k.productId?.name || "NA"}</span>
                 <span className="mykey-duration">{k.duration || "NA"}</span>
               </div>
-              <div className="mykey-key">
-                {k.key || "NA"}
+              <div className="mykey-key-row">
+                <div className="mykey-key-scroll">
+                  <span className="mykey-key">{k.key || "NA"}</span>
+                </div>
                 <button
                   className="mykey-copy-btn"
                   onClick={() => handleCopy(k.key, k._id)}
-                  style={{
-                    marginLeft: 10,
-                    padding: "2px 10px",
-                    borderRadius: 6,
-                    border: "none",
-                    background: "var(--primary)",
-                    color: "#fff",
-                    cursor: "pointer",
-                    fontSize: "0.95em",
-                  }}
                 >
                   {copiedKeyId === k._id ? "Copied!" : "Copy"}
                 </button>
@@ -124,5 +125,18 @@ export default function MyKeyPage() {
         )}
       </div>
     </div>
+  );
+}
+
+// Telegram SVG icon
+function TelegramIcon() {
+  return (
+    <svg height="20" width="20" viewBox="0 0 240 240" style={{ verticalAlign: "middle" }}>
+      <circle cx="120" cy="120" r="120" fill="#37aee2" />
+      <path
+        d="M100 170l-40-15 160-65-120 80 10 30 30-10 80-120-65 160-15-40z"
+        fill="#fff"
+      />
+    </svg>
   );
 }
