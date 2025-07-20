@@ -333,6 +333,9 @@ export default function BuyKeyPage() {
           className="buykey-btn buykey-btn-primary"
           type="button"
           disabled={!canBuy || buying}
+          style={{
+            cursor: buying ? "not-allowed" : "pointer",
+          }}
           onClick={handleBuyWithWallet}
         >
           {buying ? "Processing..." : "Buy with Wallet"}
