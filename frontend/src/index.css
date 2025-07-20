@@ -2159,3 +2159,13 @@ select.buykey-input option {
     width: 100%;
   }
 }
+.admin-key-success {
+  color: #22c55e;
+  font-weight: 600;
+  margin-bottom: 8px;
+}
+.admin-key-error {
+  color: #ff6b81;
+  font-weight: 600;
+  margin-bottom: 8px;
+}

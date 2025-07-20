@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { API } from "../../api";
+
 export default function AdminKeyManager() {
   const [products, setProducts] = useState([]);
   const [selectedProduct, setSelectedProduct] = useState("");
@@ -15,6 +16,7 @@ export default function AdminKeyManager() {
   const [editKeyId, setEditKeyId] = useState(null);
   const [editKeyValue, setEditKeyValue] = useState("");
   const [loading, setLoading] = useState(false);
+  const [message, setMessage] = useState({ type: "", text: "" }); // {type: "success"|"error", text: string}
 
   // Fetch products
   useEffect(() => {
@@ -60,59 +62,62 @@ export default function AdminKeyManager() {
 
   // Bulk add keys
   const handleBulkAdd = async (e) => {
-  e.preventDefault();
-  if (!selectedProduct || !selectedDuration || !bulkKeys.trim()) return;
-  const keysArray = bulkKeys
-    .split(/\r?\n|\r/g)
-    .map((k) => k.trim())
-    .filter((k) => k);
+    e.preventDefault();
+    setMessage({ type: "", text: "" });
+    if (!selectedProduct || !selectedDuration || !bulkKeys.trim()) return;
+    const keysArray = bulkKeys
+      .split(/\r?\n|\r/g)
+      .map((k) => k.trim())
+      .filter((k) => k);
 
-  const res = await fetch(`${API}/keys/bulk`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      productId: selectedProduct,
-      duration: selectedDuration,
-      keys: keysArray,
-    }),
-  });
+    const res = await fetch(`${API}/keys/bulk`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        productId: selectedProduct,
+        duration: selectedDuration,
+        keys: keysArray,
+      }),
+    });
 
-  if (res.ok) {
-    alert("Keys added successfully!");
-    setBulkKeys("");
-    setLoading(true);
-    Promise.all([
-      fetch(
-        `${API}/keys?productId=${selectedProduct}&duration=${encodeURIComponent(
-          selectedDuration
-        )}`
-      ).then((res) => res.json()),
-      fetch(
-        `${API}/keys/stats?productId=${selectedProduct}&duration=${encodeURIComponent(
-          selectedDuration
-        )}`
-      ).then((res) => res.json()),
-    ])
-      .then(([keysData, statsData]) => {
-        setKeys(keysData);
-        setStats(statsData);
-        setLoading(false);
-      })
-      .catch(() => setLoading(false));
-  } else {
-    const error = await res.json();
-    if (
-      error.message &&
-      error.message.includes("duplicate key error")
-    ) {
-      alert(
-        "Some or all keys were duplicates and were not added. Please check your keys."
-      );
+    if (res.ok) {
+      setMessage({ type: "success", text: "Keys added successfully!" });
+      setBulkKeys("");
+      setLoading(true);
+      Promise.all([
+        fetch(
+          `${API}/keys?productId=${selectedProduct}&duration=${encodeURIComponent(
+            selectedDuration
+          )}`
+        ).then((res) => res.json()),
+        fetch(
+          `${API}/keys/stats?productId=${selectedProduct}&duration=${encodeURIComponent(
+            selectedDuration
+          )}`
+        ).then((res) => res.json()),
+      ])
+        .then(([keysData, statsData]) => {
+          setKeys(keysData);
+          setStats(statsData);
+          setLoading(false);
+        })
+        .catch(() => setLoading(false));
     } else {
-      alert(error.message || "Failed to add keys.");
+      const error = await res.json();
+      if (
+        error.message &&
+        error.message.includes("duplicate key error")
+      ) {
+        setMessage({
+          type: "error",
+          text:
+            "Some or all keys were duplicates and were not added. Please check your keys.",
+        });
+      } else {
+        setMessage({ type: "error", text: error.message || "Failed to add keys." });
+      }
     }
-  }
-};
+  };
 
   // Delete key
   const handleDelete = async (id) => {
@@ -173,6 +178,24 @@ export default function AdminKeyManager() {
           ))}
         </select>
       </div>
+      {/* Success/Error message */}
+      {message.text && (
+        <div
+          className={
+            message.type === "success"
+              ? "admin-key-success"
+              : "admin-key-error"
+          }
+          style={{
+            margin: "12px 0",
+            textAlign: "center",
+            fontWeight: 600,
+            color: message.type === "success" ? "#22c55e" : "#ff6b81",
+          }}
+        >
+          {message.text}
+        </div>
+      )}
       <form className="admin-key-bulk-form" onSubmit={handleBulkAdd}>
         <textarea
           className="admin-key-bulk-textarea"
@@ -264,7 +287,7 @@ export default function AdminKeyManager() {
                     : "NA"}
                 </td>
                 <td>
-                  {k.expiresAt ? new Date(k.expiresAt).toLocaleString() : "NA"}
+                  {k.expiresAt ? new Date(k.expiresAt).toLocaleDateString() : "NA"}
                 </td>
                 <td>
                   {k.assignedTo
