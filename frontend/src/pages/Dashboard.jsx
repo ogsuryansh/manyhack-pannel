@@ -9,6 +9,7 @@ import AddMoneyModal from "../components/AddMoneyModal";
 export default function Dashboard() {
   const { user, refreshUser } = useAuth();
   const [products, setProducts] = useState([]);
+  const [availableKeys, setAvailableKeys] = useState({});
   const [loading, setLoading] = useState(true);
   const [showAddMoney, setShowAddMoney] = useState(false);
   const [upiId, setUpiId] = useState("");
@@ -21,6 +22,20 @@ export default function Dashboard() {
       .then((data) => {
         setProducts(data);
         setLoading(false);
+        // Fetch available keys for each product (for the first duration)
+        data.forEach((product) => {
+          const duration = product.prices?.[0]?.duration;
+          if (duration) {
+            fetch(`${API}/keys/stats?productId=${product._id}&duration=${encodeURIComponent(duration)}`)
+              .then(res => res.json())
+              .then(stats => {
+                setAvailableKeys(prev => ({
+                  ...prev,
+                  [product._id]: stats.available || 0
+                }));
+              });
+          }
+        });
       })
       .catch(() => setLoading(false));
   }, []);
@@ -80,7 +95,9 @@ export default function Dashboard() {
                 key={i}
                 {...p}
                 price={userPrice}
+                available={availableKeys[p._id] || 0}
                 onBuy={() => handleBuy(p)}
+                user={user}
               />
             );
           })}

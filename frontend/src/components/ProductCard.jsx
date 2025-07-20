@@ -7,6 +7,7 @@ export default function ProductCard({
   description,
   hot,
   onBuy,
+  available, // pass number of available keys as a prop
 }) {
   // Find the lowest price from the prices array
   const minPrice =
@@ -33,8 +34,12 @@ export default function ProductCard({
         <span>Description: </span>
         {description}
       </div>
-      <button className="buy-btn" onClick={onBuy}>
-        Purchase Key
+      <button
+        className={`buy-btn${available === 0 ? " out-of-stock" : ""}`}
+        onClick={onBuy}
+        disabled={available === 0}
+      >
+        {available === 0 ? "OUT OF STOCK" : "Purchase Key"}
       </button>
     </div>
   );
