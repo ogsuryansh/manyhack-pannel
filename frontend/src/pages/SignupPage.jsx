@@ -31,7 +31,7 @@ export default function SignupPage() {
         <div className="auth-welcome">
           <h2>Welcome!</h2>
           <p>
-            Create your account to access the MANYHACK Panel.<br />
+            Create your account to access the GAMING GARAGE Panel.<br />
             Already have an account? <Link to="/login" className="auth-link">Login</Link>
           </p>
         </div>

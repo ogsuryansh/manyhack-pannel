@@ -2,7 +2,9 @@ import React, { useEffect, useState } from "react";
 import { useAuth } from "../context/useAuth";
 import { API } from "../api";
 
-// Countdown component
+const TELEGRAM_CHANNEL_URL = "https://t.me/+5lW1baqq4a5hYWRl";
+const TELEGRAM_DM_URL = "https://t.me/legitsells66";
+
 function ExpiryCountdown({ expiry }) {
   const [timeLeft, setTimeLeft] = useState("");
 
@@ -32,6 +34,7 @@ export default function MyKeyPage() {
   const { user } = useAuth();
   const [myKeys, setMyKeys] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [copiedKeyId, setCopiedKeyId] = useState(null);
 
   useEffect(() => {
     if (!user) return;
@@ -47,9 +50,30 @@ export default function MyKeyPage() {
       });
   }, [user]);
 
+  const handleCopy = (key, id) => {
+    navigator.clipboard.writeText(key);
+    setCopiedKeyId(id);
+    setTimeout(() => setCopiedKeyId(null), 1500);
+  };
+
   return (
     <div className="mykey-page">
       <h2 className="section-title" style={{ textAlign: "center" }}>My Keys</h2>
+      <div className="mykey-telegram-box">
+        <div>
+          <b>JOIN THIS TELEGRAM CHANNEL</b> for your loader APK and search the loader you purchased.<br />
+          <a href={TELEGRAM_CHANNEL_URL} target="_blank" rel="noopener noreferrer" className="mykey-telegram-link">
+            {TELEGRAM_CHANNEL_URL}
+          </a>
+        </div>
+        <div style={{ marginTop: 8 }}>
+          Everything is uploaded there: <b>setup, loader APK, process</b>.<br />
+          For any queries, DM me on Telegram:{" "}
+          <a href={TELEGRAM_DM_URL} target="_blank" rel="noopener noreferrer" className="mykey-telegram-link">
+            {TELEGRAM_DM_URL.replace("https://", "")}
+          </a>
+        </div>
+      </div>
       <div className="mykey-list">
         {loading ? (
           <div>Loading...</div>
@@ -62,7 +86,25 @@ export default function MyKeyPage() {
                 <span className="mykey-product">{k.productId?.name || "NA"}</span>
                 <span className="mykey-duration">{k.duration || "NA"}</span>
               </div>
-              <div className="mykey-key">{k.key || "NA"}</div>
+              <div className="mykey-key">
+                {k.key || "NA"}
+                <button
+                  className="mykey-copy-btn"
+                  onClick={() => handleCopy(k.key, k._id)}
+                  style={{
+                    marginLeft: 10,
+                    padding: "2px 10px",
+                    borderRadius: 6,
+                    border: "none",
+                    background: "var(--primary)",
+                    color: "#fff",
+                    cursor: "pointer",
+                    fontSize: "0.95em",
+                  }}
+                >
+                  {copiedKeyId === k._id ? "Copied!" : "Copy"}
+                </button>
+              </div>
               <div className="mykey-row">
                 <span>
                   <b>Purchased:</b> {k.assignedAt ? new Date(k.assignedAt).toLocaleDateString() : "NA"}

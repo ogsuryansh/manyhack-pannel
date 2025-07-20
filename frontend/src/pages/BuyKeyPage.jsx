@@ -45,7 +45,10 @@ function AddMoneyModal({ upiId, onClose, onSuccess }) {
   return (
     <div className="upi-modal">
       <div className="upi-modal-content">
-        <button className="buykey-btn buykey-btn-cancel upi-modal-close" onClick={onClose}>
+        <button
+          className="buykey-btn buykey-btn-cancel upi-modal-close"
+          onClick={onClose}
+        >
           Cancel
         </button>
         <h3>Add Money to Wallet</h3>
@@ -55,7 +58,7 @@ function AddMoneyModal({ upiId, onClose, onSuccess }) {
           min={1}
           placeholder="Enter amount"
           value={amount}
-          onChange={e => setAmount(e.target.value)}
+          onChange={(e) => setAmount(e.target.value)}
           required
         />
         {upiLink && (
@@ -64,7 +67,12 @@ function AddMoneyModal({ upiId, onClose, onSuccess }) {
               <QRCodeCanvas value={upiLink} size={200} />
             </div>
             <div className="upi" style={{ textAlign: "center" }}>
-              <a href={upiLink} className="upi-link" target="_blank" rel="noopener noreferrer">
+              <a
+                href={upiLink}
+                className="upi-link"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
                 👉 Pay ₹{amount} via UPI
               </a>
             </div>
@@ -76,7 +84,7 @@ function AddMoneyModal({ upiId, onClose, onSuccess }) {
             <input
               className="buykey-input"
               value={utr}
-              onChange={e => setUtr(e.target.value)}
+              onChange={(e) => setUtr(e.target.value)}
               placeholder="Enter UTR/Txn ID"
               required
             />
@@ -86,7 +94,7 @@ function AddMoneyModal({ upiId, onClose, onSuccess }) {
             <input
               className="buykey-input"
               value={contactDetail}
-              onChange={e => setContactDetail(e.target.value)}
+              onChange={(e) => setContactDetail(e.target.value)}
               placeholder="Enter your contact detail"
               required
             />
@@ -95,12 +103,16 @@ function AddMoneyModal({ upiId, onClose, onSuccess }) {
             <input
               type="checkbox"
               checked={agreed}
-              onChange={e => setAgreed(e.target.checked)}
+              onChange={(e) => setAgreed(e.target.checked)}
               style={{ width: 18, height: 18 }}
             />
             <span>
               I agree to the{" "}
-              <Link to="/terms-policy" target="_blank" style={{ color: "var(--primary)" }}>
+              <Link
+                to="/terms-policy"
+                target="_blank"
+                style={{ color: "var(--primary)" }}
+              >
                 Terms & Policy
               </Link>
             </span>
@@ -199,7 +211,10 @@ export default function BuyKeyPage() {
 
   const canBuy = userBalance >= price * quantity && price > 0 && duration;
 
+  const [buying, setBuying] = useState(false);
+
   const handleBuyWithWallet = async () => {
+    setBuying(true); // Disable the button immediately
     const selected = products.find((p) => p.name === product);
     const res = await fetch(`${API}/keys/buy`, {
       method: "POST",
@@ -218,10 +233,12 @@ export default function BuyKeyPage() {
       await refreshUser();
       setTimeout(() => {
         setSuccess("");
+        setBuying(false); // Re-enable after redirect
         navigate("/my-key");
       }, 2500);
     } else {
       setSuccess("Failed to purchase key(s).");
+      setBuying(false); // Re-enable on error
     }
   };
 
@@ -315,10 +332,10 @@ export default function BuyKeyPage() {
         <button
           className="buykey-btn buykey-btn-primary"
           type="button"
-          disabled={!canBuy}
+          disabled={!canBuy || buying}
           onClick={handleBuyWithWallet}
         >
-          Buy with Wallet
+          {buying ? "Processing..." : "Buy with Wallet"}
         </button>
         <button
           className="buykey-btn buykey-btn-cancel"
