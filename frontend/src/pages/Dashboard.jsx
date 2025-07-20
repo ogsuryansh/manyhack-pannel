@@ -26,7 +26,7 @@ export default function Dashboard() {
   }, []);
 
   useEffect(() => {
-    fetch(`${API}settings/upi`)
+    fetch(`${API}/settings/upi`)
       .then((res) => res.json())
       .then((data) => setUpiId(data.upiId?.trim() || ""));
   }, []);
