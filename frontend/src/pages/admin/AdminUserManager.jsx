@@ -13,6 +13,7 @@ export default function AdminUserManager() {
   const [userPurchases, setUserPurchases] = useState({});
   const [userContacts, setUserContacts] = useState({});
   const [hiddenProducts, setHiddenProducts] = useState([]);
+  const [message, setMessage] = useState({ type: "", text: "" });
 
   // Fetch users and products
   useEffect(() => {
@@ -66,6 +67,7 @@ export default function AdminUserManager() {
     setSelectedProduct("");
     setSelectedDuration("");
     setCustomPrice("");
+    setMessage({ type: "", text: "" });
   };
 
   // When product or duration changes, set the custom price
@@ -104,7 +106,7 @@ export default function AdminUserManager() {
         });
       }
     }
-    await fetch(
+    const res = await fetch(
       `${API}/admin/users/${editingUser._id}/custom-prices`,
       {
         method: "PUT",
@@ -116,6 +118,11 @@ export default function AdminUserManager() {
         }),
       }
     );
+    if (res.ok) {
+      setMessage({ type: "success", text: "User updated successfully!" });
+    } else {
+      setMessage({ type: "error", text: "Failed to update user." });
+    }
     setEditingUser(null);
     fetch(`${API}/admin/users`)
       .then((res) => res.json())
@@ -221,11 +228,57 @@ export default function AdminUserManager() {
         </div>
       )}
 
+      {/* Table for hidden products */}
+      <h4 style={{ marginTop: 32 }}>Hidden Products</h4>
+      <table className="admin-user-table">
+        <thead>
+          <tr>
+            <th>User</th>
+            <th>Hidden Product(s)</th>
+          </tr>
+        </thead>
+        <tbody>
+          {users.map((user) => (
+            <tr key={user._id}>
+              <td>{user.username}</td>
+              <td>
+                {user.hiddenProducts && user.hiddenProducts.length > 0
+                  ? user.hiddenProducts
+                      .map(
+                        (pid) =>
+                          products.find((p) => String(p._id) === String(pid))?.name ||
+                          "Unknown"
+                      )
+                      .join(", ")
+                  : "None"}
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+
       {/* Modal for editing prices, wallet, and product visibility */}
       {editingUser && (
         <div className="admin-modal">
           <div className="admin-modal-content" style={{ maxHeight: "80vh", overflowY: "auto" }}>
             <h4>Edit Prices, Wallet & Product Visibility for {editingUser.username}</h4>
+            {message.text && (
+              <div
+                className={
+                  message.type === "success"
+                    ? "admin-key-success"
+                    : "admin-key-error"
+                }
+                style={{
+                  margin: "12px 0",
+                  textAlign: "center",
+                  fontWeight: 600,
+                  color: message.type === "success" ? "#22c55e" : "#ff6b81",
+                }}
+              >
+                {message.text}
+              </div>
+            )}
             <div style={{ marginBottom: 16 }}>
               <label>
                 <b>Product:</b>
