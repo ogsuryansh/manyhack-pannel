@@ -49,7 +49,7 @@ export default function AddMoneyModal({ upiId, onClose, onSuccess }) {
 
   return (
     <div className="upi-modal">
-      <div className="upi-modal-content">
+      <div className="upi-modal-content" style={{ maxHeight: "90vh", overflowY: "auto" }}>
         <button className="buykey-btn buykey-btn-cancel upi-modal-close" onClick={onClose}>
           Cancel
         </button>

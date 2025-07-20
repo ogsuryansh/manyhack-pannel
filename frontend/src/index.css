@@ -2437,3 +2437,53 @@ select.buykey-input option {
   margin-top: 6px;
   text-align: center;
 }
+
+.upi-modal-content {
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+.upi-id-copy-box {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  margin-top: 10px;
+  margin-bottom: 4px;
+}
+.upi-id-label {
+  font-weight: 600;
+  color: var(--primary);
+}
+.upi-id-value {
+  font-family: monospace;
+  color: var(--accent);
+  background: #23272f;
+  padding: 2px 8px;
+  border-radius: 6px;
+}
+.upi-id-copy-btn {
+  background: var(--primary);
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  padding: 4px 12px;
+  font-size: 0.95em;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+.upi-id-copy-btn:hover {
+  background: var(--accent);
+}
+.upi-instruction {
+  color: #ff6b81;
+  font-size: 0.98rem;
+  margin-top: 6px;
+  text-align: center;
+}
+@media (max-width: 700px) {
+  .upi-modal-content {
+    max-height: 98vh;
+    padding: 12px 4px;
+  }
+}
