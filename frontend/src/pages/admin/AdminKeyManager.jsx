@@ -63,7 +63,7 @@ export default function AdminKeyManager() {
     e.preventDefault();
     if (!selectedProduct || !selectedDuration || !bulkKeys.trim()) return;
     const keysArray = bulkKeys
-      .split("\n")
+      .split(/\r?\n|\r/g)
       .map((k) => k.trim())
       .filter((k) => k);
     const res = await fetch(`${API}/keys/bulk`, {
