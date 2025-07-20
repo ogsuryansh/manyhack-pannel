@@ -6,7 +6,9 @@ export default function AdminUserManager() {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [editingUser, setEditingUser] = useState(null);
-  const [customPrices, setCustomPrices] = useState([]);
+  const [selectedProduct, setSelectedProduct] = useState("");
+  const [selectedDuration, setSelectedDuration] = useState("");
+  const [customPrice, setCustomPrice] = useState("");
   const [addAmount, setAddAmount] = useState("");
   const [userPurchases, setUserPurchases] = useState({});
   const [userContacts, setUserContacts] = useState({});
@@ -61,46 +63,47 @@ export default function AdminUserManager() {
     setEditingUser(user);
     setAddAmount("");
     setHiddenProducts(user.hiddenProducts || []);
-    const priceList = [];
-    products.forEach((prod) => {
-      prod.prices.forEach((pr) => {
-        const custom = user.customPrices?.find(
-          (p) =>
-            String(p.productId) === String(prod._id) &&
-            p.duration === pr.duration
-        );
-        priceList.push({
-          productId: prod._id,
-          name: prod.name,
-          duration: pr.duration,
-          price: custom ? custom.price : pr.price,
-        });
-      });
-    });
-    setCustomPrices(priceList);
+    setSelectedProduct("");
+    setSelectedDuration("");
+    setCustomPrice("");
   };
 
-  // Update price in state
-  const handlePriceChange = (idx, value) => {
-    setCustomPrices((prices) =>
-      prices.map((p, i) => (i === idx ? { ...p, price: value } : p))
+  // When product or duration changes, set the custom price
+  useEffect(() => {
+    if (!editingUser || !selectedProduct || !selectedDuration) {
+      setCustomPrice("");
+      return;
+    }
+    const prod = products.find((p) => p._id === selectedProduct);
+    const pr = prod?.prices.find((pr) => pr.duration === selectedDuration);
+    const custom = editingUser.customPrices?.find(
+      (p) =>
+        String(p.productId) === String(selectedProduct) &&
+        p.duration === selectedDuration
     );
-  };
+    setCustomPrice(custom ? custom.price : pr?.price || "");
+  }, [selectedProduct, selectedDuration, editingUser, products]);
 
-  // Toggle product visibility for the user
-  const handleToggleProduct = (productId) => {
-    setHiddenProducts((prev) =>
-      prev.includes(productId)
-        ? prev.filter((id) => id !== productId)
-        : [...prev, productId]
-    );
-  };
-
-  // Save custom prices, add/deduct money, and hidden products
+  // Save custom price, add/deduct money, and hidden products
   const handleSave = async () => {
-    const customPricesToSave = customPrices.filter(
-      (p) => p.price !== "" && p.price !== null && p.price !== undefined
-    );
+    let customPricesToSave = editingUser.customPrices || [];
+    // Update or add the custom price for the selected product+duration
+    if (selectedProduct && selectedDuration && customPrice !== "") {
+      const idx = customPricesToSave.findIndex(
+        (p) =>
+          String(p.productId) === String(selectedProduct) &&
+          p.duration === selectedDuration
+      );
+      if (idx > -1) {
+        customPricesToSave[idx].price = customPrice;
+      } else {
+        customPricesToSave.push({
+          productId: selectedProduct,
+          duration: selectedDuration,
+          price: customPrice,
+        });
+      }
+    }
     await fetch(
       `${API}/admin/users/${editingUser._id}/custom-prices`,
       {
@@ -139,6 +142,19 @@ export default function AdminUserManager() {
           .reduce((sum, entry) => sum + entry.amount, 0)
       : 0;
   };
+
+  // Toggle product visibility for the user
+  const handleToggleProduct = (productId) => {
+    setHiddenProducts((prev) =>
+      prev.includes(productId)
+        ? prev.filter((id) => id !== productId)
+        : [...prev, productId]
+    );
+  };
+
+  // Get durations for selected product
+  const durations =
+    products.find((p) => p._id === selectedProduct)?.prices.map((pr) => pr.duration) || [];
 
   return (
     <div>
@@ -208,41 +224,74 @@ export default function AdminUserManager() {
       {/* Modal for editing prices, wallet, and product visibility */}
       {editingUser && (
         <div className="admin-modal">
-          <div className="admin-modal-content">
+          <div className="admin-modal-content" style={{ maxHeight: "80vh", overflowY: "auto" }}>
             <h4>Edit Prices, Wallet & Product Visibility for {editingUser.username}</h4>
-            <table className="admin-user-table">
-              <thead>
-                <tr>
-                  <th>Product</th>
-                  <th>Duration</th>
-                  <th>Custom Price (₹)</th>
-                  <th>Hide</th>
-                </tr>
-              </thead>
-              <tbody>
-                {customPrices.map((p, idx) => (
-                  <tr key={p.productId + p.duration}>
-                    <td>{p.name}</td>
-                    <td>{p.duration}</td>
-                    <td>
-                      <input
-                        type="number"
-                        value={p.price}
-                        onChange={(e) => handlePriceChange(idx, e.target.value)}
-                        style={{ width: 80 }}
-                      />
-                    </td>
-                    <td>
-                      <input
-                        type="checkbox"
-                        checked={hiddenProducts.includes(p.productId)}
-                        onChange={() => handleToggleProduct(p.productId)}
-                      />
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+            <div style={{ marginBottom: 16 }}>
+              <label>
+                <b>Product:</b>
+                <select
+                  className="admin-product-input"
+                  value={selectedProduct}
+                  onChange={e => {
+                    setSelectedProduct(e.target.value);
+                    setSelectedDuration("");
+                    setCustomPrice("");
+                  }}
+                >
+                  <option value="">Select Product</option>
+                  {products.map((prod) => (
+                    <option key={prod._id} value={prod._id}>
+                      {prod.name}
+                    </option>
+                  ))}
+                </select>
+              </label>
+            </div>
+            {selectedProduct && (
+              <div style={{ marginBottom: 16 }}>
+                <label>
+                  <b>Duration:</b>
+                  <select
+                    className="admin-product-input"
+                    value={selectedDuration}
+                    onChange={e => setSelectedDuration(e.target.value)}
+                  >
+                    <option value="">Select Duration</option>
+                    {durations.map((d) => (
+                      <option key={d} value={d}>
+                        {d}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+              </div>
+            )}
+            {selectedProduct && selectedDuration && (
+              <div style={{ marginBottom: 16 }}>
+                <label>
+                  <b>Custom Price (₹):</b>
+                  <input
+                    className="admin-product-input"
+                    type="number"
+                    value={customPrice}
+                    onChange={e => setCustomPrice(e.target.value)}
+                    style={{ width: 100 }}
+                  />
+                </label>
+              </div>
+            )}
+            {selectedProduct && (
+              <div style={{ marginBottom: 16 }}>
+                <label>
+                  <b>Hide this product for user:</b>{" "}
+                  <input
+                    type="checkbox"
+                    checked={hiddenProducts.includes(selectedProduct)}
+                    onChange={() => handleToggleProduct(selectedProduct)}
+                  />
+                </label>
+              </div>
+            )}
             <div style={{ margin: "16px 0" }}>
               <label>
                 <b>Add/Deduct Money to Wallet:</b>{" "}

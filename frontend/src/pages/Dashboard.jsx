@@ -73,7 +73,7 @@ export default function Dashboard() {
         </div>
       )}
       {!user && (
-        <div style={{ color: "var(--accent)", marginBottom: 16 }}>
+        <div style={{ color: "rgb(220,20,60)", marginBottom: 16 }}>
           Login to see your balance.
         </div>
       )}

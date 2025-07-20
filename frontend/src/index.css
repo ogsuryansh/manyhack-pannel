@@ -2296,3 +2296,10 @@ select.buykey-input option {
 .admin-notice-save-btn:hover {
   background: var(--accent);
 }
+.admin-modal-content {
+  max-height: 80vh;
+  overflow-y: auto;
+}
+.admin-user-table {
+  min-width: 600px;
+}
