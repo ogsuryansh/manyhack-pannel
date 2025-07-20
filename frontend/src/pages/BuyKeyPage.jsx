@@ -38,7 +38,7 @@ function AddMoneyModal({ upiId, onClose, onSuccess }) {
       setTimeout(() => {
         setSuccess("");
         onClose && onClose();
-      }, 2000);
+      }, 500);
     }
   };
 

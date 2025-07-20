@@ -26,7 +26,7 @@ export default function Navbar({ theme, setTheme }) {
   return (
     <nav className="navbar">
       <div className="navbar-logo">
-        MANYHACK <span className="panel">Panel</span>
+        Gaming <span className="panel">Garage</span>
       </div>
       <div className={`navbar-links${menuOpen ? " open" : ""}`}>
         {NAV_LINKS.map((link) => (

@@ -26,12 +26,6 @@ export default function ProductCard({
         {displayPrice !== null && (
           <span>
             <b>Price:</b> <span className="inr">₹{displayPrice}</span>
-            {/* Optionally show (Your Price) if user-specific price is used */}
-            {price !== undefined && price !== null && (
-              <span style={{ color: "var(--accent)", fontSize: "0.95em", marginLeft: 8 }}>
-                (Your Price)
-              </span>
-            )}
           </span>
         )}
       </div>
@@ -44,4 +38,4 @@ export default function ProductCard({
       </button>
     </div>
   );
-} 
+}

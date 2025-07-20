@@ -7,8 +7,9 @@ export default function AdminUserManager() {
   const [loading, setLoading] = useState(true);
   const [editingUser, setEditingUser] = useState(null);
   const [customPrices, setCustomPrices] = useState([]);
-  const [addAmount, setAddAmount] = useState(""); 
-  const [userPurchases, setUserPurchases] = useState({}); 
+  const [addAmount, setAddAmount] = useState("");
+  const [userPurchases, setUserPurchases] = useState({});
+  const [userContacts, setUserContacts] = useState({});
 
   // Fetch users and products
   useEffect(() => {
@@ -22,9 +23,10 @@ export default function AdminUserManager() {
     });
   }, []);
 
-  // Fetch purchases for each user
+  // Fetch purchases and contact for each user
   useEffect(() => {
     users.forEach((user) => {
+      // Purchases
       fetch(`${API}/keys/user/${user._id}`)
         .then((res) => (res.ok ? res.json() : []))
         .then((keys) => {
@@ -33,6 +35,23 @@ export default function AdminUserManager() {
             [user._id]: Array.isArray(keys)
               ? keys.map((k) => k.productId?.name || "NA")
               : [],
+          }));
+        });
+      // Contact detail (latest approved add_money payment)
+      fetch(`${API}/payments/user/${user._id}`)
+        .then((res) => (res.ok ? res.json() : []))
+        .then((payments) => {
+          const latest = Array.isArray(payments)
+            ? payments.find(
+                (p) =>
+                  p.type === "add_money" &&
+                  p.status === "approved" &&
+                  p.payerName
+              )
+            : null;
+          setUserContacts((prev) => ({
+            ...prev,
+            [user._id]: latest?.payerName || "NA",
           }));
         });
     });
@@ -122,13 +141,14 @@ export default function AdminUserManager() {
                 <th>Register Time</th>
                 <th>Total Balance</th>
                 <th>Purchases</th>
+                <th>Contact</th>
                 <th>Actions</th>
               </tr>
             </thead>
             <tbody>
               {users.length === 0 && (
                 <tr>
-                  <td colSpan={7} style={{ textAlign: "center" }}>
+                  <td colSpan={8} style={{ textAlign: "center" }}>
                     No users found.
                   </td>
                 </tr>
@@ -149,6 +169,9 @@ export default function AdminUserManager() {
                     userPurchases[user._id].length > 0
                       ? userPurchases[user._id].join(", ")
                       : "NA"}
+                  </td>
+                  <td>
+                    {userContacts[user._id] || "NA"}
                   </td>
                   <td>
                     <button onClick={() => handleEditPrices(user)}>
