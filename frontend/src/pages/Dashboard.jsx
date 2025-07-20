@@ -84,7 +84,6 @@ export default function Dashboard() {
             padding: "10px 0",
             boxShadow: "0 2px 8px #0002",
             textAlign: "center",
-            animation: "marquee 18s linear infinite"
           }}
         >
           <span>{notice}</span>
