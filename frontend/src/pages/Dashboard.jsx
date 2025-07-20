@@ -13,6 +13,7 @@ export default function Dashboard() {
   const [loading, setLoading] = useState(true);
   const [showAddMoney, setShowAddMoney] = useState(false);
   const [upiId, setUpiId] = useState("");
+  const [notice, setNotice] = useState("");
 
   const navigate = useNavigate();
 
@@ -22,7 +23,6 @@ export default function Dashboard() {
       .then((data) => {
         setProducts(data);
         setLoading(false);
-        // Fetch available keys for each product (for the first duration)
         data.forEach((product) => {
           const duration = product.prices?.[0]?.duration;
           if (duration) {
@@ -46,6 +46,13 @@ export default function Dashboard() {
       .then((data) => setUpiId(data.upiId?.trim() || ""));
   }, []);
 
+  // Fetch notice
+  useEffect(() => {
+    fetch(`${API}/notice`)
+      .then(res => res.json())
+      .then(data => setNotice(data.text || ""));
+  }, []);
+
   const now = new Date();
   const inrBalance = user?.wallet
     ? user.wallet
@@ -60,6 +67,11 @@ export default function Dashboard() {
 
   return (
     <div className="dashboard">
+      {notice && (
+        <div className="dashboard-notice-marquee">
+          <span>{notice}</span>
+        </div>
+      )}
       {!user && (
         <div style={{ color: "var(--accent)", marginBottom: 16 }}>
           Login to see your balance.

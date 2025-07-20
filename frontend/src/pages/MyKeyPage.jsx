@@ -59,30 +59,33 @@ export default function MyKeyPage() {
   return (
     <div className="mykey-page">
       <h2 className="section-title" style={{ textAlign: "center" }}>My Keys</h2>
-      <div className="mykey-telegram-box">
-        <div>
-          <b>JOIN THIS TELEGRAM CHANNEL</b> for your loader APK and search the loader you purchased.
-          <br />
-          <button
-            className="mykey-telegram-btn"
-            onClick={() => window.open(TELEGRAM_CHANNEL_URL, "_blank")}
-          >
-            <TelegramIcon />
-            <span style={{ marginLeft: 8 }}>Join Channel</span>
-          </button>
+      {/* Only show Telegram message if user has at least one key */}
+      {myKeys.length > 0 && (
+        <div className="mykey-telegram-box">
+          <div>
+            <b>JOIN THIS TELEGRAM CHANNEL</b> for your loader APK and search the loader you purchased.
+            <br />
+            <button
+              className="mykey-telegram-btn"
+              onClick={() => window.open(TELEGRAM_CHANNEL_URL, "_blank")}
+            >
+              <TelegramIcon />
+              <span style={{ marginLeft: 8 }}>Join Channel</span>
+            </button>
+          </div>
+          <div style={{ marginTop: 8 }}>
+            Everything is uploaded there: <b>setup, loader APK, process</b>.<br />
+            For any queries, DM me on Telegram:{" "}
+            <button
+              className="mykey-telegram-btn"
+              onClick={() => window.open(TELEGRAM_DM_URL, "_blank")}
+            >
+              <TelegramIcon />
+              <span style={{ marginLeft: 8 }}>t.me/legitsells66</span>
+            </button>
+          </div>
         </div>
-        <div style={{ marginTop: 8 }}>
-          Everything is uploaded there: <b>setup, loader APK, process</b>.<br />
-          For any queries, DM me on Telegram:{" "}
-          <button
-            className="mykey-telegram-btn"
-            onClick={() => window.open(TELEGRAM_DM_URL, "_blank")}
-          >
-            <TelegramIcon />
-            <span style={{ marginLeft: 8 }}>t.me/legitsells66</span>
-          </button>
-        </div>
-      </div>
+      )}
       <div className="mykey-list">
         {loading ? (
           <div>Loading...</div>

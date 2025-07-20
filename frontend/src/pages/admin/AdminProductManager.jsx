@@ -1,15 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { API } from "../../api";
 
-const DURATION_OPTIONS = [
-  "1 Day",
-  "7 Day",
-  "1 Month",
-  "3 Month",
-  "6 Month",
-  "1 Year",
-];
-
 export default function AdminProductManager() {
   const [products, setProducts] = useState([]);
   const [form, setForm] = useState({
@@ -60,6 +51,7 @@ export default function AdminProductManager() {
       prices: prev.prices.filter((_, i) => i !== idx),
     }));
   };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     let productId = editingId;
@@ -90,7 +82,7 @@ export default function AdminProductManager() {
     // Bulk add keys for each duration
     if (form.keys.trim() && productId) {
       const keysArray = form.keys
-        .split("\n")
+        .split(/\r?\n|\r/g)
         .map((k) => k.trim())
         .filter((k) => k);
       for (const price of form.prices) {
@@ -138,9 +130,6 @@ export default function AdminProductManager() {
     setProducts(products.filter((p) => p._id !== id));
   };
 
-  // Prevent duplicate durations in the same product
-  const usedDurations = form.prices.map((row) => row.duration);
-
   return (
     <div className="admin-product-manager">
       <h3>Product Manager</h3>
@@ -173,31 +162,19 @@ export default function AdminProductManager() {
           <b>Durations & Prices:</b>
           {form.prices.map((row, idx) => (
             <div key={idx} className="admin-product-duration-row">
-              <select
+              <input
                 className="admin-product-input"
+                placeholder="Duration (e.g. 10 Days, 5 Months, 1 Year)"
                 value={row.duration}
-                onChange={(e) =>
-                  handlePriceChange(idx, "duration", e.target.value)
-                }
+                onChange={e => handlePriceChange(idx, "duration", e.target.value)}
                 required
-              >
-                <option value="">Select Duration</option>
-                {DURATION_OPTIONS.filter(
-                  (d) => !usedDurations.includes(d) || d === row.duration
-                ).map((d) => (
-                  <option key={d} value={d}>
-                    {d}
-                  </option>
-                ))}
-              </select>
+              />
               <input
                 className="admin-product-input"
                 placeholder="Price"
                 type="number"
                 value={row.price}
-                onChange={(e) =>
-                  handlePriceChange(idx, "price", e.target.value)
-                }
+                onChange={e => handlePriceChange(idx, "price", e.target.value)}
                 required
               />
               {form.prices.length > 1 && (
