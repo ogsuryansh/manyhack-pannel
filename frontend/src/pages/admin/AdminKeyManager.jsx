@@ -60,44 +60,59 @@ export default function AdminKeyManager() {
 
   // Bulk add keys
   const handleBulkAdd = async (e) => {
-    e.preventDefault();
-    if (!selectedProduct || !selectedDuration || !bulkKeys.trim()) return;
-    const keysArray = bulkKeys
-      .split(/\r?\n|\r/g)
-      .map((k) => k.trim())
-      .filter((k) => k);
-    const res = await fetch(`${API}/keys/bulk`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        productId: selectedProduct,
-        duration: selectedDuration,
-        keys: keysArray,
-      }),
-    });
-    if (res.ok) {
-      setBulkKeys("");
-      setLoading(true);
-      Promise.all([
-        fetch(
-          `${API}/keys?productId=${selectedProduct}&duration=${encodeURIComponent(
-            selectedDuration
-          )}`
-        ).then((res) => res.json()),
-        fetch(
-          `${API}/keys/stats?productId=${selectedProduct}&duration=${encodeURIComponent(
-            selectedDuration
-          )}`
-        ).then((res) => res.json()),
-      ])
-        .then(([keysData, statsData]) => {
-          setKeys(keysData);
-          setStats(statsData);
-          setLoading(false);
-        })
-        .catch(() => setLoading(false));
+  e.preventDefault();
+  if (!selectedProduct || !selectedDuration || !bulkKeys.trim()) return;
+  const keysArray = bulkKeys
+    .split(/\r?\n|\r/g)
+    .map((k) => k.trim())
+    .filter((k) => k);
+
+  const res = await fetch(`${API}/keys/bulk`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      productId: selectedProduct,
+      duration: selectedDuration,
+      keys: keysArray,
+    }),
+  });
+
+  if (res.ok) {
+    alert("Keys added successfully!");
+    setBulkKeys("");
+    setLoading(true);
+    Promise.all([
+      fetch(
+        `${API}/keys?productId=${selectedProduct}&duration=${encodeURIComponent(
+          selectedDuration
+        )}`
+      ).then((res) => res.json()),
+      fetch(
+        `${API}/keys/stats?productId=${selectedProduct}&duration=${encodeURIComponent(
+          selectedDuration
+        )}`
+      ).then((res) => res.json()),
+    ])
+      .then(([keysData, statsData]) => {
+        setKeys(keysData);
+        setStats(statsData);
+        setLoading(false);
+      })
+      .catch(() => setLoading(false));
+  } else {
+    const error = await res.json();
+    if (
+      error.message &&
+      error.message.includes("duplicate key error")
+    ) {
+      alert(
+        "Some or all keys were duplicates and were not added. Please check your keys."
+      );
+    } else {
+      alert(error.message || "Failed to add keys.");
     }
-  };
+  }
+};
 
   // Delete key
   const handleDelete = async (id) => {
