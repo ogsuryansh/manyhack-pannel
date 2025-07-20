@@ -2438,11 +2438,6 @@ select.buykey-input option {
   text-align: center;
 }
 
-.upi-modal-content {
-  max-height: 90vh;
-  overflow-y: auto;
-}
-
 .upi-id-copy-box {
   display: flex;
   align-items: center;
@@ -2480,10 +2475,4 @@ select.buykey-input option {
   font-size: 0.98rem;
   margin-top: 6px;
   text-align: center;
-}
-@media (max-width: 700px) {
-  .upi-modal-content {
-    max-height: 98vh;
-    padding: 12px 4px;
-  }
 }

@@ -49,8 +49,14 @@ export default function AddMoneyModal({ upiId, onClose, onSuccess }) {
 
   return (
     <div className="upi-modal">
-      <div className="upi-modal-content" style={{ maxHeight: "90vh", overflowY: "auto" }}>
-        <button className="buykey-btn buykey-btn-cancel upi-modal-close" onClick={onClose}>
+      <div
+        className="upi-modal-content"
+        style={{ maxHeight: "90vh", overflowY: "auto" }}
+      >
+        <button
+          className="buykey-btn buykey-btn-cancel upi-modal-close"
+          onClick={onClose}
+        >
           Cancel
         </button>
         <h3>Add Money to Wallet</h3>
@@ -60,7 +66,7 @@ export default function AddMoneyModal({ upiId, onClose, onSuccess }) {
           min={1}
           placeholder="Enter amount"
           value={amount}
-          onChange={e => setAmount(e.target.value)}
+          onChange={(e) => setAmount(e.target.value)}
           required
         />
         {upiLink && (
@@ -69,7 +75,12 @@ export default function AddMoneyModal({ upiId, onClose, onSuccess }) {
               <QRCodeCanvas value={upiLink} size={200} />
             </div>
             <div className="upi" style={{ textAlign: "center", marginTop: 8 }}>
-              <a href={upiLink} className="upi-link" target="_blank" rel="noopener noreferrer">
+              <a
+                href={upiLink}
+                className="upi-link"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
                 👉 Pay ₹{amount} via UPI
               </a>
             </div>
@@ -81,7 +92,10 @@ export default function AddMoneyModal({ upiId, onClose, onSuccess }) {
               </button>
             </div>
             <div className="upi-instruction">
-              <b>If QR is not working, copy the UPI ID above and pay manually in your UPI app.</b>
+              <b>
+                If QR is not working, copy the UPI ID above and pay manually in
+                your UPI app.
+              </b>
             </div>
           </>
         )}
@@ -91,7 +105,7 @@ export default function AddMoneyModal({ upiId, onClose, onSuccess }) {
             <input
               className="buykey-input"
               value={utr}
-              onChange={e => setUtr(e.target.value)}
+              onChange={(e) => setUtr(e.target.value)}
               placeholder="Enter UTR/Txn ID"
               required
             />
@@ -102,7 +116,7 @@ export default function AddMoneyModal({ upiId, onClose, onSuccess }) {
               type="tel"
               className="buykey-input"
               value={contactDetail}
-              onChange={e => setContactDetail(e.target.value)}
+              onChange={(e) => setContactDetail(e.target.value)}
               placeholder="Enter your mobile number"
               inputMode="numeric"
               pattern="[0-9]{10}"
@@ -114,12 +128,16 @@ export default function AddMoneyModal({ upiId, onClose, onSuccess }) {
             <input
               type="checkbox"
               checked={agreed}
-              onChange={e => setAgreed(e.target.checked)}
+              onChange={(e) => setAgreed(e.target.checked)}
               style={{ width: 18, height: 18 }}
             />
             <span>
               I agree to the{" "}
-              <Link to="/terms-policy" target="_blank" style={{ color: "var(--primary)" }}>
+              <Link
+                to="/terms-policy"
+                target="_blank"
+                style={{ color: "var(--primary)" }}
+              >
                 Terms & Policy
               </Link>
             </span>
