@@ -1,13 +1,14 @@
 import React, { useState } from "react";
 import { QRCodeCanvas } from "qrcode.react";
 import { Link } from "react-router-dom";
-import { API } from "../api";
+
 export default function AddMoneyModal({ upiId, onClose, onSuccess }) {
   const [amount, setAmount] = useState("");
   const [utr, setUtr] = useState("");
   const [contactDetail, setContactDetail] = useState("");
   const [success, setSuccess] = useState("");
-  const [agreed, setAgreed] = useState(false); 
+  const [agreed, setAgreed] = useState(false);
+  const [copied, setCopied] = useState(false);
 
   const upiLink =
     upiId && amount > 0
@@ -16,9 +17,15 @@ export default function AddMoneyModal({ upiId, onClose, onSuccess }) {
 
   const canSubmit = amount > 0 && utr && contactDetail && agreed;
 
+  const handleCopyUPI = () => {
+    navigator.clipboard.writeText(upiId);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 1200);
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const res = await fetch(`${API}/payments/add-money`, {
+    const res = await fetch(`/api/payments/add-money`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -61,10 +68,20 @@ export default function AddMoneyModal({ upiId, onClose, onSuccess }) {
             <div className="qr">
               <QRCodeCanvas value={upiLink} size={200} />
             </div>
-            <div className="upi" style={{ textAlign: "center" }}>
+            <div className="upi" style={{ textAlign: "center", marginTop: 8 }}>
               <a href={upiLink} className="upi-link" target="_blank" rel="noopener noreferrer">
                 👉 Pay ₹{amount} via UPI
               </a>
+            </div>
+            <div className="upi-id-copy-box">
+              <span className="upi-id-label">UPI ID:</span>
+              <span className="upi-id-value">{upiId}</span>
+              <button className="upi-id-copy-btn" onClick={handleCopyUPI}>
+                {copied ? "Copied!" : "Copy"}
+              </button>
+            </div>
+            <div className="upi-instruction">
+              <b>If QR is not working, copy the UPI ID above and pay manually in your UPI app.</b>
             </div>
           </>
         )}
@@ -80,12 +97,16 @@ export default function AddMoneyModal({ upiId, onClose, onSuccess }) {
             />
           </label>
           <label>
-            <b>Contact Detail (Telegram/Phone):</b>
+            <b>Contact Detail (Phone):</b>
             <input
+              type="tel"
               className="buykey-input"
               value={contactDetail}
               onChange={e => setContactDetail(e.target.value)}
-              placeholder="Enter your contact detail"
+              placeholder="Enter your mobile number"
+              inputMode="numeric"
+              pattern="[0-9]{10}"
+              maxLength={10}
               required
             />
           </label>

@@ -2303,3 +2303,137 @@ select.buykey-input option {
 .admin-user-table {
   min-width: 600px;
 }
+
+.product-card {
+  background: var(--card-bg);
+  border-radius: 14px;
+  box-shadow: none;
+  padding: 24px 18px;
+  border: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  position: relative;
+  min-width: 0;
+  width: 100%;
+  box-sizing: border-box;
+  height: 100%; /* Make all cards the same height */
+}
+.buy-btn {
+  margin-top: auto; /* Push button to the bottom */
+  width: 100%;
+  border: none;
+  border-radius: 8px;
+  padding: 12px 0;
+  font-size: 1.08rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s;
+}
+.buy-btn.out-of-stock,
+.buy-btn:disabled {
+  background: #aaa;
+  color: #fff;
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+.buy-btn:not(.out-of-stock):not(:disabled) {
+  background: var(--primary);
+  color: #fff;
+}
+.telegram-float-btn {
+  position: fixed;
+  bottom: 32px;
+  right: 32px;
+  z-index: 2000;
+  display: flex;
+  align-items: center;
+  background: var(--primary);
+  color: #fff;
+  border-radius: 999px;
+  box-shadow: 0 2px 8px #0003;
+  padding: 10px 22px 10px 16px;
+  font-weight: 600;
+  font-size: 1.08rem;
+  transition: box-shadow 0.2s;
+  min-width: 160px;
+  max-width: 320px;
+}
+
+.telegram-float-link {
+  display: flex;
+  align-items: center;
+  color: #fff;
+  text-decoration: none;
+  font-weight: 600;
+  font-size: 1.08rem;
+  flex: 1;
+}
+
+.telegram-float-btn:hover {
+  box-shadow: 0 4px 16px #0005;
+}
+
+.telegram-float-close {
+  background: transparent;
+  color: #fff;
+  border: none;
+  font-size: 1.3rem;
+  margin-left: 10px;
+  cursor: pointer;
+  font-weight: bold;
+  opacity: 0.7;
+  transition: opacity 0.2s;
+}
+.telegram-float-close:hover {
+  opacity: 1;
+}
+
+@media (max-width: 700px) {
+  .telegram-float-btn {
+    right: 10px;
+    bottom: 10px;
+    padding: 8px 14px 8px 10px;
+    font-size: 1rem;
+    min-width: 120px;
+  }
+}
+
+.upi-id-copy-box {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  margin-top: 10px;
+  margin-bottom: 4px;
+}
+.upi-id-label {
+  font-weight: 600;
+  color: var(--primary);
+}
+.upi-id-value {
+  font-family: monospace;
+  color: var(--accent);
+  background: #23272f;
+  padding: 2px 8px;
+  border-radius: 6px;
+}
+.upi-id-copy-btn {
+  background: var(--primary);
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  padding: 4px 12px;
+  font-size: 0.95em;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+.upi-id-copy-btn:hover {
+  background: var(--accent);
+}
+.upi-instruction {
+  color: #ff6b81;
+  font-size: 0.98rem;
+  margin-top: 6px;
+  text-align: center;
+}

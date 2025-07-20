@@ -5,6 +5,7 @@ import { useAuth } from "../context/useAuth";
 import { useNavigate } from "react-router-dom";
 import { API } from "../api";
 import AddMoneyModal from "../components/AddMoneyModal";
+import TelegramButton from "../components/TelegramButton";
 
 export default function Dashboard() {
   const { user, refreshUser } = useAuth();
@@ -149,6 +150,8 @@ export default function Dashboard() {
           onSuccess={refreshUser}
         />
       )}
+      {/* Add the Telegram button at the very end */}
+      {user && <TelegramButton />}
     </div>
   );
 }
