@@ -13,12 +13,15 @@ router.get("/", async (req, res) => {
   }
 });
 router.put("/:id/custom-prices", async (req, res) => {
-  const { customPrices, balance } = req.body;
+  const { customPrices, balance, hiddenProducts } = req.body; // <-- add hiddenProducts
   try {
     const user = await User.findById(req.params.id);
     if (!user) return res.status(404).json({ message: "User not found" });
 
     user.customPrices = customPrices;
+
+    // Save hiddenProducts
+    user.hiddenProducts = hiddenProducts || [];
 
     // If balance is set and not zero, add or deduct from wallet
     if (balance && balance !== 0) {
