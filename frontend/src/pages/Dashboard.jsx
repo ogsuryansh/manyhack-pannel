@@ -65,10 +65,28 @@ export default function Dashboard() {
     navigate("/buy", { state: { selectedProduct: product.name } });
   };
 
+  // Hide products for this user
+  const hiddenProducts = user?.hiddenProducts?.map(id => String(id)) || [];
+
   return (
     <div className="dashboard">
       {notice && (
-        <div className="dashboard-notice-marquee">
+        <div
+          className="dashboard-notice-marquee"
+          style={{
+            background: "#2e2e2e",
+            color: "#ff6b81",
+            border: "2px solid #ff6b81",
+            fontWeight: 700,
+            fontSize: "1.08rem",
+            borderRadius: 8,
+            margin: "18px 0 28px 0",
+            padding: "10px 0",
+            boxShadow: "0 2px 8px #0002",
+            textAlign: "center",
+            animation: "marquee 18s linear infinite"
+          }}
+        >
           <span>{notice}</span>
         </div>
       )}
@@ -94,25 +112,35 @@ export default function Dashboard() {
         <div>Loading...</div>
       ) : (
         <div className="product-list">
-          {products.map((p, i) => {
-            let userPrice = null;
-            if (user && user.customPrices && user.customPrices.length > 0) {
-              const custom = user.customPrices.find(
-                (cp) => String(cp.productId) === String(p._id)
+          {products
+            .filter(
+              (p) =>
+                !user ||
+                !hiddenProducts.includes(String(p._id)) // Hide if in user's hiddenProducts
+            )
+            .map((p, i) => {
+              let userPrice = null;
+              if (user && user.customPrices && user.customPrices.length > 0) {
+                const custom = user.customPrices.find(
+                  (cp) => String(cp.productId) === String(p._id)
+                );
+                if (custom) userPrice = custom.price;
+              }
+              // OUT OF STOCK logic only for logged-in users
+              const outOfStock =
+                user && (availableKeys[p._id] || 0) === 0;
+              return (
+                <ProductCard
+                  key={i}
+                  {...p}
+                  price={userPrice}
+                  available={user ? availableKeys[p._id] || 0 : 1} // always available for guests
+                  onBuy={() => handleBuy(p)}
+                  user={user}
+                  outOfStock={outOfStock}
+                />
               );
-              if (custom) userPrice = custom.price;
-            }
-            return (
-              <ProductCard
-                key={i}
-                {...p}
-                price={userPrice}
-                available={availableKeys[p._id] || 0}
-                onBuy={() => handleBuy(p)}
-                user={user}
-              />
-            );
-          })}
+            })}
         </div>
       )}
       {showAddMoney && (

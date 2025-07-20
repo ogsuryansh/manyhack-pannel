@@ -46,7 +46,10 @@ function AddMoneyModal({ upiId, onClose, onSuccess }) {
   return (
     <div className="upi-modal">
       <div className="upi-modal-content">
-        <button className="buykey-btn buykey-btn-cancel upi-modal-close" onClick={onClose}>
+        <button
+          className="buykey-btn buykey-btn-cancel upi-modal-close"
+          onClick={onClose}
+        >
           Cancel
         </button>
         <h3>Add Money to Wallet</h3>
@@ -56,7 +59,7 @@ function AddMoneyModal({ upiId, onClose, onSuccess }) {
           min={1}
           placeholder="Enter amount"
           value={amount}
-          onChange={e => setAmount(e.target.value)}
+          onChange={(e) => setAmount(e.target.value)}
           required
         />
         {upiLink && (
@@ -65,7 +68,12 @@ function AddMoneyModal({ upiId, onClose, onSuccess }) {
               <QRCodeCanvas value={upiLink} size={200} />
             </div>
             <div className="upi" style={{ textAlign: "center" }}>
-              <a href={upiLink} className="upi-link" target="_blank" rel="noopener noreferrer">
+              <a
+                href={upiLink}
+                className="upi-link"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
                 👉 Pay ₹{amount} via UPI
               </a>
             </div>
@@ -77,18 +85,22 @@ function AddMoneyModal({ upiId, onClose, onSuccess }) {
             <input
               className="buykey-input"
               value={utr}
-              onChange={e => setUtr(e.target.value)}
+              onChange={(e) => setUtr(e.target.value)}
               placeholder="Enter UTR/Txn ID"
               required
             />
           </label>
           <label>
-            <b>Contact Detail (Telegram/Phone):</b>
+            <b>Contact Detail (Phone):</b>
             <input
+              type="tel"
               className="buykey-input"
               value={contactDetail}
-              onChange={e => setContactDetail(e.target.value)}
-              placeholder="Enter your contact detail"
+              onChange={(e) => setContactDetail(e.target.value)}
+              placeholder="Enter your mobile number"
+              inputMode="numeric"
+              pattern="[0-9]{10}"
+              maxLength={10}
               required
             />
           </label>
@@ -96,12 +108,16 @@ function AddMoneyModal({ upiId, onClose, onSuccess }) {
             <input
               type="checkbox"
               checked={agreed}
-              onChange={e => setAgreed(e.target.checked)}
+              onChange={(e) => setAgreed(e.target.checked)}
               style={{ width: 18, height: 18 }}
             />
             <span>
               I agree to the{" "}
-              <Link to="/terms-policy" target="_blank" style={{ color: "var(--primary)" }}>
+              <Link
+                to="/terms-policy"
+                target="_blank"
+                style={{ color: "var(--primary)" }}
+              >
                 Terms & Policy
               </Link>
             </span>
@@ -172,9 +188,13 @@ export default function BuyKeyPage() {
         setPrice(priceObj ? priceObj.price : 0);
       }
       // Fetch available keys for this product+duration
-      fetch(`${API}/keys/stats?productId=${selected._id}&duration=${encodeURIComponent(duration)}`)
-        .then(res => res.json())
-        .then(stats => setAvailable(stats.available || 0));
+      fetch(
+        `${API}/keys/stats?productId=${
+          selected._id
+        }&duration=${encodeURIComponent(duration)}`
+      )
+        .then((res) => res.json())
+        .then((stats) => setAvailable(stats.available || 0));
     } else {
       setPrice(0);
       setAvailable(null);
@@ -340,7 +360,9 @@ export default function BuyKeyPage() {
         {success && <div className="buykey-success">{success}</div>}
 
         <button
-          className={`buykey-btn buykey-btn-primary${available === 0 ? " out-of-stock" : ""}`}
+          className={`buykey-btn buykey-btn-primary${
+            available === 0 ? " out-of-stock" : ""
+          }`}
           type="button"
           disabled={!canBuy}
           style={{
@@ -348,7 +370,11 @@ export default function BuyKeyPage() {
           }}
           onClick={handleBuyWithWallet}
         >
-          {available === 0 ? "OUT OF STOCK" : buying ? "Processing..." : "Buy with Wallet"}
+          {available === 0
+            ? "OUT OF STOCK"
+            : buying
+            ? "Processing..."
+            : "Buy with Wallet"}
         </button>
         <button
           className="buykey-btn buykey-btn-cancel"
