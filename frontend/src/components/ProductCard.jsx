@@ -14,9 +14,7 @@ export default function ProductCard({
       ? Math.min(...prices.map((p) => Number(p.price) || 0))
       : null;
 
-  
-  const displayPrice =
-    price !== undefined && price !== null ? price : minPrice;
+  const displayPrice = price !== undefined && price !== null ? price : minPrice;
 
   return (
     <div className="product-card">
@@ -25,16 +23,7 @@ export default function ProductCard({
         {hot && <span className="hot-sale">HOT SALE</span>}
       </div>
       <div className="product-price">
-        {displayPrice !== null && (
-          <span className="inr">
-            ₹{displayPrice}
-            {price !== undefined && price !== null && (
-              <span style={{ color: "var(--accent)", fontSize: "0.95em", marginLeft: 8 }}>
-                (Your Price)
-              </span>
-            )}
-          </span>
-        )}
+        {displayPrice !== null && <span className="inr">₹{displayPrice}</span>}
       </div>
       <div className="product-desc">
         <span>Description: </span>
