@@ -15,6 +15,7 @@ export default function Dashboard() {
   const [showAddMoney, setShowAddMoney] = useState(false);
   const [upiId, setUpiId] = useState("");
   const [notice, setNotice] = useState("");
+  const [paymentEnabled, setPaymentEnabled] = useState(true);
 
   const navigate = useNavigate();
 
@@ -44,7 +45,10 @@ export default function Dashboard() {
   useEffect(() => {
     fetch(`${API}/settings/upi`)
       .then((res) => res.json())
-      .then((data) => setUpiId(data.upiId?.trim() || ""));
+      .then((data) => {
+        setUpiId(data.upiId?.trim() || "");
+        setPaymentEnabled(data.paymentEnabled !== false);
+      });
   }, []);
 
   // Fetch notice
@@ -146,11 +150,11 @@ export default function Dashboard() {
       {showAddMoney && (
         <AddMoneyModal
           upiId={upiId}
+          paymentEnabled={paymentEnabled}
           onClose={() => setShowAddMoney(false)}
           onSuccess={refreshUser}
         />
       )}
-      {/* Add the Telegram button at the very end */}
       {user && <TelegramButton />}
     </div>
   );
