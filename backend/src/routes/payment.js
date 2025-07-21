@@ -28,7 +28,7 @@ router.post("/add-money", auth, async (req, res) => {
     payerName,
     status: "pending",
     type: "add_money",
-    meta
+    meta,
   });
   await payment.save();
   res.json({ message: "Add money request submitted", payment });
@@ -71,7 +71,7 @@ router.post("/deduct-money", async (req, res) => {
   // Calculate available balance (not expired)
   const now = new Date();
   let availableBalance = 0;
-  user.wallet = user.wallet.filter(entry => {
+  user.wallet = user.wallet.filter((entry) => {
     if (!entry.expiresAt || new Date(entry.expiresAt) > now) {
       availableBalance += entry.amount;
       return true;
@@ -95,7 +95,7 @@ router.post("/deduct-money", async (req, res) => {
       toDeduct = 0;
     }
   }
-  user.wallet = user.wallet.filter(entry => entry.amount > 0);
+  user.wallet = user.wallet.filter((entry) => entry.amount > 0);
 
   await user.save();
 
@@ -106,7 +106,7 @@ router.post("/deduct-money", async (req, res) => {
     status: "approved",
     type: "deduct_money",
     meta: { note, source: "admin" },
-    createdAt: now
+    createdAt: now,
   });
 
   res.json({ message: "Money deducted", user });
@@ -145,5 +145,13 @@ router.get("/user/:userId", async (req, res) => {
     res.status(500).json({ message: "Server error" });
   }
 });
-
+// Delete a payment (admin)
+router.delete("/:id", async (req, res) => {
+  try {
+    await Payment.findByIdAndDelete(req.params.id);
+    res.json({ message: "Payment deleted" });
+  } catch (err) {
+    res.status(400).json({ message: err.message });
+  }
+});
 module.exports = router;

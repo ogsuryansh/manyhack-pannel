@@ -2481,3 +2481,35 @@ select.buykey-input option {
   max-height: 80vh;
   overflow-y: auto;
 }
+
+.admin-upi-box {
+  background: var(--card-bg);
+  border-radius: 10px;
+  padding: 18px 16px;
+  margin: 18px auto 28px auto;
+  max-width: 600px;
+  color: var(--text);
+  font-size: 1.08rem;
+  box-shadow: 0 2px 8px #0002;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.admin-payment-toggle-btn {
+  background: var(--primary);
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  padding: 8px 18px;
+  font-weight: 600;
+  font-size: 1rem;
+  cursor: pointer;
+  margin-left: 8px;
+  transition: background 0.2s;
+}
+.admin-payment-toggle-btn.enabled {
+  background: #22c55e;
+}
+.admin-payment-toggle-btn.disabled {
+  background: #ff6b81;
+}
