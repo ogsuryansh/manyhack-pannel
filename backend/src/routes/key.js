@@ -165,7 +165,6 @@ router.post("/buy", auth, async (req, res) => {
     const user = await User.findById(req.user.id);
     const now = new Date();
 
-    // Calculate available balance (not expired)
     let availableBalance = 0;
     user.wallet = user.wallet.filter((entry) => {
       if (!entry.expiresAt || new Date(entry.expiresAt) > now) {
@@ -175,18 +174,23 @@ router.post("/buy", auth, async (req, res) => {
       return false;
     });
 
-    // Get price for product+duration
     const product = await Product.findById(productId);
-    if (!product) return res.status(404).json({ message: "Product not found" });
+    if (!product) {
+      console.error("Product not found:", productId);
+      return res.status(404).json({ message: "Product not found" });
+    }
     const priceObj = product.prices.find((pr) => pr.duration === duration);
-    if (!priceObj) return res.status(400).json({ message: "Invalid duration" });
+    if (!priceObj) {
+      console.error("Invalid duration:", duration);
+      return res.status(400).json({ message: "Invalid duration" });
+    }
     const totalPrice = priceObj.price * quantity;
 
     if (availableBalance < totalPrice) {
+      console.error("Insufficient balance for user:", user._id);
       return res.status(400).json({ message: "Insufficient balance" });
     }
 
-    // Deduct from wallet (FIFO)
     let toDeduct = totalPrice;
     for (const entry of user.wallet) {
       if (toDeduct <= 0) break;
@@ -200,7 +204,6 @@ router.post("/buy", auth, async (req, res) => {
     }
     user.wallet = user.wallet.filter((entry) => entry.amount > 0);
 
-    // Assign keys
     const availableKeys = await Key.find({
       productId,
       duration,
@@ -208,6 +211,7 @@ router.post("/buy", auth, async (req, res) => {
     }).limit(quantity);
 
     if (availableKeys.length < quantity) {
+      console.error("Not enough keys available for product:", productId, "duration:", duration);
       return res.status(400).json({ message: "Not enough keys available" });
     }
 
@@ -222,7 +226,6 @@ router.post("/buy", auth, async (req, res) => {
 
     await user.save();
 
-    // Record the debit in Payment history
     await Payment.create({
       userId: user._id,
       productId,
@@ -243,7 +246,6 @@ router.post("/buy", auth, async (req, res) => {
     res.status(500).json({ message: "Server error" });
   }
 });
-
 // Helper to parse duration string to ms
 function parseDuration(duration) {
   if (duration.includes("Day")) return parseInt(duration) * 24 * 60 * 60 * 1000;

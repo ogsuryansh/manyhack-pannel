@@ -18,17 +18,18 @@ router.put("/:id/custom-prices", async (req, res) => {
   const { customPrices, balance, hiddenProducts } = req.body;
   try {
     const user = await User.findById(req.params.id);
-    if (!user) return res.status(404).json({ message: "User not found" });
+    if (!user) {
+      console.error("User not found:", req.params.id);
+      return res.status(404).json({ message: "User not found" });
+    }
 
     user.customPrices = customPrices;
     user.hiddenProducts = hiddenProducts || [];
 
-    // Only update wallet if balance is set and not zero
     if (balance && balance !== 0) {
       user.wallet = user.wallet || [];
       const now = new Date();
       if (balance > 0) {
-        // Add money
         user.wallet.push({
           amount: balance,
           addedAt: now,
@@ -43,7 +44,6 @@ router.put("/:id/custom-prices", async (req, res) => {
           createdAt: now,
         });
       } else {
-        // Deduct money (FIFO)
         let toDeduct = Math.abs(balance);
         let availableBalance = user.wallet.reduce((sum, entry) => {
           if (!entry.expiresAt || new Date(entry.expiresAt) > now) {
@@ -52,6 +52,7 @@ router.put("/:id/custom-prices", async (req, res) => {
           return sum;
         }, 0);
         if (availableBalance < toDeduct) {
+          console.error("Insufficient balance for user:", user._id);
           return res.status(400).json({ message: "Insufficient balance" });
         }
         for (const entry of user.wallet) {
@@ -81,6 +82,7 @@ router.put("/:id/custom-prices", async (req, res) => {
     await user.save();
     res.json({ message: "Updated", user });
   } catch (err) {
+    console.error("Error in /custom-prices:", err);
     res.status(400).json({ message: err.message });
   }
 });
