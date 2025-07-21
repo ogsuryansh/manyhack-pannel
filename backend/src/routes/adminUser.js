@@ -12,18 +12,18 @@ router.get("/", async (req, res) => {
     res.status(500).json({ message: "Server error" });
   }
 });
+
+// Update custom prices, add/deduct money, and hidden products for a user
 router.put("/:id/custom-prices", async (req, res) => {
-  const { customPrices, balance, hiddenProducts } = req.body; // <-- add hiddenProducts
+  const { customPrices, balance, hiddenProducts } = req.body;
   try {
     const user = await User.findById(req.params.id);
     if (!user) return res.status(404).json({ message: "User not found" });
 
     user.customPrices = customPrices;
-
-    // Save hiddenProducts
     user.hiddenProducts = hiddenProducts || [];
 
-    // If balance is set and not zero, add or deduct from wallet
+    // Only update wallet if balance is set and not zero
     if (balance && balance !== 0) {
       user.wallet = user.wallet || [];
       const now = new Date();
@@ -84,6 +84,7 @@ router.put("/:id/custom-prices", async (req, res) => {
     res.status(400).json({ message: err.message });
   }
 });
+
 // Delete a user
 router.delete("/:id", async (req, res) => {
   try {

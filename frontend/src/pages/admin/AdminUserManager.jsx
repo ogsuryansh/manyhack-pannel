@@ -14,6 +14,7 @@ export default function AdminUserManager() {
   const [userContacts, setUserContacts] = useState({});
   const [hiddenProducts, setHiddenProducts] = useState([]);
   const [message, setMessage] = useState({ type: "", text: "" });
+  const [search, setSearch] = useState("");
 
   // Fetch users and products
   useEffect(() => {
@@ -89,7 +90,6 @@ export default function AdminUserManager() {
   // Save custom price, add/deduct money, and hidden products
   const handleSave = async () => {
     let customPricesToSave = editingUser.customPrices || [];
-    // Update or add the custom price for the selected product+duration
     if (selectedProduct && selectedDuration && customPrice !== "") {
       const idx = customPricesToSave.findIndex(
         (p) =>
@@ -163,9 +163,31 @@ export default function AdminUserManager() {
   const durations =
     products.find((p) => p._id === selectedProduct)?.prices.map((pr) => pr.duration) || [];
 
+  // Filter users by search
+  const filteredUsers = users
+    .slice()
+    .sort((a, b) => {
+      if (!search) return 0;
+      const aMatch = a.username.toLowerCase().includes(search.toLowerCase());
+      const bMatch = b.username.toLowerCase().includes(search.toLowerCase());
+      if (aMatch && !bMatch) return -1;
+      if (!aMatch && bMatch) return 1;
+      return 0;
+    });
+
   return (
     <div>
       <h3 style={{ marginBottom: 24 }}>Manage Users</h3>
+      <div style={{ marginBottom: 16, textAlign: "right" }}>
+        <input
+          className="admin-product-input"
+          style={{ width: 220 }}
+          type="text"
+          placeholder="Search by username"
+          value={search}
+          onChange={e => setSearch(e.target.value)}
+        />
+      </div>
       {loading ? (
         <div>Loading...</div>
       ) : (
@@ -184,14 +206,14 @@ export default function AdminUserManager() {
               </tr>
             </thead>
             <tbody>
-              {users.length === 0 && (
+              {filteredUsers.length === 0 && (
                 <tr>
                   <td colSpan={8} style={{ textAlign: "center" }}>
                     No users found.
                   </td>
                 </tr>
               )}
-              {users.map((user) => (
+              {filteredUsers.map((user) => (
                 <tr key={user._id}>
                   <td>{user._id || "NA"}</td>
                   <td>{user.email || "NA"}</td>
@@ -207,9 +229,7 @@ export default function AdminUserManager() {
                       ? userPurchases[user._id].join(", ")
                       : "NA"}
                   </td>
-                  <td>
-                    {userContacts[user._id] || "NA"}
-                  </td>
+                  <td>{userContacts[user._id] || "NA"}</td>
                   <td>
                     <button onClick={() => handleEditPrices(user)}>
                       Edit Prices/Wallet
@@ -246,8 +266,8 @@ export default function AdminUserManager() {
                   ? user.hiddenProducts
                       .map(
                         (pid) =>
-                          products.find((p) => String(p._id) === String(pid))?.name ||
-                          "Unknown"
+                          products.find((p) => String(p._id) === String(pid))
+                            ?.name || "Unknown"
                       )
                       .join(", ")
                   : "None"}
@@ -260,8 +280,14 @@ export default function AdminUserManager() {
       {/* Modal for editing prices, wallet, and product visibility */}
       {editingUser && (
         <div className="admin-modal">
-          <div className="admin-modal-content" style={{ maxHeight: "80vh", overflowY: "auto" }}>
-            <h4>Edit Prices, Wallet & Product Visibility for {editingUser.username}</h4>
+          <div
+            className="admin-modal-content"
+            style={{ maxHeight: "80vh", overflowY: "auto" }}
+          >
+            <h4>
+              Edit Prices, Wallet & Product Visibility for{" "}
+              {editingUser.username}
+            </h4>
             {message.text && (
               <div
                 className={
@@ -307,7 +333,7 @@ export default function AdminUserManager() {
                   <select
                     className="admin-product-input"
                     value={selectedDuration}
-                    onChange={e => setSelectedDuration(e.target.value)}
+                    onChange={(e) => setSelectedDuration(e.target.value)}
                   >
                     <option value="">Select Duration</option>
                     {durations.map((d) => (

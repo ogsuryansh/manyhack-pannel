@@ -2476,3 +2476,8 @@ select.buykey-input option {
   margin-top: 6px;
   text-align: center;
 }
+
+.admin-modal-content {
+  max-height: 80vh;
+  overflow-y: auto;
+}

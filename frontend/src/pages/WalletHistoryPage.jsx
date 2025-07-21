@@ -26,16 +26,19 @@ export default function WalletHistoryPage() {
   const moneyAdded = transactions
     .filter((t) => t.type === "add_money" && t.status === "approved")
     .reduce((sum, t) => sum + t.amount, 0);
+  const moneyDeducted = transactions
+    .filter((t) => t.type === "deduct_money" && t.status === "approved")
+    .reduce((sum, t) => sum + t.amount, 0);
   const moneyUsed = transactions
     .filter((t) => t.type === "buy_key" && t.status === "approved")
     .reduce((sum, t) => sum + t.amount, 0);
-  const netBalance = moneyAdded - moneyUsed;
+  const netBalance = moneyAdded - moneyUsed - moneyDeducted;
 
   // Filtered transactions
   const filteredTx = transactions.filter((t) => {
     if (filter === "all") return true;
     if (filter === "credited") return t.type === "add_money" && t.status === "approved";
-    if (filter === "debited") return t.type === "buy_key" && t.status === "approved";
+    if (filter === "debited") return (t.type === "buy_key" || t.type === "deduct_money") && t.status === "approved";
     return true;
   });
 
@@ -62,7 +65,7 @@ export default function WalletHistoryPage() {
           </div>
           <div className="wallet-summary-card used">
             <div>Money Used</div>
-            <div className="wallet-summary-amount">₹{moneyUsed.toLocaleString()}</div>
+            <div className="wallet-summary-amount">₹{(moneyUsed + moneyDeducted).toLocaleString()}</div>
           </div>
           <div className="wallet-summary-card balance">
             <div>Net Balance</div>
@@ -92,6 +95,8 @@ export default function WalletHistoryPage() {
                 <span>
                   {tx.type === "add_money"
                     ? "Added to wallet"
+                    : tx.type === "deduct_money"
+                    ? "Deducted by admin"
                     : tx.type === "buy_key"
                     ? `Used for ${tx.productId?.name || "Product"}`
                     : ""}
