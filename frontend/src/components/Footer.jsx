@@ -13,9 +13,6 @@ export default function Footer() {
         >
           Contact Admin
         </a>
-        <Link to="/refund-policy" className="footer-btn">
-          Refund Policy
-        </Link>
         <Link to="/terms-policy" className="footer-btn">
           Terms & Policy
         </Link>
