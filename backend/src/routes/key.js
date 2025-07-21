@@ -13,10 +13,7 @@ router.get("/", async (req, res) => {
     const filter = {};
     if (productId) filter.productId = productId;
     if (duration) filter.duration = duration;
-    const keys = await Key.find(filter).populate(
-      "assignedTo",
-      "username email"
-    );
+    const keys = await Key.find(filter).populate("assignedTo", "username email");
     res.json(keys);
   } catch (err) {
     console.error("Error in GET /api/keys:", err);
@@ -34,14 +31,8 @@ router.get("/stats", async (req, res) => {
 
     const total = await Key.countDocuments(filter);
     const available = await Key.countDocuments({ ...filter, assignedTo: null });
-    const assigned = await Key.countDocuments({
-      ...filter,
-      assignedTo: { $ne: null },
-    });
-    const expired = await Key.countDocuments({
-      ...filter,
-      expiresAt: { $lt: new Date() },
-    });
+    const assigned = await Key.countDocuments({ ...filter, assignedTo: { $ne: null } });
+    const expired = await Key.countDocuments({ ...filter, expiresAt: { $lt: new Date() } });
 
     res.json({ total, available, assigned, expired });
   } catch (err) {
@@ -158,13 +149,14 @@ router.delete("/:id", async (req, res) => {
   }
 });
 
-// Buy key with wallet
+// Buy key with wallet (uses per-user custom price if set)
 router.post("/buy", auth, async (req, res) => {
   try {
     const { productId, duration, quantity } = req.body;
     const user = await User.findById(req.user.id);
     const now = new Date();
 
+    // Calculate available balance (not expired)
     let availableBalance = 0;
     user.wallet = user.wallet.filter((entry) => {
       if (!entry.expiresAt || new Date(entry.expiresAt) > now) {
@@ -179,12 +171,29 @@ router.post("/buy", auth, async (req, res) => {
       console.error("Product not found:", productId);
       return res.status(404).json({ message: "Product not found" });
     }
-    const priceObj = product.prices.find((pr) => pr.duration === duration);
-    if (!priceObj) {
-      console.error("Invalid duration:", duration);
-      return res.status(400).json({ message: "Invalid duration" });
+
+    // Use per-user custom price if set
+    let customPrice = null;
+    if (user.customPrices && user.customPrices.length > 0) {
+      const custom = user.customPrices.find(
+        (p) =>
+          String(p.productId) === String(productId) &&
+          p.duration === duration
+      );
+      if (custom) customPrice = custom.price;
     }
-    const totalPrice = priceObj.price * quantity;
+    const priceObj = product.prices.find((pr) => pr.duration === duration);
+    const unitPrice =
+      customPrice !== null && customPrice !== undefined
+        ? customPrice
+        : priceObj
+        ? priceObj.price
+        : 0;
+    const totalPrice = unitPrice * quantity;
+
+    if (unitPrice === 0) {
+      return res.status(400).json({ message: "Invalid price for this product/duration" });
+    }
 
     if (availableBalance < totalPrice) {
       console.error("Insufficient balance for user:", user._id);
@@ -246,6 +255,7 @@ router.post("/buy", auth, async (req, res) => {
     res.status(500).json({ message: "Server error" });
   }
 });
+
 // Helper to parse duration string to ms
 function parseDuration(duration) {
   if (duration.includes("Day")) return parseInt(duration) * 24 * 60 * 60 * 1000;
