@@ -4,7 +4,6 @@ const Payment = require("../models/Payment");
 const User = require("../models/User");
 const auth = require("../middlewares/auth");
 
-// Get all payments (for admin)
 router.get("/", async (req, res) => {
   try {
     const payments = await Payment.find()
@@ -18,7 +17,6 @@ router.get("/", async (req, res) => {
   }
 });
 
-// User requests to add money
 router.post("/add-money", auth, async (req, res) => {
   const { amount, utr, payerName, meta } = req.body;
   const payment = new Payment({
@@ -34,7 +32,6 @@ router.post("/add-money", auth, async (req, res) => {
   res.json({ message: "Add money request submitted", payment });
 });
 
-// Admin approves add money
 router.put("/:id/approve", async (req, res) => {
   const payment = await Payment.findById(req.params.id);
   if (
@@ -46,20 +43,18 @@ router.put("/:id/approve", async (req, res) => {
   }
   payment.status = "approved";
   await payment.save();
-  // Add to user's wallet with expiry
   const user = await User.findById(payment.userId);
   if (!user) return res.status(404).json({ message: "User not found" });
   if (!user.wallet) user.wallet = [];
   user.wallet.push({
     amount: payment.amount,
     addedAt: new Date(),
-    expiresAt: new Date(Date.now() + 60 * 24 * 60 * 60 * 1000), // 60 days from now
+    expiresAt: new Date(Date.now() + 60 * 24 * 60 * 60 * 1000),  
   });
   await user.save();
   res.json(payment);
 });
 
-// Admin deducts money from wallet
 router.post("/deduct-money", async (req, res) => {
   const { userId, amount, note } = req.body;
   if (!userId || !amount || amount <= 0) {
@@ -68,7 +63,6 @@ router.post("/deduct-money", async (req, res) => {
   const user = await User.findById(userId);
   if (!user) return res.status(404).json({ message: "User not found" });
 
-  // Calculate available balance (not expired)
   const now = new Date();
   let availableBalance = 0;
   user.wallet = user.wallet.filter((entry) => {
@@ -83,7 +77,6 @@ router.post("/deduct-money", async (req, res) => {
     return res.status(400).json({ message: "Insufficient balance" });
   }
 
-  // Deduct from wallet (FIFO)
   let toDeduct = amount;
   for (const entry of user.wallet) {
     if (toDeduct <= 0) break;
@@ -99,7 +92,6 @@ router.post("/deduct-money", async (req, res) => {
 
   await user.save();
 
-  // Record the deduction in Payment history
   await Payment.create({
     userId,
     amount,
@@ -112,7 +104,6 @@ router.post("/deduct-money", async (req, res) => {
   res.json({ message: "Money deducted", user });
 });
 
-// Admin rejects add money
 router.put("/:id/reject", async (req, res) => {
   const payment = await Payment.findByIdAndUpdate(
     req.params.id,
@@ -122,7 +113,6 @@ router.put("/:id/reject", async (req, res) => {
   res.json(payment);
 });
 
-// Get all payments for the logged-in user
 router.get("/user", auth, async (req, res) => {
   try {
     const payments = await Payment.find({ userId: req.user.id })
@@ -134,7 +124,6 @@ router.get("/user", auth, async (req, res) => {
   }
 });
 
-// Get all payments for a specific user (for admin)
 router.get("/user/:userId", async (req, res) => {
   try {
     const payments = await Payment.find({ userId: req.params.userId })
@@ -145,7 +134,6 @@ router.get("/user/:userId", async (req, res) => {
     res.status(500).json({ message: "Server error" });
   }
 });
-// Delete a payment (admin)
 router.delete("/:id", async (req, res) => {
   try {
     await Payment.findByIdAndDelete(req.params.id);

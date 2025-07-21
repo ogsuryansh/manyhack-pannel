@@ -33,7 +33,6 @@ body {
   transition: background 0.3s, color 0.3s;
 }
 
-/* Navbar */
 .navbar {
   display: flex;
   justify-content: space-between;
@@ -91,7 +90,6 @@ body {
   color: #fff;
 }
 
-/* Actions at right */
 .navbar-actions {
   display: flex;
   align-items: center;
@@ -99,7 +97,6 @@ body {
   margin-right: 3%;
 }
 
-/* Theme toggle */
 .theme-toggle {
   background: var(--card-bg);
   color: var(--text);
@@ -112,7 +109,6 @@ body {
   display: block;
 }
 
-/* Login button */
 .login-btn {
   display: flex;
   align-items: center;
@@ -132,7 +128,6 @@ body {
   font-size: 1.2em;
 }
 
-/* Hamburger */
 .hamburger {
   display: none;
   width: 32px;
@@ -161,7 +156,6 @@ body {
   transform: rotate(-45deg) translate(5px, -5px);
 }
 
-/* Responsive: mobile menu */
 @media (max-width: 900px) {
   .navbar-center {
     display: none;
@@ -251,7 +245,6 @@ body {
 .add-money-btn:hover {
   background: var(--accent);
 }
-/* Balance cards */
 .balance-row {
   display: flex;
   gap: 24px;
@@ -275,7 +268,7 @@ body {
   flex: 1;
   width: 100%;
   box-sizing: border-box;
-  box-shadow: none; /* No glow */
+  box-shadow: none;  
 }
 .gradient-card-inner {
   border-radius: 16px;
@@ -297,7 +290,6 @@ body {
   color: var(--primary);
 }
 
-/* Section title */
 .section-title {
   font-size: 1.3rem;
   margin: 32px 0 18px 0;
@@ -305,7 +297,6 @@ body {
   font-weight: 600;
 }
 
-/* Product list */
 .product-list {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
@@ -656,14 +647,12 @@ select.buykey-input option {
     padding: 14px 6px;
   }
 }
-/* Wallet hist   */
 .wallet-history-page {
   max-width: 420px;
   margin: 40px auto;
   padding: 0 12px;
 }
 
-/* Header Summary */
 .wallet-history-summary {
   display: flex;
   flex-direction: column;
@@ -671,7 +660,6 @@ select.buykey-input option {
   margin-bottom: 24px;
 }
 
-/* Filter Button */
 .wallet-filter-btn {
   background: var(--primary);
   color: #fff;
@@ -689,7 +677,6 @@ select.buykey-input option {
   gap: 10px;
 }
 
-/* Dropdown Select */
 .wallet-filter-select {
   background: var(--card-bg);
   color: var(--text);
@@ -703,8 +690,6 @@ select.buykey-input option {
   -moz-appearance: none;
   cursor: pointer;
   min-width: 80px;
-
-  /* custom arrow */
   background-image: url("data:image/svg+xml,%3Csvg width='16' height='16' fill='%23cccccc' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M4 6l4 4 4-4'/%3E%3C/svg%3E");
   background-repeat: no-repeat;
   background-position: right 10px center;
@@ -712,7 +697,6 @@ select.buykey-input option {
   padding-right: 30px;
 }
 
-/* Summary Cards */
 .wallet-summary-cards {
   display: flex;
   flex-direction: column;
@@ -751,7 +735,6 @@ select.buykey-input option {
   margin-top: 2px;
 }
 
-/* History Cards */
 .wallet-history-list {
   display: flex;
   flex-direction: column;
@@ -787,7 +770,6 @@ select.buykey-input option {
   font-weight: 600;
 }
 
-/* Responsive Adjustments */
 @media (max-width: 600px) {
   .wallet-history-page {
     max-width: 88vw;
@@ -1270,8 +1252,6 @@ select.buykey-input option {
   }
 }
 /* payment page */
-
-/* BuyKeyPage and UPI Modal Styles */
 .buykey-form-card {
   background: var(--card-bg);
   border-radius: 18px;
@@ -1381,7 +1361,6 @@ select.buykey-input option {
   color: #fff;
 }
 
-/* UPI Modal */
 .upi-modal {
   position: fixed;
   top: 0;
@@ -1515,7 +1494,6 @@ select.buykey-input option {
   background: var(--primary);
   color: #fff;
 }
-/* Responsive Buy Key + UPI Modal Styles */
 :root {
   --primary: #2e90fa;
   --accent: #ff6b81;
@@ -1746,7 +1724,6 @@ select.buykey-input option {
   font-size: 1rem;
 }
 
-/* Responsive Enhancements */
 @media (max-width: 1024px) {
   .buykey-form-card {
     padding: 24px 20px;
@@ -2017,8 +1994,6 @@ select.buykey-input option {
   background: #ffe6e6;
   color: #b20000;
 }
-
-/* ========== Container & Layout ========== */
 .mykey-page {
   padding: 20px;
   max-width: 900px;
@@ -2030,7 +2005,6 @@ select.buykey-input option {
   margin-bottom: 1rem;
 }
 
-/* ========== Telegram Box ========== */
 .mykey-telegram-box {
   background: var(--card-bg);
   border-radius: 0.5rem;
@@ -2057,14 +2031,12 @@ select.buykey-input option {
   background: darken(var(--primary), 10%);
 }
 
-/* ========== Key List ========== */
 .mykey-list {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
   gap: 1.5rem;
 }
 
-/* ========== Key Card ========== */
 .mykey-card {
   background: var(--card-bg);
   border-radius: 0.75rem;
@@ -2073,8 +2045,6 @@ select.buykey-input option {
   flex-direction: column;
   gap: 0.75rem;
 }
-
-/* row layout for title/duration and dates */
 .mykey-row {
   display: flex;
   justify-content: space-between;
@@ -2086,7 +2056,6 @@ select.buykey-input option {
   font-weight: 600;
 }
 
-/* ========== Key + Copy Button ========== */
 .mykey-key-row {
   display: flex;
   align-items: center;
@@ -2095,17 +2064,14 @@ select.buykey-input option {
 
 .mykey-key-scroll {
   flex: 1;
-  /* force horizontal scroll if necessary */
   overflow-x: auto;
   overflow-y: hidden;
   white-space: nowrap;
-
-  /* hide scrollbars in all browsers */
-  -ms-overflow-style: none;  /* IE and Edge */
-  scrollbar-width: none;  /* Firefox */
+  -ms-overflow-style: none; 
+  scrollbar-width: none;  
 }
 .mykey-key-scroll::-webkit-scrollbar {
-  display: none;  /* Chrome, Safari */
+  display: none;  
 }
 
 .mykey-key {
@@ -2115,7 +2081,6 @@ select.buykey-input option {
   color: var(--accent);
 }
 
-/* remove any default spinner/arrows on text containers */
 .mykey-key,
 .mykey-key-scroll {
   -webkit-appearance: none;
@@ -2124,7 +2089,6 @@ select.buykey-input option {
   border: none;
 }
 
-/* Copy button */
 .mykey-copy-btn {
   flex-shrink: 0;
   padding: 0.4rem 0.8rem;
@@ -2140,13 +2104,11 @@ select.buykey-input option {
   background: darken(var(--primary), 10%);
 }
 
-/* ========== Countdown ========== */
 .mykey-expiry {
   font-weight: 500;
   color: var(--accent);
 }
 
-/* ========== Responsive Tweaks ========== */
 @media (max-width: 600px) {
   .mykey-telegram-box {
     text-align: center;
@@ -2317,10 +2279,10 @@ select.buykey-input option {
   min-width: 0;
   width: 100%;
   box-sizing: border-box;
-  height: 100%; /* Make all cards the same height */
+  height: 100%; 
 }
 .buy-btn {
-  margin-top: auto; /* Push button to the bottom */
+  margin-top: auto; 
   width: 100%;
   border: none;
   border-radius: 8px;
@@ -2523,4 +2485,64 @@ select.buykey-input option {
   text-align: center;
   font-size: 1.08rem;
   margin: 18px 0;
+}
+
+.main-footer {
+  width: 100%;
+  background: var(--card-bg);
+  color: var(--text);
+  padding: 24px 0 12px 0;
+  border-top: 1.5px solid var(--border);
+  margin-top: 40px;
+  box-shadow: 0 -2px 8px #0002;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+
+.footer-links {
+  display: flex;
+  gap: 18px;
+  margin-bottom: 8px;
+}
+
+.footer-btn {
+  background: var(--primary);
+  color: #fff;
+  border: none;
+  border-radius: 20px;
+  padding: 8px 22px;
+  font-size: 1rem;
+  font-weight: 500;
+  text-decoration: none;
+  transition: background 0.2s;
+  cursor: pointer;
+  display: inline-block;
+}
+.footer-btn:hover {
+  background: var(--accent);
+  color: #fff;
+}
+
+.footer-center {
+  text-align: center;
+  font-size: 1.05rem;
+  color: var(--text);
+  opacity: 0.85;
+  font-weight: 500;
+}
+
+@media (max-width: 700px) {
+  .main-footer {
+    padding: 18px 0 8px 0;
+  }
+  .footer-links {
+    flex-direction: column;
+    gap: 10px;
+    align-items: center;
+  }
+  .footer-center {
+    font-size: 0.98rem;
+  }
 }

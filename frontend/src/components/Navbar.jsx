@@ -39,7 +39,6 @@ export default function Navbar({ theme, setTheme }) {
             {link.label}
           </Link>
         ))}
-        {/* Show Logout if logged in, Login if not (mobile menu) */}
         {user ? (
           <button className="login-btn mobile-only" onClick={handleLogout}>
             <span className="user-icon" role="img" aria-label="user">👤</span>
@@ -53,7 +52,6 @@ export default function Navbar({ theme, setTheme }) {
         )}
       </div>
       <div className="navbar-actions">
-        {/* Show Logout if logged in, Login if not (desktop) */}
         {user ? (
           <button className="login-btn desktop-only" onClick={handleLogout}>
             <span className="user-icon" role="img" aria-label="user">👤</span>

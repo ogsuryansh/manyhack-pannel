@@ -7,26 +7,23 @@ const mongoose = require("mongoose");
 
 const app = express();
 
-// Middleware
 app.use(cors());
 app.use(express.json());
 
-// Connect to MongoDB
+// Connect to Mongo
 mongoose.connect(process.env.MONGO_URI, {
-  // These options are now ignored in Mongoose 7+, but safe to include for older versions
   useNewUrlParser: true,
   useUnifiedTopology: true,
 })
 .then(() => {
   console.log("MongoDB connected!");
 
-  // Start server only after DB is connected
   const PORT = process.env.PORT || 5000;
   app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
 })
 .catch((err) => {
   console.error("MongoDB connection error:", err);
-  process.exit(1); // Exit if DB connection fails
+  process.exit(1);
 });
 
 // Routes
@@ -45,7 +42,6 @@ app.get("/", (req, res) => {
   res.send("API is running...");
 });
 
-// 404 handler for unknown API routes
 app.use((req, res, next) => {
   if (req.path.startsWith("/api/")) {
     return res.status(404).json({ message: "API route not found" });
@@ -53,7 +49,6 @@ app.use((req, res, next) => {
   next();
 });
 
-// Global error handler (optional, for debugging)
 app.use((err, req, res, next) => {
   console.error("Unhandled error:", err);
   res.status(500).json({ message: "Internal server error" });

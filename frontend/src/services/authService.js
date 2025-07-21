@@ -8,7 +8,6 @@ export async function login(username, password) {
   });
   if (!res.ok) throw new Error((await res.json()).message || "Login failed");
   const data = await res.json();
-  // Save to localStorage
   localStorage.setItem("user", JSON.stringify(data.user));
   localStorage.setItem("token", data.token);
   return data.user;

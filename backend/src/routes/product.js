@@ -2,7 +2,6 @@ const express = require("express");
 const router = express.Router();
 const Product = require("../models/Product");
 
-// Public: Get all products
 router.get("/", async (req, res) => {
   try {
     const products = await Product.find();
@@ -12,7 +11,6 @@ router.get("/", async (req, res) => {
   }
 });
 
-// Admin: Add a product
 router.post("/", async (req, res) => {
   try {
     const { name, description, image, prices, hot } = req.body;
@@ -24,7 +22,6 @@ router.post("/", async (req, res) => {
   }
 });
 
-// Admin: Edit a product
 router.put("/:id", async (req, res) => {
   try {
     const { name, description, image, prices, hot } = req.body;
@@ -39,7 +36,6 @@ router.put("/:id", async (req, res) => {
   }
 });
 
-// Admin: Delete a product
 router.delete("/:id", async (req, res) => {
   try {
     await Product.findByIdAndDelete(req.params.id);

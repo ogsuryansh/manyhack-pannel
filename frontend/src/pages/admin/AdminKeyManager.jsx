@@ -178,7 +178,6 @@ export default function AdminKeyManager() {
           ))}
         </select>
       </div>
-      {/* Success/Error message */}
       {message.text && (
         <div
           className={

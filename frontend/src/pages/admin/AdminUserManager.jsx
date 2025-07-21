@@ -248,7 +248,6 @@ export default function AdminUserManager() {
         </div>
       )}
 
-      {/* Table for hidden products */}
       <h4 style={{ marginTop: 32 }}>Hidden Products</h4>
       <table className="admin-user-table">
         <thead>
@@ -277,7 +276,6 @@ export default function AdminUserManager() {
         </tbody>
       </table>
 
-      {/* Modal for editing prices, wallet, and product visibility */}
       {editingUser && (
         <div className="admin-modal">
           <div

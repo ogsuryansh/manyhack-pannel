@@ -2,7 +2,7 @@ const mongoose = require("mongoose");
 
 const paymentSchema = new mongoose.Schema({
   userId: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
-  productId: { type: mongoose.Schema.Types.ObjectId, ref: "Product" }, // null for add_money/deduct_money
+  productId: { type: mongoose.Schema.Types.ObjectId, ref: "Product" }, 
   duration: String,
   amount: Number,
   utr: String,

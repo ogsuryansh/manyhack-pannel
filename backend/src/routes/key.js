@@ -6,7 +6,6 @@ const Product = require("../models/Product");
 const Key = require("../models/Key");
 const Payment = require("../models/Payment");
 
-// Get all keys for a product+duration
 router.get("/", async (req, res) => {
   try {
     const { productId, duration } = req.query;
@@ -21,7 +20,6 @@ router.get("/", async (req, res) => {
   }
 });
 
-// Get key stats for a product+duration
 router.get("/stats", async (req, res) => {
   try {
     const { productId, duration } = req.query;
@@ -41,7 +39,6 @@ router.get("/stats", async (req, res) => {
   }
 });
 
-// Get all keys for the logged-in user
 router.get("/user", auth, async (req, res) => {
   try {
     const keys = await Key.find({ assignedTo: req.user.id })
@@ -54,7 +51,6 @@ router.get("/user", auth, async (req, res) => {
   }
 });
 
-// Get all keys for a specific user (for admin)
 router.get("/user/:userId", async (req, res) => {
   try {
     const keys = await Key.find({ assignedTo: req.params.userId })
@@ -67,23 +63,19 @@ router.get("/user/:userId", async (req, res) => {
   }
 });
 
-// Bulk add keys (skips duplicates)
 router.post("/bulk", async (req, res) => {
   try {
     const { productId, duration, keys } = req.body;
     console.log("Bulk add keys request:", { productId, duration, keys });
 
-    // Validate productId
     if (!productId) {
       console.error("Missing productId");
       return res.status(400).json({ message: "Missing productId" });
     }
-    // Validate duration
     if (!duration) {
       console.error("Missing duration");
       return res.status(400).json({ message: "Missing duration" });
     }
-    // Validate keys
     if (!Array.isArray(keys) || keys.length === 0) {
       console.error("Keys array is missing or empty");
       return res
@@ -91,14 +83,12 @@ router.post("/bulk", async (req, res) => {
         .json({ message: "Keys array is missing or empty" });
     }
 
-    // Check if product exists
     const product = await Product.findById(productId);
     if (!product) {
       console.error("Product not found:", productId);
       return res.status(400).json({ message: "Product not found" });
     }
 
-    // Check if duration is valid for this product
     const validDuration = product.prices.some((pr) => pr.duration === duration);
     if (!validDuration) {
       console.error("Invalid duration for this product:", duration);
@@ -107,14 +97,13 @@ router.post("/bulk", async (req, res) => {
         .json({ message: "Invalid duration for this product" });
     }
 
-    // Prepare key docs
     const keyDocs = keys.map((key) => ({
       key,
       productId,
       duration,
     }));
 
-    await Key.insertMany(keyDocs, { ordered: false }); // skip duplicates
+    await Key.insertMany(keyDocs, { ordered: false });
     res.json({ message: "Keys added" });
   } catch (err) {
     console.error("Error in POST /api/keys/bulk:", err);
@@ -122,7 +111,6 @@ router.post("/bulk", async (req, res) => {
   }
 });
 
-// Edit a key
 router.put("/:id", async (req, res) => {
   try {
     const { key } = req.body;
@@ -138,7 +126,6 @@ router.put("/:id", async (req, res) => {
   }
 });
 
-// Delete a key
 router.delete("/:id", async (req, res) => {
   try {
     await Key.findByIdAndDelete(req.params.id);
@@ -149,14 +136,12 @@ router.delete("/:id", async (req, res) => {
   }
 });
 
-// Buy key with wallet (uses per-user custom price if set)
 router.post("/buy", auth, async (req, res) => {
   try {
     const { productId, duration, quantity } = req.body;
     const user = await User.findById(req.user.id);
     const now = new Date();
 
-    // Calculate available balance (not expired)
     let availableBalance = 0;
     user.wallet = user.wallet.filter((entry) => {
       if (!entry.expiresAt || new Date(entry.expiresAt) > now) {
@@ -172,7 +157,6 @@ router.post("/buy", auth, async (req, res) => {
       return res.status(404).json({ message: "Product not found" });
     }
 
-    // Use per-user custom price if set
     let customPrice = null;
     if (user.customPrices && user.customPrices.length > 0) {
       const custom = user.customPrices.find(
@@ -256,7 +240,6 @@ router.post("/buy", auth, async (req, res) => {
   }
 });
 
-// Helper to parse duration string to ms
 function parseDuration(duration) {
   if (duration.includes("Day")) return parseInt(duration) * 24 * 60 * 60 * 1000;
   if (duration.includes("Month"))

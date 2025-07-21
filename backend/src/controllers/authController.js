@@ -9,7 +9,6 @@ exports.register = async (req, res) => {
       return res.status(400).json({ message: "All fields are required." });
     }
 
-    // Check for existing user by email or username
     const existingEmail = await User.findOne({ email });
     if (existingEmail) {
       return res.status(400).json({ message: "Email already exists." });
@@ -23,7 +22,6 @@ exports.register = async (req, res) => {
     const user = await User.create({ email, username, password: hash });
     res.status(201).json({ message: "User registered successfully." });
   } catch (err) {
-    // Handle duplicate key error from MongoDB unique index
     if (err.code === 11000) {
       if (err.keyPattern?.email) {
         return res.status(400).json({ message: "Email already exists." });

@@ -12,12 +12,12 @@ export const AuthContext = createContext();
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(getCurrentUser());
 
-  // Refresh user from backend
+  
   const refreshUser = async () => {
     const token = getToken();
     if (!token) return;
     try {
-      const res = await fetch(`${API}/auth/me`, { // <-- fixed typo here
+      const res = await fetch(`${API}/auth/me`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       if (res.ok) {

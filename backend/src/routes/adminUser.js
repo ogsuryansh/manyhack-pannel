@@ -3,7 +3,6 @@ const router = express.Router();
 const User = require("../models/User");
 const Payment = require("../models/Payment");
 
-// Get all users
 router.get("/", async (req, res) => {
   try {
     const users = await User.find().sort({ createdAt: -1 });
@@ -13,7 +12,6 @@ router.get("/", async (req, res) => {
   }
 });
 
-// Update custom prices, add/deduct money, and hidden products for a user
 router.put("/:id/custom-prices", async (req, res) => {
   const { customPrices, balance, hiddenProducts } = req.body;
   try {
@@ -87,7 +85,6 @@ router.put("/:id/custom-prices", async (req, res) => {
   }
 });
 
-// Delete a user
 router.delete("/:id", async (req, res) => {
   try {
     await User.findByIdAndDelete(req.params.id);

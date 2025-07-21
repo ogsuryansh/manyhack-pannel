@@ -132,7 +132,6 @@ export default function AdminPaymentManager() {
         </button>
       </div>
 
-      {/* UPI ID and Payment Toggle */}
       <div className="admin-upi-box">
         <label>
           <b>UPI ID:</b>
@@ -251,7 +250,6 @@ export default function AdminPaymentManager() {
                       </button>
                     </>
                   )}
-                  {/* Delete payment button */}
                   <button
                     className="admin-key-delete-btn"
                     onClick={() => handleDeletePayment(p._id)}
@@ -313,7 +311,6 @@ export default function AdminPaymentManager() {
                 </td>
                 <td>{new Date(p.createdAt).toLocaleString()}</td>
                 <td>
-                  {/* Delete payment button */}
                   <button
                     className="admin-key-delete-btn"
                     onClick={() => handleDeletePayment(p._id)}

@@ -2,16 +2,14 @@ const express = require("express");
 const router = express.Router();
 const Settings = require("../models/Settings");
 
-// Get UPI ID and payment enabled status
 router.get("/upi", async (req, res) => {
   const settings = await Settings.findOne();
   res.json({
     upiId: settings?.upiId || "",
-    paymentEnabled: settings?.paymentEnabled !== false, // default to true
+    paymentEnabled: settings?.paymentEnabled !== false, 
   });
 });
 
-// Admin: update UPI ID and payment enabled status
 router.put("/upi", async (req, res) => {
   try {
     const { upiId, paymentEnabled } = req.body;

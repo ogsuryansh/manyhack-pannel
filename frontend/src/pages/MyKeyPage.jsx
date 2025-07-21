@@ -59,7 +59,6 @@ export default function MyKeyPage() {
   return (
     <div className="mykey-page">
       <h2 className="section-title" style={{ textAlign: "center" }}>My Keys</h2>
-      {/* Only show Telegram message if user has at least one key */}
       {myKeys.length > 0 && (
         <div className="mykey-telegram-box">
           <div>

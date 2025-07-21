@@ -11,6 +11,7 @@ import ProtectedRoute from "./components/ProtectedRoute";
 import AdminRoute from "./components/AdminRoute";
 import AdminLoginPage from "./pages/AdminLoginPage";
 import TermsAndPolicy from "./pages/TermsAndPolicy";
+import Footer from "./components/Footer";
 
 // Admin area imports
 import AdminLayout from "./pages/admin/AdminLayout";
@@ -30,7 +31,6 @@ function App() {
   return (
     <Router>
       <Routes>
-        {/* Admin area with its own layout/navbar */}
         <Route
           path="/admin"
           element={
@@ -47,10 +47,8 @@ function App() {
           <Route path="payment-manager" element={<AdminPaymentManager />} />
         </Route>
 
-        {/* Terms and Policy page (public) */}
         <Route path="/terms-policy" element={<TermsAndPolicy />} />
 
-        {/* Public and user-protected routes */}
         <Route
           path="*"
           element={
@@ -86,6 +84,7 @@ function App() {
                 <Route path="/signup" element={<SignupPage />} />
                 <Route path="/admin-login" element={<AdminLoginPage />} />
               </Routes>
+              <Footer />
             </>
           }
         />
