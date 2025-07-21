@@ -1,23 +1,15 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { QRCodeCanvas } from "qrcode.react";
 import { Link } from "react-router-dom";
 import { API } from "../api";
 
-export default function AddMoneyModal({ upiId, onClose, onSuccess }) {
+export default function AddMoneyModal({ upiId, onClose, paymentEnabled = true, onSuccess }) {
   const [amount, setAmount] = useState("");
   const [utr, setUtr] = useState("");
   const [contactDetail, setContactDetail] = useState("");
   const [success, setSuccess] = useState("");
   const [agreed, setAgreed] = useState(false);
   const [copied, setCopied] = useState(false);
-  const [paymentEnabled, setPaymentEnabled] = useState(true);
-
-  // Fetch payment enabled status
-  useEffect(() => {
-    fetch(`${API}/settings/upi`)
-      .then((res) => res.json())
-      .then((data) => setPaymentEnabled(data.paymentEnabled !== false));
-  }, []);
 
   const upiLink =
     upiId && amount > 0
@@ -58,10 +50,7 @@ export default function AddMoneyModal({ upiId, onClose, onSuccess }) {
 
   return (
     <div className="upi-modal">
-      <div
-        className="upi-modal-content"
-        style={{ maxHeight: "90vh", overflowY: "auto" }}
-      >
+      <div className="upi-modal-content" style={{ maxHeight: "90vh", overflowY: "auto" }}>
         <button className="buykey-btn buykey-btn-cancel upi-modal-close" onClick={onClose}>
           Cancel
         </button>
@@ -105,8 +94,7 @@ export default function AddMoneyModal({ upiId, onClose, onSuccess }) {
                 </div>
                 <div className="upi-instruction">
                   <b>
-                    If QR is not working, copy the UPI ID above and pay manually in
-                    your UPI app.
+                    If QR is not working, copy the UPI ID above and pay manually in your UPI app.
                   </b>
                 </div>
               </>

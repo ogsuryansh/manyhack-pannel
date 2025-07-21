@@ -137,6 +137,7 @@ export default function BuyKeyPage() {
   const [success, setSuccess] = useState("");
   const [buying, setBuying] = useState(false);
   const [available, setAvailable] = useState(null);
+   const [paymentEnabled, setPaymentEnabled] = useState(true)
 
   const inputRef = useRef();
 
@@ -147,10 +148,13 @@ export default function BuyKeyPage() {
   }, []);
 
   useEffect(() => {
-    fetch(`${API}/settings/upi`)
-      .then((res) => res.json())
-      .then((data) => setUpiId(data.upiId?.trim() || ""));
-  }, []);
+  fetch(`${API}/settings/upi`)
+    .then((res) => res.json())
+    .then((data) => {
+      setUpiId(data.upiId?.trim() || "");
+      setPaymentEnabled(data.paymentEnabled !== false);
+    });
+}, []);
 
   useEffect(() => {
     if (location.state?.selectedProduct) {
@@ -371,12 +375,13 @@ export default function BuyKeyPage() {
 
       {/* Add Money Modal */}
       {showAddMoney && (
-        <AddMoneyModal
-          upiId={upiId}
-          onClose={() => setShowAddMoney(false)}
-          onSuccess={refreshUser}
-        />
-      )}
+  <AddMoneyModal
+    upiId={upiId}
+    paymentEnabled={paymentEnabled}
+    onClose={() => setShowAddMoney(false)}
+    onSuccess={refreshUser}
+  />
+)}
     </div>
   );
 }
