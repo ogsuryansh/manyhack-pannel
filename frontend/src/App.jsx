@@ -20,8 +20,6 @@ import AdminKeyManager from "./pages/admin/AdminKeyManager";
 import AdminProductManager from "./pages/admin/AdminProductManager";
 import AdminUserManager from "./pages/admin/AdminUserManager";
 import AdminPaymentManager from "./pages/admin/AdminPaymentManager";
-import OfferAddPage from "./pages/OfferAddPage";
-import AdminOfferManager from "./pages/admin/AdminOfferManager";
 
 function App() {
   const [theme, setTheme] = useState("dark");
@@ -47,7 +45,6 @@ function App() {
           <Route path="product-manager" element={<AdminProductManager />} />
           <Route path="user-manager" element={<AdminUserManager />} />
           <Route path="payment-manager" element={<AdminPaymentManager />} />
-          <Route path="offer-manager" element={<AdminOfferManager />} />
         </Route>
 
         <Route path="/terms-policy" element={<TermsAndPolicy />} />
@@ -64,14 +61,6 @@ function App() {
                   element={
                     <ProtectedRoute>
                       <BuyKeyPage />
-                    </ProtectedRoute>
-                  }
-                />
-                <Route
-                  path="/offers"
-                  element={
-                    <ProtectedRoute>
-                      <OfferAddPage />
                     </ProtectedRoute>
                   }
                 />

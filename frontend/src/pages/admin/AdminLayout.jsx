@@ -7,7 +7,6 @@ const adminTabs = [
   { label: "User Manager", to: "/admin/user-manager" },
   { label: "Key Manager", to: "/admin/key-manager" }, 
   { label: "Payment Manager", to: "/admin/payment-manager" },
-  { label: "Offer Manager", to: "/admin/offer-manager" },
 ];
 
 export default function AdminLayout() {

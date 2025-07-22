@@ -16,11 +16,7 @@ export default function AdminPaymentManager() {
   // Fetch payments and UPI ID
   const fetchPayments = () => {
     setLoading(true);
-    fetch(`${API}/payments`, {
-      headers: {
-        Authorization: `Bearer ${localStorage.getItem("token")}`,
-      },
-    })
+    fetch(`${API}/payments`)
       .then((res) => res.ok ? res.json() : [])
       .then((data) => {
         setPayments(Array.isArray(data) ? data : []);
@@ -35,11 +31,7 @@ export default function AdminPaymentManager() {
   useEffect(() => {
     fetchPayments();
     // Fetch UPI ID and payment enabled status
-    fetch(`${API}/settings/upi`, {
-      headers: {
-        Authorization: `Bearer ${localStorage.getItem("token")}`,
-      },
-    })
+    fetch(`${API}/settings/upi`)
       .then((res) => res.json())
       .then((data) => {
         setUpiId(data.upiId?.trim() || "");
@@ -49,34 +41,19 @@ export default function AdminPaymentManager() {
   }, []);
 
   const handleApprove = async (id) => {
-    await fetch(`${API}/payments/${id}/approve`, {
-      method: "PUT",
-      headers: {
-        Authorization: `Bearer ${localStorage.getItem("token")}`,
-      },
-    });
+    await fetch(`${API}/payments/${id}/approve`, { method: "PUT" });
     fetchPayments();
   };
 
   const handleReject = async (id) => {
-    await fetch(`${API}/payments/${id}/reject`, {
-      method: "PUT",
-      headers: {
-        Authorization: `Bearer ${localStorage.getItem("token")}`,
-      },
-    });
+    await fetch(`${API}/payments/${id}/reject`, { method: "PUT" });
     fetchPayments();
   };
 
   // **NEW: Delete payment**
   const handleDeletePayment = async (id) => {
     if (!window.confirm("Are you sure you want to delete this payment?")) return;
-    await fetch(`${API}/payments/${id}`, {
-      method: "DELETE",
-      headers: {
-        Authorization: `Bearer ${localStorage.getItem("token")}`,
-      },
-    });
+    await fetch(`${API}/payments/${id}`, { method: "DELETE" });
     fetchPayments();
   };
 
@@ -236,11 +213,6 @@ export default function AdminPaymentManager() {
             filteredWalletTx.map((p) => (
               <tr key={p._id}>
                 <td>
-                  {p.type === "add_money" && p.meta && p.meta.offerId ? (
-                    <span style={{ background: "#22c55e", color: "#fff", borderRadius: 6, padding: "2px 8px", fontSize: "0.95em", marginRight: 6 }}>
-                      Offer Top-up
-                    </span>
-                  ) : null}
                   {p.userId?.username || p.userId?.email || (
                     <span className="admin-payment-deleted">Deleted</span>
                   )}

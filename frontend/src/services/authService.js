@@ -1,6 +1,4 @@
-import { API } from "../api";
-
-const API_URL = `${API}/auth`;
+const API_URL = `${import.meta.env.VITE_API_URL}/auth`;
 
 export async function login(username, password) {
   const res = await fetch(`${API_URL}/login`, {
@@ -8,13 +6,8 @@ export async function login(username, password) {
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ username, password }),
   });
-  let data;
-  try {
-    data = await res.json();
-  } catch {
-    throw new Error("Server error or invalid response");
-  }
-  if (!res.ok) throw new Error((data && data.message) || "Login failed");
+  if (!res.ok) throw new Error((await res.json()).message || "Login failed");
+  const data = await res.json();
   localStorage.setItem("user", JSON.stringify(data.user));
   localStorage.setItem("token", data.token);
   return data.user;
@@ -26,14 +19,8 @@ export async function register(email, username, password) {
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ email, username, password }),
   });
-  let data;
-  try {
-    data = await res.json();
-  } catch {
-    throw new Error("Server error or invalid response");
-  }
-  if (!res.ok) throw new Error((data && data.message) || "Register failed");
-  return data;
+  if (!res.ok) throw new Error((await res.json()).message || "Register failed");
+  return await res.json();
 }
 
 export function logout() {

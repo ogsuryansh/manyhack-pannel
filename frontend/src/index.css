@@ -324,7 +324,6 @@ body {
   min-width: 0;
   width: 100%;
   box-sizing: border-box;
-  height: 100%; 
 }
 .product-header {
   display: flex;
@@ -376,43 +375,59 @@ body {
   margin-bottom: 6px;
 }
 .buy-btn {
-  margin-top: auto; 
-  width: 100%;
-  border: none;
-  border-radius: 8px;
-  padding: 12px 0;
-  font-size: 1.08rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: background 0.2s, color 0.2s;
-}
-.buy-btn.out-of-stock,
-.buy-btn:disabled {
-  background: #aaa;
-  color: #fff;
-  cursor: not-allowed;
-  opacity: 0.7;
-}
-.buy-btn:not(.out-of-stock):not(:disabled) {
   background: var(--primary);
   color: #fff;
+  border: none;
+  border-radius: 8px;
+  padding: 10px 0;
+  font-size: 1rem;
+  font-weight: 500;
+  cursor: pointer;
+  margin-top: 8px;
+  transition: background 0.2s;
 }
-
-/* --- BUYKEY FORM (merged all duplicate rules) --- */
+.buy-btn:disabled {
+  background: #aaa;
+  cursor: not-allowed;
+}
+.product-list {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 24px;
+}
+@media (max-width: 700px) {
+  .product-list {
+    grid-template-columns: 1fr;
+  }
+}
+/* for buy frm */
 .buykey-form-card {
   background: var(--card-bg);
   border-radius: 18px;
   box-shadow: 0 2px 12px 0 rgba(44, 62, 80, 0.1);
   padding: 32px 28px;
-  max-width: 420px;
+  max-width: 370px;
   margin: 48px auto;
-  width: 90%;
 }
-@media (max-width: 1024px) {
-  .buykey-form-card { padding: 24px 20px; margin: 24px auto; }
+
+.user-balance-box {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: var(--bg);
+  border: 1.5px solid var(--primary);
+  border-radius: 10px;
+  padding: 12px 18px;
+  margin-bottom: 28px;
+  font-size: 1.08rem;
+  font-weight: 500;
+  color: var(--text);
 }
-@media (max-width: 500px) {
-  .buykey-form-card { padding: 18px 6px; max-width: 98vw; }
+
+.user-balance-amount {
+  color: var(--primary);
+  font-weight: bold;
+  font-size: 1.15rem;
 }
 
 .buykey-form {
@@ -420,8 +435,8 @@ body {
   flex-direction: column;
   gap: 18px;
 }
-@media (max-width: 1024px) {
-  .buykey-form { gap: 14px; }
+.buykey-form div input {
+  width: 90%;
 }
 
 .buykey-label {
@@ -430,29 +445,27 @@ body {
   font-weight: 500;
   margin-bottom: 4px;
 }
-@media (max-width: 1024px) {
-  .buykey-label { font-size: 1rem; }
-}
 
 .buykey-input {
   background: transparent;
-  border: 2px solid rgba(64, 64, 255, 0.756);
+  border: 1.5px solid var(--border);
   border-radius: 8px;
   padding: 12px 14px;
   color: var(--text);
   font-size: 1rem;
   outline: none;
+  margin-bottom: 2px;
   transition: border 0.2s, background 0.2s;
-  width: 90%;
-  margin: 10px 0 2px 0;
   box-shadow: none;
 }
-.buykey-input:focus {
-  border-color: var(--primary);
-  background: rgba(46, 144, 250, 0.08);
+.buykey-input {
+  border: 2px solid transparent;
+  border-color: rgba(24, 95, 237, 0.772);
 }
-@media (max-width: 1024px) {
-  .buykey-input { font-size: 0.95rem; padding: 10px 12px; }
+.buykey-input::-webkit-inner-spin-button,
+.buykey-input::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
 }
 
 select.buykey-input {
@@ -463,24 +476,29 @@ select.buykey-input {
   -webkit-appearance: none;
   -moz-appearance: none;
   cursor: pointer;
+}
+
+select.buykey-input {
   background-image: url("data:image/svg+xml;charset=US-ASCII,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='%23fff' viewBox='0 0 16 16'%3E%3Cpath d='M1.5 5.5l6 6 6-6'/%3E%3C/svg%3E");
   background-repeat: no-repeat;
   background-position: right 0.75rem center;
   background-size: 1rem;
-  padding-right: 1.8rem;
 }
+
 select.buykey-input option {
   background-color: var(--card-bg);
   color: var(--text);
+}
+
+.buykey-input:focus {
+  border-color: var(--primary);
+  background: rgba(46, 144, 250, 0.08);
 }
 
 .buykey-hint {
   color: #aaa;
   font-size: 0.95rem;
   margin-bottom: 8px;
-}
-@media (max-width: 1024px) {
-  .buykey-hint { font-size: 0.9rem; }
 }
 
 .buykey-btn {
@@ -494,131 +512,70 @@ select.buykey-input option {
   cursor: pointer;
   transition: background 0.2s, color 0.2s;
 }
-@media (max-width: 1024px) {
-  .buykey-btn { font-size: 1rem; padding: 10px 0; }
-}
 
 .buykey-btn-primary {
-  background: var(--primary);
+  background: var(--gradient);
   color: #fff;
   margin-bottom: 8px;
 }
+
 .buykey-btn-cancel {
-  background: #2e2e2e;
-  color: #fff;
-}
-
-.buykey-total {
-  margin: 8px 0;
-  color: var(--primary);
-  font-weight: 600;
-}
-.buykey-success {
-  color: green;
-  margin-bottom: 8px;
-  text-align: center;
-}
-.buykey-error {
-  color: var(--accent);
-  margin-bottom: 8px;
-}
-
-.buykey-product-select { position: relative; }
-.buykey-dropdown {
-  position: absolute;
-  top: 100%;
-  left: 0;
-  right: 0;
-  background: var(--card-bg);
-  border: 1px solid var(--border);
-  z-index: 10;
-  max-height: 180px;
-  overflow-y: auto;
-  border-radius: 8px;
-}
-.buykey-dropdown-item {
-  padding: 10px 12px;
-  cursor: pointer;
-  color: var(--text);
-}
-.buykey-dropdown-item:hover {
   background: var(--primary);
   color: #fff;
 }
 
-/* UPI Modal (merged) */
-.upi-modal {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(0, 0, 0, 0.6);
-  z-index: 1000;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 1rem;
+@media (max-width: 500px) {
+  .buykey-form-card {
+    padding: 18px 6px;
+    max-width: 98vw;
+  }
 }
-.upi-modal-content {
-  background: var(--card-bg);
-  border-radius: 16px;
-  padding: 32px 24px;
-  box-shadow: 0 2px 12px rgba(44, 62, 80, 0.1);
-  display: flex;
-  flex-direction: column;
-  position: relative;
-}
-.upi-modal-close {
-  position: absolute;
-  top: 12px;
-  right: 12px;
-  background: var(--accent);
-  color: #fff;
-  padding: 6px 14px;
-  width: fit-content;
-  border-radius: 20px;
-  font-size: 0.9rem;
-  font-weight: 500;
-  border: none;
-  cursor: pointer;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
-  transition: background 0.2s ease-in-out;
-}
-.upi-modal-close:hover { background: #ff4c68; }
-.upi-modal-info {
-  margin: 12px 0;
-  text-align: center;
-  color: var(--text);
-  font-size: 0.95rem;
-}
-.upi-modal-form {
-  width: 100%;
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
-  margin-top: 12px;
-}
-.upi-link {
-  color: var(--primary);
-  font-weight: 500;
-  font-size: 1rem;
-  margin-top: 8px;
-  display: inline-block;
-}
+@media (max-width: 1024px) {
+  .buykey-form-card {
+    padding: 24px 16px;
+    max-width: 80vw;
+    margin: 32px auto;
+  }
 
-/* User balance box (merged) */
-.user-balance-box {
-  background: rgba(255, 255, 255, 0.05);
-  padding: 10px 16px;
-  border-radius: 10px;
-  margin-bottom: 18px;
-  display: flex;
-  justify-content: space-between;
-  color: var(--text);
+  .buykey-form {
+    gap: 14px;
+  }
+
+  .buykey-input {
+    font-size: 0.95rem;
+    padding: 10px 12px;
+  }
+
+  select.buykey-input {
+    padding-right: 1.8rem;
+    background-position: right 0.6rem center;
+  }
+
+  .buykey-label {
+    font-size: 1rem;
+  }
+
+  .user-balance-box {
+    padding: 10px 14px;
+    font-size: 1rem;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 6px;
+  }
+
+  .user-balance-amount {
+    font-size: 1.05rem;
+  }
+
+  .buykey-btn {
+    font-size: 1rem;
+    padding: 10px 0;
+  }
+
+  .buykey-hint {
+    font-size: 0.9rem;
+  }
 }
-.user-balance-box span:first-child { font-weight: 500; font-size: 0.95rem; }
-.user-balance-amount { font-weight: 700; color: var(--primary); font-size: 1rem; }
 
 /* for mykey */
 
@@ -1537,6 +1494,145 @@ select.buykey-input option {
   background: var(--primary);
   color: #fff;
 }
+:root {
+  --primary: #2e90fa;
+  --accent: #ff6b81;
+  --bg: #181a20;
+  --card-bg: #23272f;
+  --text: #fff;
+  --border: #23272f;
+  --gradient: linear-gradient(90deg, #2e90fa 0%, #ff6b81 100%);
+  --navbar-bg: #181a20;
+  --navbar-btn: #23272f;
+  --navbar-btn-active: #2e90fa;
+}
+
+[data-theme="light"] {
+  --primary: #2e90fa;
+  --accent: #ff6b81;
+  --bg: #f8fafd;
+  --card-bg: #fff;
+  --text: #222;
+  --border: #e3e3e3;
+  --gradient: linear-gradient(90deg, #2e90fa 0%, #ff6b81 100%);
+  --navbar-bg: #fff;
+  --navbar-btn: #f8fafd;
+  --navbar-btn-active: #2e90fa;
+}
+
+.buykey-form-card {
+  background: var(--card-bg);
+  border-radius: 18px;
+  box-shadow: 0 2px 12px 0 rgba(44, 62, 80, 0.1);
+  padding: 32px 28px;
+  max-width: 420px;
+  margin: 48px auto;
+  width: 90%;
+}
+
+.buykey-form {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.buykey-label {
+  color: var(--text);
+  font-size: 1.05rem;
+  font-weight: 500;
+  margin-bottom: 4px;
+}
+
+.buykey-input {
+  background: transparent;
+  border: 2px solid rgba(64, 64, 255, 0.756);
+  border-radius: 8px;
+  padding: 12px 14px;
+  color: var(--text);
+  font-size: 1rem;
+  outline: none;
+  transition: border 0.2s;
+  width: 90%;
+  margin: 10px 0;
+}
+
+.buykey-input:focus {
+  border-color: var(--primary);
+  background: rgba(46, 144, 250, 0.08);
+}
+
+.buykey-hint {
+  color: #aaa;
+  font-size: 0.95rem;
+  margin-bottom: 8px;
+}
+
+.buykey-btn {
+  width: 100%;
+  border: none;
+  border-radius: 8px;
+  padding: 12px 0;
+  font-size: 1.08rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s;
+}
+
+.buykey-btn-primary {
+  background: var(--primary);
+  color: #fff;
+  margin-bottom: 8px;
+}
+
+.buykey-btn-cancel {
+  background: #2e2e2e;
+  color: #fff;
+}
+
+.buykey-total {
+  margin: 8px 0;
+  color: var(--primary);
+  font-weight: 600;
+}
+
+.buykey-success {
+  color: green;
+  margin-bottom: 8px;
+  text-align: center;
+}
+
+.buykey-error {
+  color: var(--accent);
+  margin-bottom: 8px;
+}
+
+.buykey-product-select {
+  position: relative;
+}
+
+.buykey-dropdown {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  z-index: 10;
+  max-height: 180px;
+  overflow-y: auto;
+  border-radius: 8px;
+}
+
+.buykey-dropdown-item {
+  padding: 10px 12px;
+  cursor: pointer;
+  color: var(--text);
+}
+
+.buykey-dropdown-item:hover {
+  background: var(--primary);
+  color: #fff;
+}
 
 /* UPI Modal */
 .upi-modal {
@@ -2450,102 +2546,3 @@ select.buykey-input option {
     font-size: 0.98rem;
   }
 }
-
-/* --- UX/Toast Feedback --- */
-.toast {
-  position: fixed;
-  left: 50%;
-  bottom: 32px;
-  transform: translateX(-50%);
-  background: var(--card-bg);
-  color: var(--text);
-  border-radius: 12px;
-  box-shadow: 0 2px 12px #0005;
-  padding: 16px 32px;
-  font-size: 1.08rem;
-  font-weight: 600;
-  z-index: 3000;
-  opacity: 0.98;
-  border: 2px solid var(--primary);
-  animation: toast-in 0.3s;
-}
-.toast-success { border-color: #22c55e; color: #22c55e; }
-.toast-error { border-color: var(--accent); color: var(--accent); }
-@keyframes toast-in { from { opacity: 0; bottom: 0; } to { opacity: 0.98; bottom: 32px; } }
-
-/* --- Responsive Card/Buttons --- */
-.product-card, .buykey-form-card, .mykey-card, .wallet-history-card {
-  box-shadow: 0 4px 16px 0 rgba(44,62,80,0.13);
-  border-radius: 18px;
-  margin-bottom: 18px;
-  transition: box-shadow 0.2s;
-}
-.product-card:hover, .buykey-form-card:hover, .mykey-card:hover, .wallet-history-card:hover {
-  box-shadow: 0 8px 32px 0 rgba(44,62,80,0.18);
-}
-.add-money-btn, .buykey-btn, .admin-payment-refresh, .footer-btn {
-  min-height: 48px;
-  font-size: 1.08rem;
-  border-radius: 12px;
-  padding: 12px 24px;
-  margin-bottom: 8px;
-  box-shadow: 0 2px 8px #0002;
-}
-.add-money-btn:active, .buykey-btn:active, .admin-payment-refresh:active, .footer-btn:active {
-  transform: scale(0.97);
-}
-
-/* --- Mobile Improvements --- */
-@media (max-width: 500px) {
-  .product-card, .buykey-form-card, .mykey-card, .wallet-history-card {
-    padding: 12px 4px !important;
-    border-radius: 12px !important;
-    font-size: 0.98rem;
-  }
-  .add-money-btn, .buykey-btn, .admin-payment-refresh, .footer-btn {
-    font-size: 1rem;
-    padding: 10px 8px;
-    min-height: 44px;
-    border-radius: 10px;
-  }
-  .section-title {
-    font-size: 1.2rem;
-    margin: 18px 0 10px 0;
-  }
-}
-
-/* --- Success/Error Message Improvements --- */
-.buykey-success, .admin-key-success {
-  background: #e6fff2;
-  color: #008a4c;
-  border-radius: 8px;
-  padding: 10px 0;
-  margin-bottom: 10px;
-  font-weight: 600;
-  text-align: center;
-  box-shadow: 0 2px 8px #22c55e22;
-}
-.buykey-error, .admin-key-error {
-  background: #ffe6e6;
-  color: #b20000;
-  border-radius: 8px;
-  padding: 10px 0;
-  margin-bottom: 10px;
-  font-weight: 600;
-  text-align: center;
-  box-shadow: 0 2px 8px #ff6b8122;
-}
-
-/* --- Card/Container Padding Tweaks --- */
-.dashboard, .wallet-history-page, .mykey-page, .admin-dashboard, .admin-product-manager {
-  padding-left: 4vw;
-  padding-right: 4vw;
-}
-@media (max-width: 500px) {
-  .dashboard, .wallet-history-page, .mykey-page, .admin-dashboard, .admin-product-manager {
-    padding-left: 2vw;
-    padding-right: 2vw;
-  }
-}
-
-/* --- End Modern/Responsive/UX Additions --- */

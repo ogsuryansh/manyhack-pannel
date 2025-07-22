@@ -24,15 +24,6 @@ export function AuthProvider({ children }) {
         const data = await res.json();
         setUser(data);
         localStorage.setItem("user", JSON.stringify(data));
-      } else if (res.status === 404) {
-        // If admin, ignore; if user, log out
-        const storedUser = getCurrentUser();
-        if (storedUser && storedUser.isAdmin) {
-          // Ignore 404 for admin
-          return;
-        } else {
-          logout();
-        }
       }
     } catch (err) {
       console.error("Error refreshing user:", err);
