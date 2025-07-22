@@ -26,6 +26,7 @@ import { API } from "./api";
 
 function App() {
   const [theme, setTheme] = useState("dark");
+  const [siteTitle, setSiteTitle] = useState("GAMING GARAGE");
 
   // Poll for settingsVersion and reload if changed (for users only)
   useEffect(() => {
@@ -54,8 +55,20 @@ function App() {
   }, []);
 
   useEffect(() => {
+    fetch("/api/settings/site")
+      .then(res => res.json())
+      .then(data => {
+        if (data.websiteTitle) setSiteTitle(data.websiteTitle);
+      });
+  }, []);
+
+  useEffect(() => {
     document.body.setAttribute("data-theme", theme);
   }, [theme]);
+
+  useEffect(() => {
+    document.title = siteTitle;
+  }, [siteTitle]);
 
   return (
     <Router>

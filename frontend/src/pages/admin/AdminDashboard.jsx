@@ -8,6 +8,11 @@ export default function AdminDashboard() {
   const [noticeMsg, setNoticeMsg] = useState("");
   const [refreshMsg, setRefreshMsg] = useState("");
 
+  // Website name/title state
+  const [siteName, setSiteName] = useState("");
+  const [siteTitle, setSiteTitle] = useState("");
+  const [siteMsg, setSiteMsg] = useState("");
+
   useEffect(() => {
     fetch(`${API}/admin/stats`)
       .then(res => res.json())
@@ -16,11 +21,17 @@ export default function AdminDashboard() {
         setLoading(false);
       })
       .catch(() => setLoading(false));
-    // Fetch current notice (to prefill the textarea on first load)
     fetch(`${API}/notice`)
       .then(res => res.json())
       .then(data => {
         setNoticeInput(data.text || "");
+      });
+    // Fetch website name/title
+    fetch(`${API}/settings/site`)
+      .then(res => res.json())
+      .then(data => {
+        setSiteName(data.websiteName || "");
+        setSiteTitle(data.websiteTitle || "");
       });
   }, []);
 
@@ -55,9 +66,55 @@ export default function AdminDashboard() {
     setTimeout(() => setRefreshMsg(""), 4000);
   };
 
+  const handleSiteSave = async () => {
+    setSiteMsg("");
+    const res = await fetch(`${API}/settings/site`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ websiteName: siteName, websiteTitle: siteTitle }),
+    });
+    if (res.ok) {
+      setSiteMsg("Website name and title updated!");
+      setTimeout(() => setSiteMsg(""), 2000);
+    } else {
+      setSiteMsg("Failed to update website name/title.");
+    }
+  };
+
   return (
     <div className="admin-dashboard">
       <h2 className="section-title admin-dashboard-title">Admin Dashboard</h2>
+      {/* Website Name/Title Editor */}
+      <div className="admin-site-editor" style={{marginBottom: 24}}>
+        <label>
+          <b>Website Name:</b>
+          <input
+            className="admin-site-input"
+            value={siteName}
+            onChange={e => setSiteName(e.target.value)}
+            placeholder="Website Name"
+            style={{marginLeft: 8, minWidth: 200}}
+          />
+        </label>
+        <label style={{marginLeft: 16}}>
+          <b>Website Title (HTML):</b>
+          <input
+            className="admin-site-input"
+            value={siteTitle}
+            onChange={e => setSiteTitle(e.target.value)}
+            placeholder="Website Title"
+            style={{marginLeft: 8, minWidth: 260}}
+          />
+        </label>
+        <button className="admin-notice-save-btn" style={{marginLeft: 16}} onClick={handleSiteSave}>
+          Save Website Name/Title
+        </button>
+        {siteMsg && (
+          <div style={{ color: siteMsg.includes("updated") ? "#22c55e" : "#ff6b81", marginTop: 8, fontWeight: 600 }}>
+            {siteMsg}
+          </div>
+        )}
+      </div>
       <div className="admin-notice-editor">
         <label>
           <b>Notice (shown to all users):</b>

@@ -3,11 +3,15 @@ const router = express.Router();
 const Settings = require("../models/Settings");
 
 router.get("/upi", async (req, res) => {
-  const settings = await Settings.findOne();
-  res.json({
-    upiId: settings?.upiId || "",
-    paymentEnabled: settings?.paymentEnabled !== false, 
-  });
+  try {
+    const settings = await Settings.findOne();
+    res.json({
+      upiId: settings?.upiId || "",
+      paymentEnabled: settings?.paymentEnabled !== false, 
+    });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
 });
 
 router.put("/upi", async (req, res) => {
@@ -25,18 +29,51 @@ router.put("/upi", async (req, res) => {
       paymentEnabled: settings.paymentEnabled !== false,
     });
   } catch (err) {
-    console.error("Error in PUT /api/settings/upi:", err);
     res.status(500).json({ message: err.message });
   }
 });
 
-// Get settings version
-router.get("/version", async (req, res) => {
-  const settings = await Settings.findOne();
-  res.json({ settingsVersion: settings?.settingsVersion || 1 });
+router.get("/site", async (req, res) => {
+  try {
+    const settings = await Settings.findOne();
+    res.json({
+      websiteName: settings?.websiteName || "GAMING GARAGE",
+      websiteTitle: settings?.websiteTitle || "Gaming Garage - Full Licensing Panel",
+    });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
 });
 
-// Admin: increment settings version to trigger refresh
+router.put("/site", async (req, res) => {
+  try {
+    const { websiteName, websiteTitle } = req.body;
+    let settings = await Settings.findOne();
+    if (!settings) settings = new Settings({ websiteName, websiteTitle });
+    else {
+      if (websiteName !== undefined) settings.websiteName = websiteName;
+      if (websiteTitle !== undefined) settings.websiteTitle = websiteTitle;
+      settings.settingsVersion = (settings.settingsVersion || 1) + 1;
+    }
+    await settings.save();
+    res.json({
+      websiteName: settings.websiteName,
+      websiteTitle: settings.websiteTitle,
+    });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
+router.get("/version", async (req, res) => {
+  try {
+    const settings = await Settings.findOne();
+    res.json({ settingsVersion: settings?.settingsVersion || 1 });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
 router.post("/refresh-version", async (req, res) => {
   try {
     let settings = await Settings.findOne();

@@ -10,8 +10,13 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-// Connect to Mongo
-mongoose.connect(process.env.MONGO_URI);
+// Connect to MongoDB ONCE at startup
+mongoose.connect(process.env.MONGO_URI)
+  .then(() => console.log("MongoDB connected successfully"))
+  .catch((err) => {
+    console.error("MongoDB connection error:", err);
+    process.exit(1);
+  });
 
 // Routes
 app.use("/api/auth", require("./routes/auth"));
@@ -46,3 +51,10 @@ module.exports = app;
 // For serverless platforms (uncomment if needed):
 // const serverless = require('serverless-http');
 // module.exports.handler = serverless(app);
+
+if (require.main === module) {
+  const PORT = process.env.PORT || 5000;
+  app.listen(PORT, () => {
+    console.log(`Server running on port ${PORT}`);
+  });
+}

@@ -22,7 +22,6 @@ export default function WalletHistoryPage() {
       });
   }, [user]);
 
-  // Calculate summary
   const moneyAdded = transactions
     .filter((t) => t.type === "add_money" && t.status === "approved")
     .reduce((sum, t) => sum + (t.meta && t.meta.bonus ? t.meta.bonus : t.amount), 0);
@@ -34,7 +33,6 @@ export default function WalletHistoryPage() {
     .reduce((sum, t) => sum + t.amount, 0);
   const netBalance = moneyAdded - moneyUsed - moneyDeducted;
 
-  // Filtered transactions
   const filteredTx = transactions.filter((t) => {
     if (filter === "all") return true;
     if (filter === "credited") return t.type === "add_money" && t.status === "approved";

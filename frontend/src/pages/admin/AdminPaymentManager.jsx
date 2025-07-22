@@ -7,14 +7,12 @@ export default function AdminPaymentManager() {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
 
-  // UPI management
   const [upiId, setUpiId] = useState("");
   const [upiInput, setUpiInput] = useState("");
   const [upiMsg, setUpiMsg] = useState("");
   const [paymentEnabled, setPaymentEnabled] = useState(true);
   const [paymentMsg, setPaymentMsg] = useState("");
 
-  // Fetch payments and UPI ID
   const fetchPayments = () => {
     setLoading(true);
     fetch(`${API}/payments`)
@@ -31,13 +29,12 @@ export default function AdminPaymentManager() {
 
   useEffect(() => {
     fetchPayments();
-    // Fetch UPI ID and payment enabled status
     fetch(`${API}/settings/upi`)
       .then((res) => res.json())
       .then((data) => {
         setUpiId(data.upiId?.trim() || "");
         setUpiInput(data.upiId?.trim() || "");
-        setPaymentEnabled(data.paymentEnabled !== false); // default to true
+        setPaymentEnabled(data.paymentEnabled !== false);
       });
   }, []);
 
@@ -51,14 +48,12 @@ export default function AdminPaymentManager() {
     fetchPayments();
   };
 
-  // **NEW: Delete payment**
   const handleDeletePayment = async (id) => {
     if (!window.confirm("Are you sure you want to delete this payment?")) return;
     await fetch(`${API}/payments/${id}`, { method: "DELETE" });
     fetchPayments();
   };
 
-  // UPI ID update
   const handleUpiSave = async () => {
     const res = await fetch(`${API}/settings/upi`, {
       method: "PUT",
@@ -74,7 +69,6 @@ export default function AdminPaymentManager() {
     }
   };
 
-  // Payment receiving toggle
   const handlePaymentToggle = async () => {
     const res = await fetch(`${API}/settings/upi`, {
       method: "PUT",
@@ -94,13 +88,11 @@ export default function AdminPaymentManager() {
     }
   };
 
-  // Separate wallet and purchase transactions
   const walletTx = payments.filter(
     (p) => p.type === "add_money" || p.type === "deduct_money"
   );
   const purchaseTx = payments.filter((p) => p.type === "buy_key");
 
-  // Filter by status
   const userMatches = (p) => {
     const q = search.trim().toLowerCase();
     if (!q) return true;

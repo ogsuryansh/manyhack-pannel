@@ -5,8 +5,6 @@ const User = require("../models/User");
 const auth = require("../middlewares/auth");
 const TopUpPlan = require("../models/TopUpPlan");
 
-// Remove all debug logs from this file (console.log, console.error)
-
 router.get("/", async (req, res) => {
   try {
     const payments = await Payment.find()

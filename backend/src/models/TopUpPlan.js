@@ -1,8 +1,8 @@
 const mongoose = require("mongoose");
 
 const topUpPlanSchema = new mongoose.Schema({
-  amount: { type: Number, required: true }, // base amount user pays
-  bonus: { type: Number, required: true }, // amount credited to wallet
+  amount: { type: Number, required: true },
+  bonus: { type: Number, required: true },
   isActive: { type: Boolean, default: true },
 }, { timestamps: true });
 

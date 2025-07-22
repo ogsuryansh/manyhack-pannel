@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/useAuth";
 
@@ -11,9 +11,18 @@ const NAV_LINKS = [
 
 export default function Navbar({ theme, setTheme }) {
   const [menuOpen, setMenuOpen] = useState(false);
+  const [siteName, setSiteName] = useState("Gaming Garage");
   const location = useLocation();
   const navigate = useNavigate();
   const { user, logout } = useAuth();
+
+  useEffect(() => {
+    fetch("/api/settings/site")
+      .then(res => res.json())
+      .then(data => {
+        if (data.websiteName) setSiteName(data.websiteName);
+      });
+  }, []);
 
   const handleNavClick = () => setMenuOpen(false);
 
@@ -33,7 +42,7 @@ export default function Navbar({ theme, setTheme }) {
   return (
     <nav className="navbar">
       <div className="navbar-logo">
-        Gaming <span className="panel">Garage</span>
+        {siteName}
       </div>
       <div className={`navbar-links${menuOpen ? " open" : ""}`}>
         {NAV_LINKS.map((link) => (
