@@ -163,16 +163,15 @@ export default function AdminUserManager() {
   const durations =
     products.find((p) => p._id === selectedProduct)?.prices.map((pr) => pr.duration) || [];
 
-  // Filter users by search
+  // Filter users by search (username or email, match either)
   const filteredUsers = users
-    .slice()
-    .sort((a, b) => {
-      if (!search) return 0;
-      const aMatch = a.username.toLowerCase().includes(search.toLowerCase());
-      const bMatch = b.username.toLowerCase().includes(search.toLowerCase());
-      if (aMatch && !bMatch) return -1;
-      if (!aMatch && bMatch) return 1;
-      return 0;
+    .filter(user => {
+      const q = search.trim().toLowerCase();
+      if (!q) return true;
+      return (
+        (user.username && user.username.toLowerCase().includes(q)) ||
+        (user.email && user.email.toLowerCase().includes(q))
+      );
     });
 
   return (

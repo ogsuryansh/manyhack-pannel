@@ -5,6 +5,7 @@ export default function AdminPaymentManager() {
   const [payments, setPayments] = useState([]);
   const [filter, setFilter] = useState("all");
   const [loading, setLoading] = useState(true);
+  const [search, setSearch] = useState("");
 
   // UPI management
   const [upiId, setUpiId] = useState("");
@@ -100,15 +101,23 @@ export default function AdminPaymentManager() {
   const purchaseTx = payments.filter((p) => p.type === "buy_key");
 
   // Filter by status
+  const userMatches = (p) => {
+    const q = search.trim().toLowerCase();
+    if (!q) return true;
+    return (
+      (p.userId?.username && p.userId.username.toLowerCase().includes(q)) ||
+      (p.userId?.email && p.userId.email.toLowerCase().includes(q))
+    );
+  };
   const filteredWalletTx =
     filter === "all"
-      ? walletTx
-      : walletTx.filter((p) => p.status === filter);
+      ? walletTx.filter(userMatches)
+      : walletTx.filter((p) => p.status === filter && userMatches(p));
 
   const filteredPurchaseTx =
     filter === "all"
-      ? purchaseTx
-      : purchaseTx.filter((p) => p.status === filter);
+      ? purchaseTx.filter(userMatches)
+      : purchaseTx.filter((p) => p.status === filter && userMatches(p));
 
   return (
     <div>
@@ -127,6 +136,14 @@ export default function AdminPaymentManager() {
             <option value="rejected">Rejected</option>
           </select>
         </label>
+        <input
+          className="admin-product-input"
+          style={{ width: 180, marginLeft: 16 }}
+          type="text"
+          placeholder="Search by user/email"
+          value={search}
+          onChange={e => setSearch(e.target.value)}
+        />
         <button className="admin-payment-refresh" onClick={fetchPayments}>
           Refresh
         </button>
