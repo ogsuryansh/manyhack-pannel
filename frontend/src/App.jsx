@@ -37,11 +37,13 @@ function App() {
           const res = await fetch(`${API}/settings/version`);
           const data = await res.json();
           const lastVersion = localStorage.getItem("settingsVersion");
-          if (lastVersion && Number(lastVersion) !== data.settingsVersion) {
+          if (lastVersion === null) {
+            // First visit or after cache clear: just set, do not reload
+            localStorage.setItem("settingsVersion", data.settingsVersion);
+          } else if (Number(lastVersion) !== data.settingsVersion) {
+            // Only reload if version actually changed
             localStorage.setItem("settingsVersion", data.settingsVersion);
             window.location.reload();
-          } else {
-            localStorage.setItem("settingsVersion", data.settingsVersion);
           }
         } catch {}
       };
