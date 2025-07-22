@@ -12,6 +12,7 @@ import AdminRoute from "./components/AdminRoute";
 import AdminLoginPage from "./pages/AdminLoginPage";
 import TermsAndPolicy from "./pages/TermsAndPolicy";
 import Footer from "./components/Footer";
+import AddBalancePage from "./pages/AddBalancePage";
 
 // Admin area imports
 import AdminLayout from "./pages/admin/AdminLayout";
@@ -20,9 +21,35 @@ import AdminKeyManager from "./pages/admin/AdminKeyManager";
 import AdminProductManager from "./pages/admin/AdminProductManager";
 import AdminUserManager from "./pages/admin/AdminUserManager";
 import AdminPaymentManager from "./pages/admin/AdminPaymentManager";
+import AdminTopUpPlanManager from "./pages/admin/AdminTopUpPlanManager";
+import { API } from "./api";
 
 function App() {
   const [theme, setTheme] = useState("dark");
+
+  // Poll for settingsVersion and reload if changed (for users only)
+  useEffect(() => {
+    let interval;
+    const isAdmin = window.location.pathname.startsWith("/admin");
+    if (!isAdmin) {
+      const checkVersion = async () => {
+        try {
+          const res = await fetch(`${API}/settings/version`);
+          const data = await res.json();
+          const lastVersion = localStorage.getItem("settingsVersion");
+          if (lastVersion && Number(lastVersion) !== data.settingsVersion) {
+            localStorage.setItem("settingsVersion", data.settingsVersion);
+            window.location.reload();
+          } else {
+            localStorage.setItem("settingsVersion", data.settingsVersion);
+          }
+        } catch {}
+      };
+      checkVersion();
+      interval = setInterval(checkVersion, 30000);
+    }
+    return () => interval && clearInterval(interval);
+  }, []);
 
   useEffect(() => {
     document.body.setAttribute("data-theme", theme);
@@ -45,6 +72,7 @@ function App() {
           <Route path="product-manager" element={<AdminProductManager />} />
           <Route path="user-manager" element={<AdminUserManager />} />
           <Route path="payment-manager" element={<AdminPaymentManager />} />
+          <Route path="topup-plan-manager" element={<AdminTopUpPlanManager />} />
         </Route>
 
         <Route path="/terms-policy" element={<TermsAndPolicy />} />
@@ -77,6 +105,14 @@ function App() {
                   element={
                     <ProtectedRoute>
                       <WalletHistoryPage />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/add-balance"
+                  element={
+                    <ProtectedRoute>
+                      <AddBalancePage />
                     </ProtectedRoute>
                   }
                 />

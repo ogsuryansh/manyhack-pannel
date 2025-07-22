@@ -1,15 +1,19 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { QRCodeCanvas } from "qrcode.react";
 import { Link } from "react-router-dom";
 import { API } from "../api";
 
-export default function AddMoneyModal({ upiId, onClose, paymentEnabled = true, onSuccess }) {
-  const [amount, setAmount] = useState("");
+export default function AddMoneyModal({ upiId, onClose, paymentEnabled = true, onSuccess, defaultAmount, planId, bonus }) {
+  const [amount, setAmount] = useState(defaultAmount || "");
   const [utr, setUtr] = useState("");
   const [contactDetail, setContactDetail] = useState("");
   const [success, setSuccess] = useState("");
   const [agreed, setAgreed] = useState(false);
   const [copied, setCopied] = useState(false);
+
+  useEffect(() => {
+    if (defaultAmount) setAmount(defaultAmount);
+  }, [defaultAmount]);
 
   const upiLink =
     upiId && amount > 0
@@ -26,6 +30,7 @@ export default function AddMoneyModal({ upiId, onClose, paymentEnabled = true, o
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    const meta = planId ? { offer: true, planId, bonus: bonus || amount } : undefined;
     const res = await fetch(`${API}/payments/add-money`, {
       method: "POST",
       headers: {
@@ -36,6 +41,7 @@ export default function AddMoneyModal({ upiId, onClose, paymentEnabled = true, o
         amount,
         utr,
         payerName: contactDetail,
+        meta,
       }),
     });
     if (res.ok) {
@@ -55,6 +61,12 @@ export default function AddMoneyModal({ upiId, onClose, paymentEnabled = true, o
           Cancel
         </button>
         <h3>Add Money to Wallet</h3>
+        {planId && (
+          <div className="alert alert-info" style={{ marginBottom: 12 }}>
+            <b>This payment is via an <span style={{ color: 'var(--accent)' }}>Offer</span> plan.</b><br />
+            You will receive <b>₹{bonus || amount}</b> in your wallet after admin approval.
+          </div>
+        )}
         {!paymentEnabled ? (
           <div className="upi-payment-offline">
             <b style={{ color: "#ff6b81", fontSize: "1.1rem" }}>
@@ -74,6 +86,7 @@ export default function AddMoneyModal({ upiId, onClose, paymentEnabled = true, o
               value={amount}
               onChange={e => setAmount(e.target.value)}
               required
+              disabled={!!defaultAmount}
             />
             {upiLink && (
               <>

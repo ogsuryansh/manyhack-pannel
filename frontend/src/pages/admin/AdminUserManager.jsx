@@ -283,8 +283,7 @@ export default function AdminUserManager() {
             style={{ maxHeight: "80vh", overflowY: "auto" }}
           >
             <h4>
-              Edit Prices, Wallet & Product Visibility for{" "}
-              {editingUser.username}
+              Edit Prices, Wallet & Product Visibility for {editingUser.username}
             </h4>
             {message.text && (
               <div
@@ -303,72 +302,125 @@ export default function AdminUserManager() {
                 {message.text}
               </div>
             )}
-            <div style={{ marginBottom: 16 }}>
-              <label>
-                <b>Product:</b>
-                <select
-                  className="admin-product-input"
-                  value={selectedProduct}
-                  onChange={e => {
-                    setSelectedProduct(e.target.value);
-                    setSelectedDuration("");
-                    setCustomPrice("");
-                  }}
-                >
-                  <option value="">Select Product</option>
-                  {products.map((prod) => (
-                    <option key={prod._id} value={prod._id}>
-                      {prod.name}
-                    </option>
-                  ))}
-                </select>
-              </label>
-            </div>
-            {selectedProduct && (
-              <div style={{ marginBottom: 16 }}>
+            {/* Custom price editor for selected product */}
+            <div style={{ marginBottom: 24 }}>
+              <b>Custom Prices for Selected Product:</b>
+              <div style={{ margin: '8px 0' }}>
                 <label>
-                  <b>Duration:</b>
+                  <b>Product:</b>
                   <select
                     className="admin-product-input"
-                    value={selectedDuration}
-                    onChange={(e) => setSelectedDuration(e.target.value)}
+                    value={selectedProduct}
+                    onChange={e => {
+                      setSelectedProduct(e.target.value);
+                      setSelectedDuration("");
+                      setCustomPrice("");
+                    }}
                   >
-                    <option value="">Select Duration</option>
-                    {durations.map((d) => (
-                      <option key={d} value={d}>
-                        {d}
+                    <option value="">Select Product</option>
+                    {products.map((prod) => (
+                      <option key={prod._id} value={prod._id}>
+                        {prod.name}
                       </option>
                     ))}
                   </select>
                 </label>
               </div>
-            )}
-            {selectedProduct && selectedDuration && (
-              <div style={{ marginBottom: 16 }}>
-                <label>
-                  <b>Custom Price (₹):</b>
-                  <input
-                    className="admin-product-input"
-                    type="number"
-                    value={customPrice}
-                    onChange={e => setCustomPrice(e.target.value)}
-                    style={{ width: 100 }}
-                  />
-                </label>
-              </div>
-            )}
-            {selectedProduct && (
-              <div style={{ marginBottom: 16 }}>
-                <label>
-                  <b>Hide this product for user:</b>{" "}
+              {selectedProduct && (
+                <table className="admin-user-table" style={{ marginTop: 8 }}>
+                  <thead>
+                    <tr>
+                      <th>Duration</th>
+                      <th>Custom Price (₹)</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {products
+                      .find((p) => p._id === selectedProduct)
+                      ?.prices.map((pr) => {
+                        const idx =
+                          editingUser.customPrices?.findIndex(
+                            (p) =>
+                              String(p.productId) === String(selectedProduct) &&
+                              p.duration === pr.duration
+                          ) ?? -1;
+                        const value =
+                          idx > -1
+                            ? editingUser.customPrices[idx].price
+                            : pr.price;
+                        return (
+                          <tr key={pr.duration}>
+                            <td>{pr.duration}</td>
+                            <td>
+                              <input
+                                type="number"
+                                className="admin-product-input"
+                                value={value}
+                                onChange={e => {
+                                  const val = e.target.value;
+                                  setEditingUser((prev) => {
+                                    const cp = prev.customPrices ? [...prev.customPrices] : [];
+                                    const idx = cp.findIndex(
+                                      (p) =>
+                                        String(p.productId) === String(selectedProduct) &&
+                                        p.duration === pr.duration
+                                    );
+                                    if (idx > -1) {
+                                      cp[idx].price = val;
+                                    } else {
+                                      cp.push({ productId: selectedProduct, duration: pr.duration, price: val });
+                                    }
+                                    return { ...prev, customPrices: cp };
+                                  });
+                                }}
+                                style={{ width: 80 }}
+                              />
+                            </td>
+                          </tr>
+                        );
+                      })}
+                  </tbody>
+                </table>
+              )}
+            </div>
+            {/* Hide products with Select All */}
+            <div style={{ marginBottom: 24 }}>
+              <b>Hide Products for User:</b>
+              <div style={{ marginTop: 8 }}>
+                <label style={{ marginRight: 16 }}>
                   <input
                     type="checkbox"
-                    checked={hiddenProducts.includes(selectedProduct)}
-                    onChange={() => handleToggleProduct(selectedProduct)}
+                    checked={
+                      hiddenProducts.length === products.length && products.length > 0
+                    }
+                    onChange={e => {
+                      if (e.target.checked) {
+                        setHiddenProducts(products.map(p => p._id));
+                      } else {
+                        setHiddenProducts([]);
+                      }
+                    }}
                   />
+                  Select All
                 </label>
+                {products.map((prod) => (
+                  <label key={prod._id} style={{ marginRight: 16 }}>
+                    <input
+                      type="checkbox"
+                      checked={hiddenProducts.includes(prod._id)}
+                      onChange={() => {
+                        setHiddenProducts((prev) =>
+                          prev.includes(prod._id)
+                            ? prev.filter((id) => id !== prod._id)
+                            : [...prev, prod._id]
+                        );
+                      }}
+                    />
+                    {prod.name}
+                  </label>
+                ))}
               </div>
-            )}
+            </div>
             <div style={{ margin: "16px 0" }}>
               <label>
                 <b>Add/Deduct Money to Wallet:</b>{" "}
@@ -390,11 +442,7 @@ export default function AdminUserManager() {
                 {editingUser.wallet && editingUser.wallet.length > 0 ? (
                   editingUser.wallet.map((entry, i) => (
                     <li key={i}>
-                      ₹{entry.amount} (expires:{" "}
-                      {entry.expiresAt
-                        ? new Date(entry.expiresAt).toLocaleDateString()
-                        : "Never"}
-                      )
+                      ₹{entry.amount} (expires: {entry.expiresAt ? new Date(entry.expiresAt).toLocaleDateString() : "Never"})
                     </li>
                   ))
                 ) : (
@@ -402,7 +450,34 @@ export default function AdminUserManager() {
                 )}
               </ul>
             </div>
-            <button onClick={handleSave}>Save</button>
+            <button
+              onClick={async () => {
+                // Save all custom prices and hidden products in one go
+                const res = await fetch(
+                  `${API}/admin/users/${editingUser._id}/custom-prices`,
+                  {
+                    method: "PUT",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                      customPrices: editingUser.customPrices,
+                      balance: addAmount ? Number(addAmount) : 0,
+                      hiddenProducts,
+                    }),
+                  }
+                );
+                if (res.ok) {
+                  setMessage({ type: "success", text: "User updated successfully!" });
+                } else {
+                  setMessage({ type: "error", text: "Failed to update user." });
+                }
+                setEditingUser(null);
+                fetch(`${API}/admin/users`)
+                  .then((res) => res.json())
+                  .then((data) => setUsers(data));
+              }}
+            >
+              Save All
+            </button>
             <button onClick={() => setEditingUser(null)}>Cancel</button>
           </div>
         </div>

@@ -6,6 +6,7 @@ export default function AdminDashboard() {
   const [loading, setLoading] = useState(true);
   const [noticeInput, setNoticeInput] = useState("");
   const [noticeMsg, setNoticeMsg] = useState("");
+  const [refreshMsg, setRefreshMsg] = useState("");
 
   useEffect(() => {
     fetch(`${API}/admin/stats`)
@@ -38,6 +39,22 @@ export default function AdminDashboard() {
     }
   };
 
+  const handleRefreshAll = async () => {
+    setRefreshMsg("");
+    try {
+      const res = await fetch(`${API}/settings/refresh-version`, { method: "POST" });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        setRefreshMsg("All user websites will refresh within 1 minute!");
+      } else {
+        setRefreshMsg("Failed to trigger refresh. Try again.");
+      }
+    } catch {
+      setRefreshMsg("Failed to trigger refresh. Try again.");
+    }
+    setTimeout(() => setRefreshMsg(""), 4000);
+  };
+
   return (
     <div className="admin-dashboard">
       <h2 className="section-title admin-dashboard-title">Admin Dashboard</h2>
@@ -55,6 +72,9 @@ export default function AdminDashboard() {
         <button className="admin-notice-save-btn" onClick={handleNoticeSave}>
           Save Notice
         </button>
+        <button className="admin-notice-save-btn" style={{ marginLeft: 12, background: '#2e90fa' }} onClick={handleRefreshAll}>
+          Refresh All User Websites
+        </button>
         {noticeMsg && (
           <div
             style={{
@@ -64,6 +84,17 @@ export default function AdminDashboard() {
             }}
           >
             {noticeMsg}
+          </div>
+        )}
+        {refreshMsg && (
+          <div
+            style={{
+              color: refreshMsg.includes("refresh") ? "#22c55e" : "#ff6b81",
+              marginTop: 8,
+              fontWeight: 600,
+            }}
+          >
+            {refreshMsg}
           </div>
         )}
       </div>

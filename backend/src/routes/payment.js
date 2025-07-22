@@ -3,6 +3,9 @@ const router = express.Router();
 const Payment = require("../models/Payment");
 const User = require("../models/User");
 const auth = require("../middlewares/auth");
+const TopUpPlan = require("../models/TopUpPlan");
+
+// Remove all debug logs from this file (console.log, console.error)
 
 router.get("/", async (req, res) => {
   try {
@@ -12,7 +15,6 @@ router.get("/", async (req, res) => {
       .sort({ createdAt: -1 });
     res.json(payments);
   } catch (err) {
-    console.error("Error in /api/payments:", err);
     res.status(500).json({ message: "Server error" });
   }
 });
@@ -46,10 +48,18 @@ router.put("/:id/approve", async (req, res) => {
   const user = await User.findById(payment.userId);
   if (!user) return res.status(404).json({ message: "User not found" });
   if (!user.wallet) user.wallet = [];
+  // Offer logic: credit bonus if present
+  let creditAmount = payment.amount;
+  let offerHint = undefined;
+  if (payment.meta && payment.meta.offer && payment.meta.bonus) {
+    creditAmount = payment.meta.bonus;
+    offerHint = `Offer Plan: Paid ₹${payment.amount}, Credited ₹${creditAmount}`;
+  }
   user.wallet.push({
-    amount: payment.amount,
+    amount: creditAmount,
     addedAt: new Date(),
     expiresAt: new Date(Date.now() + 60 * 24 * 60 * 60 * 1000),  
+    offerHint,
   });
   await user.save();
   res.json(payment);
@@ -142,4 +152,96 @@ router.delete("/:id", async (req, res) => {
     res.status(400).json({ message: err.message });
   }
 });
+
+// ADMIN: Get all top-up plans
+router.get("/topup-plans", auth, async (req, res) => {
+  try {
+    if (!req.user.isAdmin) return res.status(403).json({ message: "Forbidden" });
+    const plans = await TopUpPlan.find();
+    res.json(plans);
+  } catch (err) {
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// ADMIN: Create a new top-up plan
+router.post("/topup-plans", auth, async (req, res) => {
+  try {
+    if (!req.user.isAdmin) return res.status(403).json({ message: "Forbidden" });
+    const { amount, bonus, isActive } = req.body;
+    const plan = new TopUpPlan({ amount, bonus, isActive });
+    await plan.save();
+    res.status(201).json(plan);
+  } catch (err) {
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// ADMIN: Update a top-up plan
+router.put("/topup-plans/:id", auth, async (req, res) => {
+  try {
+    if (!req.user.isAdmin) return res.status(403).json({ message: "Forbidden" });
+    const { amount, bonus, isActive } = req.body;
+    const plan = await TopUpPlan.findByIdAndUpdate(
+      req.params.id,
+      { amount, bonus, isActive },
+      { new: true }
+    );
+    if (!plan) return res.status(404).json({ message: "Plan not found" });
+    res.json(plan);
+  } catch (err) {
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// ADMIN: Delete a top-up plan
+router.delete("/topup-plans/:id", auth, async (req, res) => {
+  try {
+    if (!req.user.isAdmin) return res.status(403).json({ message: "Forbidden" });
+    await TopUpPlan.findByIdAndDelete(req.params.id);
+    res.json({ message: "Plan deleted" });
+  } catch (err) {
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// USER: Get active top-up plans
+router.get("/topup-plans/active", auth, async (req, res) => {
+  try {
+    const plans = await TopUpPlan.find({ isActive: true });
+    res.json(plans);
+  } catch (err) {
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// USER: Top-up wallet with a plan
+router.post("/topup", auth, async (req, res) => {
+  try {
+    const { planId } = req.body;
+    const plan = await TopUpPlan.findById(planId);
+    if (!plan || !plan.isActive) return res.status(400).json({ message: "Invalid plan" });
+    const user = await User.findById(req.user.id);
+    if (!user) return res.status(404).json({ message: "User not found" });
+    if (!user.wallet) user.wallet = [];
+    user.wallet.push({
+      amount: plan.bonus,
+      addedAt: new Date(),
+      expiresAt: new Date(Date.now() + 60 * 24 * 60 * 60 * 1000),
+    });
+    await user.save();
+    await Payment.create({
+      userId: user._id,
+      amount: plan.amount,
+      status: "approved",
+      type: "add_money",
+      meta: { planId, credited: plan.bonus },
+      createdAt: new Date(),
+    });
+    res.json({ message: "Wallet credited", bonus: plan.bonus });
+  } catch (err) {
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
 module.exports = router;

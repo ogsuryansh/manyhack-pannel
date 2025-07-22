@@ -25,7 +25,7 @@ export default function WalletHistoryPage() {
   // Calculate summary
   const moneyAdded = transactions
     .filter((t) => t.type === "add_money" && t.status === "approved")
-    .reduce((sum, t) => sum + t.amount, 0);
+    .reduce((sum, t) => sum + (t.meta && t.meta.bonus ? t.meta.bonus : t.amount), 0);
   const moneyDeducted = transactions
     .filter((t) => t.type === "deduct_money" && t.status === "approved")
     .reduce((sum, t) => sum + t.amount, 0);
@@ -79,36 +79,47 @@ export default function WalletHistoryPage() {
         ) : filteredTx.length === 0 ? (
           <div style={{ color: "#aaa", textAlign: "center", marginTop: 24 }}>No transactions found.</div>
         ) : (
-          filteredTx.map((tx) => (
-            <div className="wallet-history-card" key={tx._id}>
-              <div className="wallet-history-row">
-                <span>{new Date(tx.createdAt).toLocaleDateString()}</span>
-                <span
-                  className={`wallet-history-amount ${
-                    tx.type === "add_money" ? "credit" : "debit"
-                  }`}
-                >
-                  {tx.type === "add_money" ? "+" : "-"}₹{tx.amount}
-                </span>
+          filteredTx.map((tx) => {
+            const credited = tx.type === "add_money" && tx.meta && tx.meta.bonus ? tx.meta.bonus : tx.amount;
+            const isOffer = tx.type === "add_money" && tx.meta && tx.meta.offer;
+            return (
+              <div className="wallet-history-card" key={tx._id}>
+                <div className="wallet-history-row">
+                  <span>{new Date(tx.createdAt).toLocaleDateString()}</span>
+                  <span
+                    className={`wallet-history-amount ${
+                      tx.type === "add_money" ? "credit" : "debit"
+                    }`}
+                  >
+                    {tx.type === "add_money" ? "+" : "-"}₹{tx.type === "add_money" ? credited : tx.amount}
+                  </span>
+                </div>
+                <div className="wallet-history-row">
+                  <span>
+                    {tx.type === "add_money"
+                      ? "Added to wallet"
+                      : tx.type === "deduct_money"
+                      ? "Deducted by admin"
+                      : tx.type === "buy_key"
+                      ? `Used for ${tx.productId?.name || "Product"}`
+                      : ""}
+                  </span>
+                  <span>Status: {tx.status}</span>
+                </div>
+                {isOffer && (
+                  <div className="wallet-history-row" style={{ color: "#22c55e", fontSize: "0.95em" }}>
+                    <span>
+                      <b>Offer:</b> Paid ₹{tx.amount}, Credited ₹{credited}
+                    </span>
+                  </div>
+                )}
+                <div className="wallet-history-row">
+                  <span>UTR: {tx.utr || "NA"}</span>
+                  <span>Contact: {tx.payerName || "NA"}</span>
+                </div>
               </div>
-              <div className="wallet-history-row">
-                <span>
-                  {tx.type === "add_money"
-                    ? "Added to wallet"
-                    : tx.type === "deduct_money"
-                    ? "Deducted by admin"
-                    : tx.type === "buy_key"
-                    ? `Used for ${tx.productId?.name || "Product"}`
-                    : ""}
-                </span>
-                <span>Status: {tx.status}</span>
-              </div>
-              <div className="wallet-history-row">
-                <span>UTR: {tx.utr || "NA"}</span>
-                <span>Contact: {tx.payerName || "NA"}</span>
-              </div>
-            </div>
-          ))
+            );
+          })
         )}
       </div>
     </div>

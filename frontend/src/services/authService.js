@@ -1,4 +1,5 @@
-const API_URL = `${import.meta.env.VITE_API_URL}/auth`;
+import { API } from "../api";
+const API_URL = `${API}/auth`;
 
 export async function login(username, password) {
   const res = await fetch(`${API_URL}/login`, {
@@ -6,8 +7,13 @@ export async function login(username, password) {
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ username, password }),
   });
-  if (!res.ok) throw new Error((await res.json()).message || "Login failed");
-  const data = await res.json();
+  let data;
+  try {
+    data = await res.json();
+  } catch {
+    data = {};
+  }
+  if (!res.ok) throw new Error(data.message || "Login failed");
   localStorage.setItem("user", JSON.stringify(data.user));
   localStorage.setItem("token", data.token);
   return data.user;

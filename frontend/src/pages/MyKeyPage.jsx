@@ -110,16 +110,21 @@ export default function MyKeyPage() {
               </div>
               <div className="mykey-row">
                 <span>
-                  <b>Purchased:</b> {k.assignedAt ? new Date(k.assignedAt).toLocaleDateString() : "NA"}
+                  <b>Purchased:</b> {k.assignedAt ? new Date(k.assignedAt).toLocaleString() : "NA"}
                 </span>
                 <span>
-                  <b>Expires:</b> {k.expiresAt ? new Date(k.expiresAt).toLocaleDateString() : "NA"}
+                  <b>Expires:</b> {k.expiresAt ? new Date(k.expiresAt).toLocaleString() : "NA"}
                 </span>
               </div>
               <div className="mykey-row">
                 <span>
                   <b>Countdown:</b>{" "}
                   {k.expiresAt ? <ExpiryCountdown expiry={k.expiresAt} /> : "NA"}
+                </span>
+              </div>
+              <div className="mykey-row">
+                <span style={{ fontSize: "0.85em", color: "#888" }}>
+                  Your real countdown will start when you started using your key.
                 </span>
               </div>
             </div>

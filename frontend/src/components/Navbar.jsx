@@ -23,6 +23,13 @@ export default function Navbar({ theme, setTheme }) {
     navigate("/login");
   };
 
+  const handleSafeLogout = () => {
+    localStorage.removeItem("token");
+    localStorage.removeItem("user");
+    localStorage.removeItem("adminToken");
+    window.location.reload();
+  };
+
   return (
     <nav className="navbar">
       <div className="navbar-logo">
@@ -63,6 +70,9 @@ export default function Navbar({ theme, setTheme }) {
             Login
           </Link>
         )}
+        <Link to="/add-balance" className="offer-btn">
+          <span role="img" aria-label="offer">🎁</span> Offers
+        </Link>
         <button
           className="theme-toggle"
           onClick={() => setTheme(theme === "dark" ? "light" : "dark")}

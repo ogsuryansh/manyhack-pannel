@@ -20,8 +20,13 @@ export default function AdminLoginPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(form),
       });
-      if (!res.ok) throw new Error((await res.json()).message || "Login failed");
-      const data = await res.json();
+      let data;
+      try {
+        data = await res.json();
+      } catch {
+        data = {};
+      }
+      if (!res.ok) throw new Error(data.message || "Login failed");
       localStorage.setItem("adminToken", data.token);
       navigate("/admin");
     } catch (err) {
