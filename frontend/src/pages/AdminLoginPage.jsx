@@ -22,7 +22,8 @@ export default function AdminLoginPage() {
       });
       if (!res.ok) throw new Error((await res.json()).message || "Login failed");
       const data = await res.json();
-      localStorage.setItem("adminToken", data.token);
+      localStorage.setItem("token", data.token);
+      localStorage.setItem("user", JSON.stringify({ username: data.admin.username, isAdmin: true }));
       navigate("/admin");
     } catch (err) {
       setError(err.message);

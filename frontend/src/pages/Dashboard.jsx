@@ -58,6 +58,14 @@ export default function Dashboard() {
       .then(data => setNotice(data.text || ""));
   }, []);
 
+  useEffect(() => {
+    const onFocus = () => {
+      if (user) refreshUser();
+    };
+    window.addEventListener("focus", onFocus);
+    return () => window.removeEventListener("focus", onFocus);
+  }, [user, refreshUser]);
+
   const now = new Date();
   const inrBalance = user?.wallet
     ? user.wallet
@@ -103,12 +111,28 @@ export default function Dashboard() {
         <BalanceCard label="INR Balance" value={inrBalance} currency="INR" />
         <BalanceCard label="USD Balance" value={usdBalance} currency="USD" />
         {user && (
-          <button
-            className="add-money-btn"
-            onClick={() => setShowAddMoney(true)}
-          >
-            + Add Money
-          </button>
+          <>
+            <button
+              className="add-money-btn"
+              onClick={() => setShowAddMoney(true)}
+            >
+              + Add Money
+            </button>
+            <button
+              className="add-money-btn"
+              style={{ background: "var(--accent)", marginLeft: 8 }}
+              onClick={() => navigate("/offers")}
+            >
+              Offers (Top-up Bonus)
+            </button>
+            <button
+              className="add-money-btn"
+              style={{ background: "#22c55e", marginLeft: 8 }}
+              onClick={refreshUser}
+            >
+              Refresh Balance
+            </button>
+          </>
         )}
       </div>
       <h2 className="section-title">Available Products</h2>

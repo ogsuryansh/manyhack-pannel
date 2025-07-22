@@ -36,6 +36,7 @@ app.use("/api/keys", require("./routes/key"));
 app.use("/api/payments", require("./routes/payment"));
 app.use("/api/settings", require("./routes/settings"));
 app.use("/api/notice", require("./routes/notice"));
+app.use("/api/topup-offers", require("./routes/topupOffer"));
 
 // Test route
 app.get("/", (req, res) => {

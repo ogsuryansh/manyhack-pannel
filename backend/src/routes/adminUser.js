@@ -2,8 +2,11 @@ const express = require("express");
 const router = express.Router();
 const User = require("../models/User");
 const Payment = require("../models/Payment");
+const auth = require("../middlewares/auth");
 
-router.get("/", async (req, res) => {
+// Admin: Get all users
+router.get("/", auth, async (req, res) => {
+  if (!req.user?.isAdmin) return res.status(403).json({ message: "Forbidden" });
   try {
     const users = await User.find().sort({ createdAt: -1 });
     res.json(users);
@@ -12,7 +15,9 @@ router.get("/", async (req, res) => {
   }
 });
 
-router.put("/:id/custom-prices", async (req, res) => {
+// Admin: Update user custom prices, balance, hidden products
+router.put("/:id/custom-prices", auth, async (req, res) => {
+  if (!req.user?.isAdmin) return res.status(403).json({ message: "Forbidden" });
   const { customPrices, balance, hiddenProducts } = req.body;
   try {
     const user = await User.findById(req.params.id);
@@ -85,7 +90,9 @@ router.put("/:id/custom-prices", async (req, res) => {
   }
 });
 
-router.delete("/:id", async (req, res) => {
+// Admin: Delete user
+router.delete("/:id", auth, async (req, res) => {
+  if (!req.user?.isAdmin) return res.status(403).json({ message: "Forbidden" });
   try {
     await User.findByIdAndDelete(req.params.id);
     res.json({ message: "User deleted" });
