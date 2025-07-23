@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { API } from "../../api";
+import { FaGift, FaRupeeSign, FaCheckCircle, FaTimesCircle, FaEdit, FaTrash } from "react-icons/fa";
 
 const getAdminToken = () => localStorage.getItem("adminToken");
 
@@ -101,14 +102,14 @@ const AdminTopUpPlanManager = () => {
   };
 
   return (
-    <div className="max-w-2xl mx-auto p-4">
+    <div className="admin-topup-bg max-w-3xl mx-auto p-4">
       <h2 className="text-3xl font-bold mb-6 text-center">Top-Up Plans Manager</h2>
       <div className="mb-6 text-center text-gray-400 text-sm">
         Create, edit, or remove top-up offers. <span className="text-accent font-semibold">Active plans</span> are visible to users.
       </div>
       <form onSubmit={handleSubmit} className="mb-8 bg-card p-6 rounded-xl shadow-md space-y-4 animate-fade-in">
-        <div className="flex gap-4 flex-wrap">
-          <div className="flex-1 min-w-[120px]">
+        <div className="admin-topup-form-row flex flex-wrap gap-4 items-end">
+          <div className="flex-1 min-w-[160px]">
             <label className="block mb-1 font-medium">Amount (₹)</label>
             <input
               type="number"
@@ -121,7 +122,7 @@ const AdminTopUpPlanManager = () => {
               placeholder="Enter amount"
             />
           </div>
-          <div className="flex-1 min-w-[120px]">
+          <div className="flex-1 min-w-[160px]">
             <label className="block mb-1 font-medium">Bonus (₹ credited)</label>
             <input
               type="number"
@@ -134,8 +135,8 @@ const AdminTopUpPlanManager = () => {
               placeholder="Enter bonus"
             />
           </div>
-          <div className="flex items-center min-w-[100px] mt-6">
-            <label className="inline-flex items-center">
+          <div className="flex items-center min-w-[100px] mb-2" style={{height: '100%'}}>
+            <label className="inline-flex items-center mt-6">
               <input
                 type="checkbox"
                 name="isActive"
@@ -176,46 +177,63 @@ const AdminTopUpPlanManager = () => {
           <span className="ml-3">Loading plans...</span>
         </div>
       ) : (
-        <div className="bg-card rounded-xl shadow-md p-4 animate-fade-in">
-          <table className="w-full border-separate border-spacing-y-2">
-            <thead>
-              <tr className="bg-gray-100">
-                <th className="p-2 border-b text-left">Amount</th>
-                <th className="p-2 border-b text-left">Bonus</th>
-                <th className="p-2 border-b text-center">Active</th>
-                <th className="p-2 border-b text-center">Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {plans.map((plan) => (
-                <tr key={plan._id} className="transition-all hover:bg-primary/10">
-                  <td className="p-2 font-semibold text-primary">₹{plan.amount}</td>
-                  <td className="p-2 font-semibold text-green-600">
-                    ₹{plan.bonus}
-                    {plan.bonus > plan.amount && (
-                      <span className="ml-2 inline-block bg-accent text-white px-2 py-0.5 rounded-full text-xs animate-bounce">Offer</span>
+        <div className="admin-topup-card-list grid grid-cols-1 sm:grid-cols-2 gap-6 animate-fade-in">
+          {plans.length === 0 && <div className="alert alert-info col-span-2">No top-up plans found.</div>}
+          {plans.map((plan) => (
+            <div
+              key={plan._id}
+              className={`admin-topup-card flex flex-col gap-2 p-5 rounded-2xl shadow-md bg-card border-2 transition-all duration-200 ${plan.isActive ? "border-primary" : "border-gray-500"}`}
+              style={{ borderColor: plan.bonus > plan.amount ? "var(--accent)" : plan.isActive ? "var(--primary)" : "#888" }}
+            >
+              <div className="flex items-center gap-3 mb-3">
+                <div className="admin-topup-icon flex items-center justify-center rounded-full bg-primary/10 p-3">
+                  {plan.bonus > plan.amount ? (
+                    <FaGift size={26} className="text-accent" />
+                  ) : (
+                    <FaRupeeSign size={26} className="text-primary" />
+                  )}
+                </div>
+                <div>
+                  <div className="font-semibold text-lg flex items-center gap-1 mb-1">
+                    Pay <span className="text-primary">₹{plan.amount}</span>
+                  </div>
+                  <div className="text-green-600 font-bold text-xl flex items-center gap-1 mb-1">
+                    Get ₹{plan.bonus} in wallet
+                  </div>
+                  {plan.bonus > plan.amount && (
+                    <div className="text-xs text-green-500 font-semibold flex items-center gap-2 mt-1 mb-1">
+                      <span className="inline-block bg-accent text-white px-2 py-0.5 rounded-full animate-bounce font-bold shadow-sm">OFFER</span>
+                      <span>Bonus: ₹{plan.bonus - plan.amount}</span>
+                    </div>
+                  )}
+                  <div className="flex items-center gap-1 text-sm mt-2 mb-1">
+                    {plan.isActive ? (
+                      <FaCheckCircle className="text-green-500" />
+                    ) : (
+                      <FaTimesCircle className="text-gray-400" />
                     )}
-                  </td>
-                  <td className="p-2 text-center">{plan.isActive ? "✅" : "❌"}</td>
-                  <td className="p-2 text-center">
-                    <button
-                      className="add-money-btn px-4 py-1 text-sm mr-2"
-                      onClick={() => handleEdit(plan)}
-                    >
-                      Edit
-                    </button>
-                    <button
-                      className="offer-btn px-4 py-1 text-sm"
-                      onClick={() => handleDelete(plan._id)}
-                    >
-                      Delete
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-          {plans.length === 0 && <div className="alert alert-info mt-4">No top-up plans found.</div>}
+                    {plan.isActive ? "Active" : "Inactive"}
+                  </div>
+                </div>
+              </div>
+              <div className="flex gap-3 mt-auto pt-2 admin-topup-btn-row">
+                <button
+                  className="admin-topup-action-btn"
+                  title="Edit"
+                  onClick={() => handleEdit(plan)}
+                >
+                  <FaEdit />
+                </button>
+                <button
+                  className="admin-topup-action-btn admin-topup-delete"
+                  title="Delete"
+                  onClick={() => handleDelete(plan._id)}
+                >
+                  <FaTrash />
+                </button>
+              </div>
+            </div>
+          ))}
         </div>
       )}
     </div>
