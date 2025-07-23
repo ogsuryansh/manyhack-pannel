@@ -5,6 +5,7 @@ const express = require("express");
 const cors = require("cors");
 const mongoose = require("mongoose");
 const connectToDatabase = require("./utils/db");
+const serverless = require('serverless-http');
 
 const app = express();
 
@@ -42,7 +43,7 @@ app.use(express.json());
     res.status(500).json({ message: "Internal server error" });
   });
 
-  module.exports = app;
+  module.exports.handler = serverless(app);
 
   if (require.main === module) {
     const PORT = process.env.PORT || 5000;
