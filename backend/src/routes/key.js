@@ -240,6 +240,39 @@ router.post("/buy", auth, async (req, res) => {
   }
 });
 
+// Batch stats endpoint: returns stats for all products/durations
+let statsCache = { data: null, ts: 0 };
+const CACHE_TTL = 10000; // 10 seconds
+
+router.get("/all-stats", async (req, res) => {
+  const now = Date.now();
+  if (statsCache.data && now - statsCache.ts < CACHE_TTL) {
+    return res.json(statsCache.data);
+  }
+  try {
+    const Product = require("../models/Product");
+    const products = await Product.find();
+    const stats = {};
+    for (const product of products) {
+      for (const price of product.prices) {
+        const key = `${product._id}_${price.duration}`;
+        const filter = { productId: product._id, duration: price.duration };
+        const available = await Key.countDocuments({ ...filter, assignedTo: null });
+        stats[key] = {
+          productId: product._id,
+          duration: price.duration,
+          available,
+        };
+      }
+    }
+    statsCache = { data: stats, ts: now };
+    res.json(stats);
+  } catch (err) {
+    console.error("Error in GET /api/keys/all-stats:", err);
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
 function parseDuration(duration) {
   if (duration.includes("Day")) return parseInt(duration) * 24 * 60 * 60 * 1000;
   if (duration.includes("Month"))
