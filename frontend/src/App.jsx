@@ -30,7 +30,6 @@ function App() {
 
   // Poll for settingsVersion and reload if changed (for users only)
   useEffect(() => {
-    let interval;
     const isAdmin = window.location.pathname.startsWith("/admin");
     if (!isAdmin) {
       const checkVersion = async () => {
@@ -49,9 +48,8 @@ function App() {
         } catch {}
       };
       checkVersion();
-      interval = setInterval(checkVersion, 30000);
+      // Removed interval polling
     }
-    return () => interval && clearInterval(interval);
   }, []);
 
   useEffect(() => {

@@ -138,6 +138,7 @@ export default function BuyKeyPage() {
   const [buying, setBuying] = useState(false);
   const [available, setAvailable] = useState(null);
    const [paymentEnabled, setPaymentEnabled] = useState(true)
+  const [allStats, setAllStats] = useState({});
 
   const inputRef = useRef();
 
@@ -157,6 +158,10 @@ export default function BuyKeyPage() {
 }, []);
 
   useEffect(() => {
+  fetch(`${API}/keys/all-stats`).then(res => res.json()).then(setAllStats);
+}, []);
+
+  useEffect(() => {
     if (location.state?.selectedProduct) {
       setProduct(location.state.selectedProduct);
       setSearch(location.state.selectedProduct);
@@ -164,36 +169,31 @@ export default function BuyKeyPage() {
   }, [location.state]);
 
   useEffect(() => {
-    const selected = products.find((p) => p.name === product);
-    if (selected && duration) {
-      let userPrice = null;
-      if (user && user.customPrices && user.customPrices.length > 0) {
-        const custom = user.customPrices.find(
-          (cp) =>
-            String(cp.productId) === String(selected._id) &&
-            cp.duration === duration
-        );
-        if (custom) userPrice = custom.price;
-      }
-      if (userPrice !== null && userPrice !== undefined) {
-        setPrice(userPrice);
-      } else {
-        const priceObj = selected.prices.find((pr) => pr.duration === duration);
-        setPrice(priceObj ? priceObj.price : 0);
-      }
-      // Fetch available keys for this product+duration
-      fetch(
-        `${API}/keys/stats?productId=${
-          selected._id
-        }&duration=${encodeURIComponent(duration)}`
-      )
-        .then((res) => res.json())
-        .then((stats) => setAvailable(stats.available || 0));
-    } else {
-      setPrice(0);
-      setAvailable(null);
+  const selected = products.find((p) => p.name === product);
+  if (selected && duration) {
+    let userPrice = null;
+    if (user && user.customPrices && user.customPrices.length > 0) {
+      const custom = user.customPrices.find(
+        (cp) =>
+          String(cp.productId) === String(selected._id) &&
+          cp.duration === duration
+      );
+      if (custom) userPrice = custom.price;
     }
-  }, [product, duration, products, user]);
+    if (userPrice !== null && userPrice !== undefined) {
+      setPrice(userPrice);
+    } else {
+      const priceObj = selected.prices.find((pr) => pr.duration === duration);
+      setPrice(priceObj ? priceObj.price : 0);
+    }
+    // Use allStats for availability
+    const statKey = `${selected._id}_${duration}`;
+    setAvailable(allStats[statKey]?.available || 0);
+  } else {
+    setPrice(0);
+    setAvailable(null);
+  }
+}, [product, duration, products, user, allStats]);
 
   // Calculate wallet balance (only non-expired entries)
   const now = new Date();

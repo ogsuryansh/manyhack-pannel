@@ -25,19 +25,21 @@ export default function Dashboard() {
       .then((data) => {
         setProducts(data);
         setLoading(false);
-        data.forEach((product) => {
-          const duration = product.prices?.[0]?.duration;
-          if (duration) {
-            fetch(`${API}/keys/stats?productId=${product._id}&duration=${encodeURIComponent(duration)}`)
-              .then(res => res.json())
-              .then(stats => {
-                setAvailableKeys(prev => ({
-                  ...prev,
-                  [product._id]: stats.available || 0
-                }));
-              });
-          }
-        });
+        // Fetch all product stats in one request
+        fetch(`${API}/keys/all-stats`)
+          .then(res => res.json())
+          .then(stats => {
+            // Map stats to availableKeys by productId (using first duration for each product)
+            const keys = {};
+            data.forEach(product => {
+              const duration = product.prices?.[0]?.duration;
+              if (duration) {
+                const statKey = `${product._id}_${duration}`;
+                keys[product._id] = stats[statKey]?.available || 0;
+              }
+            });
+            setAvailableKeys(keys);
+          });
       })
       .catch(() => setLoading(false));
   }, []);

@@ -17,6 +17,12 @@ export default function AdminKeyManager() {
   const [editKeyValue, setEditKeyValue] = useState("");
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState({ type: "", text: "" });
+  const [allStats, setAllStats] = useState({});
+
+  // Fetch all stats once
+  useEffect(() => {
+    fetch(`${API}/keys/all-stats`).then(res => res.json()).then(setAllStats);
+  }, []);
 
   // Fetch products
   useEffect(() => {
@@ -25,7 +31,7 @@ export default function AdminKeyManager() {
       .then((data) => setProducts(data));
   }, []);
 
-  // Fetch keys and stats for selected product+duration
+  // Fetch keys for selected product+duration, use allStats for stats
   useEffect(() => {
     if (!selectedProduct || !selectedDuration) {
       setKeys([]);
@@ -34,25 +40,22 @@ export default function AdminKeyManager() {
       return;
     }
     setLoading(true);
-    Promise.all([
-      fetch(
-        `${API}/keys?productId=${selectedProduct}&duration=${encodeURIComponent(
-          selectedDuration
-        )}`
-      ).then((res) => res.json()),
-      fetch(
-        `${API}/keys/stats?productId=${selectedProduct}&duration=${encodeURIComponent(
-          selectedDuration
-        )}`
-      ).then((res) => res.json()),
-    ])
-      .then(([keysData, statsData]) => {
+    fetch(
+      `${API}/keys?productId=${selectedProduct}&duration=${encodeURIComponent(selectedDuration)}`
+    )
+      .then((res) => res.json())
+      .then((keysData) => {
         setKeys(keysData);
-        setStats(statsData);
+        // Use allStats for available
+        const statKey = `${selectedProduct}_${selectedDuration}`;
+        setStats((prev) => ({
+          ...prev,
+          available: allStats[statKey]?.available || 0,
+        }));
         setLoading(false);
       })
       .catch(() => setLoading(false));
-  }, [selectedProduct, selectedDuration]);
+  }, [selectedProduct, selectedDuration, allStats]);
 
   // Get durations for selected product
   const durations =
