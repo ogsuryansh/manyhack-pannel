@@ -12,7 +12,7 @@ router.get("/", async (req, res) => {
     const filter = {};
     if (productId) filter.productId = productId;
     if (duration) filter.duration = duration;
-    const keys = await Key.find(filter).populate("assignedTo", "username email");
+    const keys = await Key.find(filter).populate("assignedTo", "username email").lean();
     res.json(keys);
   } catch (err) {
     console.error("Error in GET /api/keys:", err);
@@ -43,7 +43,8 @@ router.get("/user", auth, async (req, res) => {
   try {
     const keys = await Key.find({ assignedTo: req.user.id })
       .populate("productId", "name")
-      .sort({ createdAt: -1 });
+      .sort({ createdAt: -1 })
+      .lean();
     res.json(keys);
   } catch (err) {
     console.error("Error in GET /api/keys/user:", err);
@@ -55,7 +56,8 @@ router.get("/user/:userId", async (req, res) => {
   try {
     const keys = await Key.find({ assignedTo: req.params.userId })
       .populate("productId", "name")
-      .sort({ createdAt: -1 });
+      .sort({ createdAt: -1 })
+      .lean();
     res.json(keys);
   } catch (err) {
     console.error("Error in GET /api/keys/user/:userId:", err);
@@ -201,7 +203,7 @@ router.post("/buy", auth, async (req, res) => {
       productId,
       duration,
       assignedTo: null,
-    }).limit(quantity);
+    }).limit(quantity).lean();
 
     if (availableKeys.length < quantity) {
       console.error("Not enough keys available for product:", productId, "duration:", duration);

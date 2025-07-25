@@ -1,6 +1,15 @@
 import React, { useEffect, useState } from "react";
 import { API } from "../../api";
 
+function useDebounce(value, delay) {
+  const [debounced, setDebounced] = useState(value);
+  useEffect(() => {
+    const handler = setTimeout(() => setDebounced(value), delay);
+    return () => clearTimeout(handler);
+  }, [value, delay]);
+  return debounced;
+}
+
 export default function AdminUserManager() {
   const [users, setUsers] = useState([]);
   const [products, setProducts] = useState([]);
@@ -15,18 +24,28 @@ export default function AdminUserManager() {
   const [hiddenProducts, setHiddenProducts] = useState([]);
   const [message, setMessage] = useState({ type: "", text: "" });
   const [search, setSearch] = useState("");
+  const debouncedSearch = useDebounce(search, 400);
+  const [page, setPage] = useState(0);
+  const [total, setTotal] = useState(0);
+  const pageSize = 10;
 
-  // Fetch users and products
   useEffect(() => {
+    setPage(0);
+  }, [debouncedSearch]);
+
+  // Fetch users and products with pagination and search
+  useEffect(() => {
+    setLoading(true);
     Promise.all([
-      fetch(`${API}/admin/users`).then((res) => res.json()),
+      fetch(`${API}/admin/users?limit=${pageSize}&skip=${page*pageSize}&search=${encodeURIComponent(debouncedSearch)}`).then((res) => res.json()),
       fetch(`${API}/products`).then((res) => res.json()),
     ]).then(([usersData, productsData]) => {
-      setUsers(usersData);
+      setUsers(usersData.users || []);
+      setTotal(usersData.total || 0);
       setProducts(productsData);
       setLoading(false);
     });
-  }, []);
+  }, [page, debouncedSearch]);
 
   // Fetch purchases and contact for each user
   useEffect(() => {
@@ -163,16 +182,7 @@ export default function AdminUserManager() {
   const durations =
     products.find((p) => p._id === selectedProduct)?.prices.map((pr) => pr.duration) || [];
 
-  // Filter users by search (username or email, match either)
-  const filteredUsers = users
-    .filter(user => {
-      const q = search.trim().toLowerCase();
-      if (!q) return true;
-      return (
-        (user.username && user.username.toLowerCase().includes(q)) ||
-        (user.email && user.email.toLowerCase().includes(q))
-      );
-    });
+  // Remove client-side filteredUsers, use users directly from backend
 
   return (
     <div>
@@ -205,14 +215,14 @@ export default function AdminUserManager() {
               </tr>
             </thead>
             <tbody>
-              {filteredUsers.length === 0 && (
+              {users.length === 0 && (
                 <tr>
                   <td colSpan={8} style={{ textAlign: "center" }}>
                     No users found.
                   </td>
                 </tr>
               )}
-              {filteredUsers.map((user) => (
+              {users.map((user) => (
                 <tr key={user._id}>
                   <td>{user._id || "NA"}</td>
                   <td>{user.email || "NA"}</td>
@@ -274,6 +284,12 @@ export default function AdminUserManager() {
           ))}
         </tbody>
       </table>
+
+      <div style={{ marginTop: 16, textAlign: "center" }}>
+        <button onClick={() => setPage(page-1)} disabled={page===0}>Previous</button>
+        <span style={{ margin: "0 12px" }}>Page {page+1} of {Math.ceil(total/pageSize)}</span>
+        <button onClick={() => setPage(page+1)} disabled={(page+1)*pageSize >= total}>Next</button>
+      </div>
 
       {editingUser && (
         <div className="admin-modal">

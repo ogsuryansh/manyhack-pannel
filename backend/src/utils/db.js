@@ -13,6 +13,7 @@ async function connectToDatabase() {
       useNewUrlParser: true,
       useUnifiedTopology: true,
       ssl: true,
+      maxPoolSize: 10,
       tlsAllowInvalidCertificates: false, // set to true ONLY if using self-signed certs locally
     }).then((mongoose) => mongoose);
   }

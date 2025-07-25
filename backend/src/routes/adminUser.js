@@ -5,8 +5,22 @@ const Payment = require("../models/Payment");
 
 router.get("/", async (req, res) => {
   try {
-    const users = await User.find().sort({ createdAt: -1 });
-    res.json(users);
+    const limit = parseInt(req.query.limit) || 10;
+    const skip = parseInt(req.query.skip) || 0;
+    const search = req.query.search ? req.query.search.trim() : "";
+    const searchFilter = search
+      ? {
+          $or: [
+            { username: { $regex: search, $options: "i" } },
+            { email: { $regex: search, $options: "i" } },
+          ],
+        }
+      : {};
+    const [users, total] = await Promise.all([
+      User.find(searchFilter).sort({ createdAt: -1 }).skip(skip).limit(limit).lean(),
+      User.countDocuments(searchFilter),
+    ]);
+    res.json({ users, total });
   } catch (err) {
     res.status(500).json({ message: "Server error" });
   }
@@ -15,7 +29,7 @@ router.get("/", async (req, res) => {
 router.put("/:id/custom-prices", async (req, res) => {
   const { customPrices, balance, hiddenProducts } = req.body;
   try {
-    const user = await User.findById(req.params.id);
+    const user = await User.findById(req.params.id).lean();
     if (!user) {
       console.error("User not found:", req.params.id);
       return res.status(404).json({ message: "User not found" });
@@ -77,7 +91,7 @@ router.put("/:id/custom-prices", async (req, res) => {
       }
     }
 
-    await user.save();
+    await User.findByIdAndUpdate(req.params.id, user);
     res.json({ message: "Updated", user });
   } catch (err) {
     console.error("Error in /custom-prices:", err);

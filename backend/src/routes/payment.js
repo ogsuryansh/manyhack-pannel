@@ -7,11 +7,31 @@ const TopUpPlan = require("../models/TopUpPlan");
 
 router.get("/", async (req, res) => {
   try {
-    const payments = await Payment.find()
-      .populate("userId", "username email")
-      .populate({ path: "productId", select: "name", strictPopulate: false })
-      .sort({ createdAt: -1 });
-    res.json(payments);
+    const limit = parseInt(req.query.limit) || 10;
+    const skip = parseInt(req.query.skip) || 0;
+    const search = req.query.search ? req.query.search.trim() : "";
+    let userIds = undefined;
+    if (search) {
+      const users = await User.find({
+        $or: [
+          { username: { $regex: search, $options: "i" } },
+          { email: { $regex: search, $options: "i" } },
+        ],
+      }).select('_id');
+      userIds = users.map(u => u._id);
+    }
+    const paymentFilter = userIds ? { userId: { $in: userIds } } : {};
+    const [payments, total] = await Promise.all([
+      Payment.find(paymentFilter)
+        .populate("userId", "username email")
+        .populate({ path: "productId", select: "name", strictPopulate: false })
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(limit)
+        .lean(),
+      Payment.countDocuments(paymentFilter),
+    ]);
+    res.json({ payments, total });
   } catch (err) {
     res.status(500).json({ message: "Server error" });
   }
@@ -125,7 +145,8 @@ router.get("/user", auth, async (req, res) => {
   try {
     const payments = await Payment.find({ userId: req.user.id })
       .populate({ path: "productId", select: "name", strictPopulate: false })
-      .sort({ createdAt: -1 });
+      .sort({ createdAt: -1 })
+      .lean();
     res.json(payments);
   } catch (err) {
     res.status(500).json({ message: "Server error" });
@@ -136,7 +157,8 @@ router.get("/user/:userId", async (req, res) => {
   try {
     const payments = await Payment.find({ userId: req.params.userId })
       .populate({ path: "productId", select: "name", strictPopulate: false })
-      .sort({ createdAt: -1 });
+      .sort({ createdAt: -1 })
+      .lean();
     res.json(payments);
   } catch (err) {
     res.status(500).json({ message: "Server error" });

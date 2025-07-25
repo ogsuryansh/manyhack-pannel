@@ -1,11 +1,24 @@
 import React, { useEffect, useState } from "react";
 import { API } from "../../api";
 
+function useDebounce(value, delay) {
+  const [debounced, setDebounced] = useState(value);
+  useEffect(() => {
+    const handler = setTimeout(() => setDebounced(value), delay);
+    return () => clearTimeout(handler);
+  }, [value, delay]);
+  return debounced;
+}
+
 export default function AdminPaymentManager() {
   const [payments, setPayments] = useState([]);
   const [filter, setFilter] = useState("all");
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
+  const debouncedSearch = useDebounce(search, 400);
+  const [page, setPage] = useState(0);
+  const [total, setTotal] = useState(0);
+  const pageSize = 10;
 
   const [upiId, setUpiId] = useState("");
   const [upiInput, setUpiInput] = useState("");
@@ -15,17 +28,23 @@ export default function AdminPaymentManager() {
 
   const fetchPayments = () => {
     setLoading(true);
-    fetch(`${API}/payments`)
-      .then((res) => res.ok ? res.json() : [])
+    fetch(`${API}/payments?limit=${pageSize}&skip=${page*pageSize}&search=${encodeURIComponent(debouncedSearch)}`)
+      .then((res) => res.ok ? res.json() : { payments: [], total: 0 })
       .then((data) => {
-        setPayments(Array.isArray(data) ? data : []);
+        setPayments(Array.isArray(data.payments) ? data.payments : []);
+        setTotal(data.total || 0);
         setLoading(false);
       })
       .catch(() => {
         setPayments([]);
+        setTotal(0);
         setLoading(false);
       });
   };
+
+  useEffect(() => {
+    setPage(0);
+  }, [debouncedSearch]);
 
   useEffect(() => {
     fetchPayments();
@@ -36,7 +55,7 @@ export default function AdminPaymentManager() {
         setUpiInput(data.upiId?.trim() || "");
         setPaymentEnabled(data.paymentEnabled !== false);
       });
-  }, []);
+  }, [page, debouncedSearch]);
 
   const handleApprove = async (id) => {
     await fetch(`${API}/payments/${id}/approve`, { method: "PUT" });
@@ -88,11 +107,6 @@ export default function AdminPaymentManager() {
     }
   };
 
-  const walletTx = payments.filter(
-    (p) => p.type === "add_money" || p.type === "deduct_money"
-  );
-  const purchaseTx = payments.filter((p) => p.type === "buy_key");
-
   const userMatches = (p) => {
     const q = search.trim().toLowerCase();
     if (!q) return true;
@@ -103,13 +117,13 @@ export default function AdminPaymentManager() {
   };
   const filteredWalletTx =
     filter === "all"
-      ? walletTx.filter(userMatches)
-      : walletTx.filter((p) => p.status === filter && userMatches(p));
+      ? payments.filter(userMatches)
+      : payments.filter((p) => p.status === filter && userMatches(p));
 
   const filteredPurchaseTx =
     filter === "all"
-      ? purchaseTx.filter(userMatches)
-      : purchaseTx.filter((p) => p.status === filter && userMatches(p));
+      ? payments.filter(userMatches)
+      : payments.filter((p) => p.status === filter && userMatches(p));
 
   return (
     <div>
@@ -332,6 +346,11 @@ export default function AdminPaymentManager() {
           )}
         </tbody>
       </table>
+      <div style={{ marginTop: 16, textAlign: "center" }}>
+        <button onClick={() => setPage(page-1)} disabled={page===0}>Previous</button>
+        <span style={{ margin: "0 12px" }}>Page {page+1} of {Math.ceil(total/pageSize)}</span>
+        <button onClick={() => setPage(page+1)} disabled={(page+1)*pageSize >= total}>Next</button>
+      </div>
     </div>
   );
 }
