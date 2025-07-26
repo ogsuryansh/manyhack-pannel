@@ -204,7 +204,7 @@ router.post("/buy", auth, async (req, res) => {
       productId,
       duration,
       assignedTo: null,
-    }).limit(quantity).lean();
+    }).limit(quantity);
 
     if (availableKeys.length < quantity) {
       console.error("Not enough keys available for product:", productId, "duration:", duration);
