@@ -29,14 +29,16 @@ export default function Dashboard() {
         fetch(`${API}/keys/all-stats`)
           .then(res => res.json())
           .then(stats => {
-            // Map stats to availableKeys by productId (using first duration for each product)
+            // Map stats to availableKeys by productId (check if ANY duration has available keys)
             const keys = {};
             data.forEach(product => {
-              const duration = product.prices?.[0]?.duration;
-              if (duration) {
-                const statKey = `${product._id}_${duration}`;
-                keys[product._id] = stats[statKey]?.available || 0;
-              }
+              // Check all durations for this product
+              let totalAvailable = 0;
+              product.prices.forEach(price => {
+                const statKey = `${product._id}_${price.duration}`;
+                totalAvailable += stats[statKey]?.available || 0;
+              });
+              keys[product._id] = totalAvailable;
             });
             setAvailableKeys(keys);
           });
