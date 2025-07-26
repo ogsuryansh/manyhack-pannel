@@ -166,7 +166,11 @@ export default function BuyKeyPage() {
         setAllStats(data);
         setStatsLoading(false);
       })
-      .catch(() => setStatsLoading(false));
+      .catch(() => {
+        setStatsLoading(false);
+        // If stats fail, show products as available to prevent blocking UX
+        setAllStats({});
+      });
   }, []);
 
   useEffect(() => {
@@ -313,10 +317,10 @@ export default function BuyKeyPage() {
           className="buykey-input"
           value={duration}
           onChange={(e) => setDuration(e.target.value)}
-          disabled={!product || statsLoading}
+          disabled={!product}
         >
           <option value="">
-            {statsLoading ? "Loading stock info..." : "Select a duration"}
+            {statsLoading ? "Loading..." : "Select a duration"}
           </option>
           {durations.map((d) => {
             const statKey = `${products.find(p => p.name === product)?._id}_${d}`;

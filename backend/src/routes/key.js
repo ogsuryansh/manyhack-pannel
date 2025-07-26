@@ -107,6 +107,8 @@ router.post("/bulk", async (req, res) => {
     }));
 
     await Key.insertMany(keyDocs, { ordered: false });
+    // Clear cache to reflect new keys immediately
+    statsCache = { data: null, ts: 0 };
     res.json({ message: "Keys added" });
   } catch (err) {
     console.error("Error in POST /api/keys/bulk:", err);
@@ -222,6 +224,9 @@ router.post("/buy", auth, async (req, res) => {
 
     await user.save();
 
+    // Clear cache to reflect key assignment immediately
+    statsCache = { data: null, ts: 0 };
+
     await Payment.create({
       userId: user._id,
       productId,
@@ -245,7 +250,7 @@ router.post("/buy", auth, async (req, res) => {
 
 // Batch stats endpoint: returns stats for all products/durations
 let statsCache = { data: null, ts: 0 };
-const CACHE_TTL = 5000; // 5 seconds - reduced for better UX
+const CACHE_TTL = 30000; // 30 seconds - increased to reduce DB calls
 
 router.get("/all-stats", async (req, res) => {
   const now = Date.now();
@@ -255,19 +260,39 @@ router.get("/all-stats", async (req, res) => {
   try {
     const Product = require("../models/Product");
     const products = await Product.find();
+    
+    // Single aggregation query instead of multiple countDocuments
+    const pipeline = [
+      { $match: { assignedTo: null } },
+      { $group: { 
+        _id: { productId: "$productId", duration: "$duration" }, 
+        available: { $sum: 1 } 
+      }}
+    ];
+    
+    const keyStats = await Key.aggregate(pipeline);
     const stats = {};
+    
+    // Initialize all product/duration combinations with 0
     for (const product of products) {
       for (const price of product.prices) {
         const key = `${product._id}_${price.duration}`;
-        const filter = { productId: product._id, duration: price.duration };
-        const available = await Key.countDocuments({ ...filter, assignedTo: null });
         stats[key] = {
           productId: product._id,
           duration: price.duration,
-          available,
+          available: 0,
         };
       }
     }
+    
+    // Update with actual counts
+    keyStats.forEach(stat => {
+      const key = `${stat._id.productId}_${stat._id.duration}`;
+      if (stats[key]) {
+        stats[key].available = stat.available;
+      }
+    });
+    
     statsCache = { data: stats, ts: now };
     res.json(stats);
   } catch (err) {

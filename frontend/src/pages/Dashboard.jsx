@@ -20,30 +20,27 @@ export default function Dashboard() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    fetch(`${API}/products`)
-      .then((res) => res.json())
-      .then((data) => {
-        setProducts(data);
-        setLoading(false);
-        // Fetch all product stats in one request
-        fetch(`${API}/keys/all-stats`)
-          .then(res => res.json())
-          .then(stats => {
-            // Map stats to availableKeys by productId (check if ANY duration has available keys)
-            const keys = {};
-            data.forEach(product => {
-              // Check all durations for this product
-              let totalAvailable = 0;
-              product.prices.forEach(price => {
-                const statKey = `${product._id}_${price.duration}`;
-                totalAvailable += stats[statKey]?.available || 0;
-              });
-              keys[product._id] = totalAvailable;
-            });
-            setAvailableKeys(keys);
-          });
-      })
-      .catch(() => setLoading(false));
+    // Load products and stats in parallel for faster loading
+    Promise.all([
+      fetch(`${API}/products`).then(res => res.json()),
+      fetch(`${API}/keys/all-stats`).then(res => res.json()).catch(() => ({}))
+    ]).then(([productsData, statsData]) => {
+      setProducts(productsData);
+      setLoading(false);
+      
+      // Map stats to availableKeys by productId (check if ANY duration has available keys)
+      const keys = {};
+      productsData.forEach(product => {
+        // Check all durations for this product
+        let totalAvailable = 0;
+        product.prices.forEach(price => {
+          const statKey = `${product._id}_${price.duration}`;
+          totalAvailable += statsData[statKey]?.available || 0;
+        });
+        keys[product._id] = totalAvailable;
+      });
+      setAvailableKeys(keys);
+    }).catch(() => setLoading(false));
   }, []);
 
   useEffect(() => {
