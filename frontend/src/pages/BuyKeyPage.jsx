@@ -139,6 +139,7 @@ export default function BuyKeyPage() {
   const [available, setAvailable] = useState(null);
    const [paymentEnabled, setPaymentEnabled] = useState(true)
   const [allStats, setAllStats] = useState({});
+  const [statsLoading, setStatsLoading] = useState(true);
 
   const inputRef = useRef();
 
@@ -158,8 +159,15 @@ export default function BuyKeyPage() {
 }, []);
 
   useEffect(() => {
-  fetch(`${API}/keys/all-stats`).then(res => res.json()).then(setAllStats);
-}, []);
+    setStatsLoading(true);
+    fetch(`${API}/keys/all-stats`)
+      .then(res => res.json())
+      .then(data => {
+        setAllStats(data);
+        setStatsLoading(false);
+      })
+      .catch(() => setStatsLoading(false));
+  }, []);
 
   useEffect(() => {
     if (location.state?.selectedProduct) {
@@ -305,19 +313,45 @@ export default function BuyKeyPage() {
           className="buykey-input"
           value={duration}
           onChange={(e) => setDuration(e.target.value)}
-          disabled={!product}
+          disabled={!product || statsLoading}
         >
-          <option value="">Select a duration</option>
+          <option value="">
+            {statsLoading ? "Loading stock info..." : "Select a duration"}
+          </option>
           {durations.map((d) => {
             const statKey = `${products.find(p => p.name === product)?._id}_${d}`;
             const stockCount = allStats[statKey]?.available || 0;
             return (
-              <option key={d} value={d} disabled={stockCount === 0}>
-                {d} {stockCount === 0 ? "(Out of Stock)" : `(${stockCount} available)`}
+              <option key={d} value={d}>
+                {d} {stockCount > 0 ? `(${stockCount} available)` : "(Out of Stock)"}
               </option>
             );
           })}
         </select>
+        {product && !statsLoading && (
+          <div style={{ fontSize: '0.85em', color: '#666', marginTop: '4px' }}>
+            {(() => {
+              const selectedProduct = products.find(p => p.name === product);
+              const availableDurations = selectedProduct?.prices.filter(p => {
+                const statKey = `${selectedProduct._id}_${p.duration}`;
+                return (allStats[statKey]?.available || 0) > 0;
+              }) || [];
+              
+              if (availableDurations.length === 0) {
+                return "⚠️ No durations available for this product";
+              } else if (availableDurations.length < selectedProduct.prices.length) {
+                return `✅ ${availableDurations.length} of ${selectedProduct.prices.length} durations available`;
+              } else {
+                return "✅ All durations available";
+              }
+            })()}
+          </div>
+        )}
+        {product && statsLoading && (
+          <div style={{ fontSize: '0.85em', color: '#666', marginTop: '4px' }}>
+            🔄 Checking stock availability...
+          </div>
+        )}
 
         <label className="buykey-label">Quantity</label>
         <input

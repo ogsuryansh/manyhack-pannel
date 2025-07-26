@@ -245,7 +245,7 @@ router.post("/buy", auth, async (req, res) => {
 
 // Batch stats endpoint: returns stats for all products/durations
 let statsCache = { data: null, ts: 0 };
-const CACHE_TTL = 10000; // 10 seconds
+const CACHE_TTL = 5000; // 5 seconds - reduced for better UX
 
 router.get("/all-stats", async (req, res) => {
   const now = Date.now();
