@@ -501,6 +501,7 @@ select.buykey-input {
   -webkit-appearance: none;
   -moz-appearance: none;
   cursor: pointer;
+width: 96%;  
 }
 
 select.buykey-input {

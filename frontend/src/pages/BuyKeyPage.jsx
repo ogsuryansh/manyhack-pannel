@@ -255,7 +255,8 @@ export default function BuyKeyPage() {
         navigate("/my-key");
       }, 2500);
     } else {
-      setSuccess("Failed to purchase key(s).");
+      const errorData = await res.json();
+      setSuccess(`Failed to purchase key(s): ${errorData.message || "Unknown error"}`);
       setBuying(false);
     }
   };
@@ -307,11 +308,15 @@ export default function BuyKeyPage() {
           disabled={!product}
         >
           <option value="">Select a duration</option>
-          {durations.map((d) => (
-            <option key={d} value={d}>
-              {d}
-            </option>
-          ))}
+          {durations.map((d) => {
+            const statKey = `${products.find(p => p.name === product)?._id}_${d}`;
+            const stockCount = allStats[statKey]?.available || 0;
+            return (
+              <option key={d} value={d} disabled={stockCount === 0}>
+                {d} {stockCount === 0 ? "(Out of Stock)" : `(${stockCount} available)`}
+              </option>
+            );
+          })}
         </select>
 
         <label className="buykey-label">Quantity</label>
@@ -338,6 +343,22 @@ export default function BuyKeyPage() {
         {user && product && duration && quantity > 0 && price > 0 && available === 0 && (
           <div className="buykey-error">
             OUT OF STOCK for this product/duration.
+            {(() => {
+              const selectedProduct = products.find(p => p.name === product);
+              const otherDurations = selectedProduct?.prices.filter(p => p.duration !== duration) || [];
+              const availableDurations = otherDurations.filter(p => {
+                const statKey = `${selectedProduct._id}_${p.duration}`;
+                return (allStats[statKey]?.available || 0) > 0;
+              });
+              if (availableDurations.length > 0) {
+                return (
+                  <div style={{ marginTop: 8, fontSize: '0.9em', color: '#666' }}>
+                    Try other durations: {availableDurations.map(d => d.duration).join(', ')}
+                  </div>
+                );
+              }
+              return null;
+            })()}
           </div>
         )}
 

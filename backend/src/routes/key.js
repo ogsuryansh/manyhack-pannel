@@ -103,6 +103,7 @@ router.post("/bulk", async (req, res) => {
       key,
       productId,
       duration,
+      assignedTo: null, // Ensure assignedTo is explicitly set to null
     }));
 
     await Key.insertMany(keyDocs, { ordered: false });
