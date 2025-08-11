@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Link, Outlet, useLocation } from "react-router-dom";
+import { Link, Outlet, useLocation, useNavigate } from "react-router-dom";
 
 const adminTabs = [
   { label: "Dashboard", to: "/admin/dashboard" },
@@ -12,7 +12,13 @@ const adminTabs = [
 
 export default function AdminLayout() {
   const location = useLocation();
+  const navigate = useNavigate();
   const [menuOpen, setMenuOpen] = useState(false);
+
+  const handleLogout = () => {
+    localStorage.removeItem("adminToken");
+    navigate("/admin-login");
+  };
   return (
     <div>
       <nav className="admin-navbar">
@@ -27,6 +33,12 @@ export default function AdminLayout() {
               {tab.label}
             </Link>
           ))}
+        </div>
+        <div className="admin-navbar-actions desktop-only">
+          <button className="admin-logout-btn" onClick={handleLogout}>
+            <span role="img" aria-label="logout">🚪</span>
+            Logout
+          </button>
         </div>
         <div className="admin-hamburger mobile-only" onClick={() => setMenuOpen(v => !v)}>
           <div className={`bar${menuOpen ? " open" : ""}`}></div>
@@ -48,6 +60,16 @@ export default function AdminLayout() {
               {tab.label}
             </Link>
           ))}
+          <button 
+            className="admin-navbar-link admin-logout-btn-mobile" 
+            onClick={() => {
+              handleLogout();
+              setMenuOpen(false);
+            }}
+          >
+            <span role="img" aria-label="logout">🚪</span>
+            Logout
+          </button>
         </div>
       </div>
       <div className="admin-content">

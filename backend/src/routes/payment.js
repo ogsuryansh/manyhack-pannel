@@ -3,6 +3,7 @@ const router = express.Router();
 const Payment = require("../models/Payment");
 const User = require("../models/User");
 const auth = require("../middlewares/auth");
+const { adminAuth } = require("../middlewares/auth");
 const TopUpPlan = require("../models/TopUpPlan");
 
 router.get("/", async (req, res) => {
@@ -174,9 +175,8 @@ router.delete("/:id", async (req, res) => {
 });
 
 // ADMIN: Get all top-up plans
-router.get("/topup-plans", auth, async (req, res) => {
+router.get("/topup-plans", adminAuth, async (req, res) => {
   try {
-    if (!req.user.isAdmin) return res.status(403).json({ message: "Forbidden" });
     const plans = await TopUpPlan.find();
     res.json(plans);
   } catch (err) {
@@ -185,9 +185,8 @@ router.get("/topup-plans", auth, async (req, res) => {
 });
 
 // ADMIN: Create a new top-up plan
-router.post("/topup-plans", auth, async (req, res) => {
+router.post("/topup-plans", adminAuth, async (req, res) => {
   try {
-    if (!req.user.isAdmin) return res.status(403).json({ message: "Forbidden" });
     const { amount, bonus, isActive } = req.body;
     const plan = new TopUpPlan({ amount, bonus, isActive });
     await plan.save();
@@ -198,9 +197,8 @@ router.post("/topup-plans", auth, async (req, res) => {
 });
 
 // ADMIN: Update a top-up plan
-router.put("/topup-plans/:id", auth, async (req, res) => {
+router.put("/topup-plans/:id", adminAuth, async (req, res) => {
   try {
-    if (!req.user.isAdmin) return res.status(403).json({ message: "Forbidden" });
     const { amount, bonus, isActive } = req.body;
     const plan = await TopUpPlan.findByIdAndUpdate(
       req.params.id,
@@ -215,9 +213,8 @@ router.put("/topup-plans/:id", auth, async (req, res) => {
 });
 
 // ADMIN: Delete a top-up plan
-router.delete("/topup-plans/:id", auth, async (req, res) => {
+router.delete("/topup-plans/:id", adminAuth, async (req, res) => {
   try {
-    if (!req.user.isAdmin) return res.status(403).json({ message: "Forbidden" });
     await TopUpPlan.findByIdAndDelete(req.params.id);
     res.json({ message: "Plan deleted" });
   } catch (err) {

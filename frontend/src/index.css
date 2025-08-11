@@ -1001,6 +1001,45 @@ select.buykey-input option {
   background: var(--gradient);
   color: #fff;
 }
+
+.admin-navbar-actions {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+}
+
+.admin-logout-btn {
+  background: var(--accent);
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 8px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.admin-logout-btn:hover {
+  background: var(--primary);
+  transform: translateY(-1px);
+}
+
+.admin-logout-btn-mobile {
+  background: var(--accent) !important;
+  color: white !important;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.admin-logout-btn-mobile:hover {
+  background: var(--primary) !important;
+}
 .admin-content {
   padding: 32px 24px;
 }
