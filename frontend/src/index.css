@@ -2008,10 +2008,13 @@ select.buykey-input option {
   justify-content: center;
 }
 .qr canvas {
-  border:2px solid blue;
+  border: 2px solid var(--primary);
   padding: 15px;
-  width: 30%;
-  height: 30%;
+  width: auto !important;
+  height: auto !important;
+  max-width: 100%;
+  border-radius: 8px;
+  background: white;
 }
 
 /* admin payment manager */

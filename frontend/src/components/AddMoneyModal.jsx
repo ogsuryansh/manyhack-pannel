@@ -10,14 +10,13 @@ export default function AddMoneyModal({ upiId, onClose, paymentEnabled = true, o
   const [success, setSuccess] = useState("");
   const [agreed, setAgreed] = useState(false);
   const [copied, setCopied] = useState(false);
-
   useEffect(() => {
     if (defaultAmount) setAmount(defaultAmount);
   }, [defaultAmount]);
 
   const upiLink =
     upiId && amount > 0
-      ? `upi://pay?pa=${upiId}&pn=shashwat&am=${amount}&cu=INR`
+      ? `upi://pay?pa=${upiId}&pn=MANYHACKPANEL&am=${amount}&cu=INR&tn=Wallet%20Recharge&mc=0000&tr=${Date.now()}`
       : "";
 
   const canSubmit = amount > 0 && utr && contactDetail && agreed;
@@ -27,6 +26,8 @@ export default function AddMoneyModal({ upiId, onClose, paymentEnabled = true, o
     setCopied(true);
     setTimeout(() => setCopied(false), 1200);
   };
+
+
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -91,7 +92,19 @@ export default function AddMoneyModal({ upiId, onClose, paymentEnabled = true, o
             {upiLink && (
               <>
                 <div className="qr">
-                  <QRCodeCanvas value={upiLink} size={200} />
+                  <QRCodeCanvas 
+                    value={upiLink} 
+                    size={280}
+                    level="H"
+                    includeMargin={true}
+                    style={{ 
+                      backgroundColor: 'white',
+                      padding: '15px',
+                      borderRadius: '12px',
+                      boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
+                      border: '3px solid var(--primary)'
+                    }}
+                  />
                 </div>
                 <div className="upi" style={{ textAlign: "center", marginTop: 8 }}>
                   <a href={upiLink} className="upi-link" target="_blank" rel="noopener noreferrer">
