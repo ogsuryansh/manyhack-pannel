@@ -5,8 +5,17 @@ const { getDeviceInfo } = require('../utils/deviceUtils');
 // Session-based authentication middleware
 module.exports = async function (req, res, next) {
   try {
+    console.log('=== SESSION AUTH DEBUG ===');
+    console.log('Request URL:', req.url);
+    console.log('Request method:', req.method);
+    console.log('Session exists:', !!req.session);
+    console.log('Session userId:', req.session?.userId);
+    console.log('Session sessionId:', req.session?.sessionId);
+    console.log('==========================');
+    
     // Check if user is logged in via session
     if (!req.session || !req.session.userId) {
+      console.log('No active session found');
       return res.status(401).json({ message: "No active session" });
     }
 
@@ -70,8 +79,17 @@ module.exports = async function (req, res, next) {
 // Admin session middleware
 module.exports.adminAuth = async function (req, res, next) {
   try {
+    console.log('=== ADMIN AUTH DEBUG ===');
+    console.log('Request URL:', req.url);
+    console.log('Request method:', req.method);
+    console.log('Session exists:', !!req.session);
+    console.log('Session userId:', req.session?.userId);
+    console.log('Session isAdmin:', req.session?.isAdmin);
+    console.log('========================');
+    
     // Check if user is logged in via session
     if (!req.session || !req.session.userId) {
+      console.log('No active session found for admin');
       return res.status(401).json({ message: "No active session" });
     }
 

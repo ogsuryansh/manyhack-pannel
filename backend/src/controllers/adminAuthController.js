@@ -3,15 +3,31 @@ const Session = require('../models/Session');
 
 exports.adminLogin = async (req, res) => {
   try {
+    console.log('=== ADMIN LOGIN DEBUG ===');
+    console.log('Request body:', req.body);
+    console.log('Environment ADMIN_USERNAME:', process.env.ADMIN_USERNAME);
+    console.log('Environment ADMIN_PASSWORD:', process.env.ADMIN_PASSWORD ? 'SET' : 'NOT SET');
+    console.log('Session secret:', process.env.SESSION_SECRET ? 'SET' : 'NOT SET');
+    console.log('========================');
+    
     const { username, password } = req.body;
+    
+    if (!username || !password) {
+      console.log('Missing username or password');
+      return res.status(400).json({ message: "Username and password are required" });
+    }
+    
     if (
       username === process.env.ADMIN_USERNAME &&
       password === process.env.ADMIN_PASSWORD
     ) {
       // Get device information
+      console.log('Getting device info...');
       const deviceInfo = getDeviceInfo(req);
+      console.log('Device info:', deviceInfo);
       
       // Create admin session
+      console.log('Creating admin session...');
       const newSession = new Session({
         sessionId: deviceInfo.sessionId,
         userId: 'admin', // Special admin user ID
@@ -19,14 +35,19 @@ exports.adminLogin = async (req, res) => {
         userAgent: deviceInfo.userAgent,
         ipAddress: deviceInfo.ipAddress
       });
+      console.log('Session object created:', newSession);
       await newSession.save();
+      console.log('Session saved to database');
 
       // Store admin info in session
+      console.log('Storing admin info in session...');
       req.session.userId = 'admin';
       req.session.sessionId = deviceInfo.sessionId;
       req.session.deviceFingerprint = deviceInfo.deviceFingerprint;
       req.session.isAdmin = true;
+      console.log('Session stored:', req.session);
       
+      console.log('Sending success response...');
       return res.json({
         message: "Admin login successful",
         admin: { 
@@ -36,9 +57,13 @@ exports.adminLogin = async (req, res) => {
         }
       });
     }
+    console.log('Invalid credentials - username or password mismatch');
     return res.status(401).json({ message: "Invalid admin credentials" });
   } catch (err) {
-    console.error('Admin login error:', err);
+    console.error('=== ADMIN LOGIN ERROR ===');
+    console.error('Error message:', err.message);
+    console.error('Error stack:', err.stack);
+    console.error('========================');
     res.status(500).json({ message: "Server error" });
   }
 };

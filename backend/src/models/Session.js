@@ -7,8 +7,7 @@ const sessionSchema = new mongoose.Schema({
     unique: true
   },
   userId: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'User',
+    type: mongoose.Schema.Types.Mixed, // Can be ObjectId or String (for admin)
     required: true
   },
   deviceFingerprint: {
