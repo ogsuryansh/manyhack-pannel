@@ -1,5 +1,4 @@
 const { getDeviceInfo } = require('../utils/deviceUtils');
-const Session = require('../models/Session');
 
 exports.adminLogin = async (req, res) => {
   try {
@@ -26,18 +25,9 @@ exports.adminLogin = async (req, res) => {
       const deviceInfo = getDeviceInfo(req);
       console.log('Device info:', deviceInfo);
       
-      // Create admin session
-      console.log('Creating admin session...');
-      const newSession = new Session({
-        sessionId: deviceInfo.sessionId,
-        userId: 'admin', // Special admin user ID
-        deviceFingerprint: deviceInfo.deviceFingerprint,
-        userAgent: deviceInfo.userAgent,
-        ipAddress: deviceInfo.ipAddress
-      });
-      console.log('Session object created:', newSession);
-      await newSession.save();
-      console.log('Session saved to database');
+      // Note: We don't need to create a custom Session model entry
+      // The express-session store will handle the session storage
+      console.log('Using express-session store for session management');
 
       // Store admin info in session
       console.log('Storing admin info in session...');

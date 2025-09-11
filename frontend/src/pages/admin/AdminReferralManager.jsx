@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { API } from "../../api";
+import { adminApi } from "../../utils/adminApi";
 
 export default function AdminReferralManager() {
   const [referralCodes, setReferralCodes] = useState([]);
@@ -23,28 +24,19 @@ export default function AdminReferralManager() {
 
   const fetchReferralCodes = async () => {
     try {
-      const res = await fetch(`${API}/referral`, {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("adminToken")}`,
-        },
-      });
-      const data = await res.json();
+      const data = await adminApi.get('/referral');
       setReferralCodes(data);
-      setLoading(false);
     } catch (err) {
       console.error("Error fetching referral codes:", err);
+      setMessage(`Error: ${err.message}`);
+    } finally {
       setLoading(false);
     }
   };
 
   const fetchStats = async () => {
     try {
-      const res = await fetch(`${API}/referral/stats`, {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("adminToken")}`,
-        },
-      });
-      const data = await res.json();
+      const data = await adminApi.get('/referral/stats');
       setStats(data);
     } catch (err) {
       console.error("Error fetching stats:", err);
@@ -68,29 +60,22 @@ export default function AdminReferralManager() {
         rewardAmount: formData.rewardAmount ? parseFloat(formData.rewardAmount) : 0
       };
       
-      const res = await fetch(url, {
-        method,
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${localStorage.getItem("adminToken")}`,
-        },
-        body: JSON.stringify(requestBody),
-      });
-
-      if (res.ok) {
-        setMessage(editingCode ? "Referral code updated!" : "Referral code created!");
-        setShowModal(false);
-        setEditingCode(null);
-        setFormData({ code: "", description: "", maxUsage: "", isActive: true });
-        fetchReferralCodes();
-        fetchStats();
-        setTimeout(() => setMessage(""), 3000);
+      if (editingCode) {
+        await adminApi.put(`/referral/${editingCode._id}`, requestBody);
+        setMessage("Referral code updated!");
       } else {
-        const errorData = await res.json();
-        setMessage(errorData.message || "Error occurred");
+        await adminApi.post('/referral', requestBody);
+        setMessage("Referral code created!");
       }
+      
+      setShowModal(false);
+      setEditingCode(null);
+      setFormData({ code: "", description: "", maxUsage: "", isActive: true });
+      fetchReferralCodes();
+      fetchStats();
+      setTimeout(() => setMessage(""), 3000);
     } catch (err) {
-      setMessage("Error occurred");
+      setMessage(`Error: ${err.message}`);
     }
   };
 
@@ -109,48 +94,24 @@ export default function AdminReferralManager() {
     if (!window.confirm("Are you sure you want to delete this referral code?")) return;
 
     try {
-      const res = await fetch(`${API}/referral/${id}`, {
-        method: "DELETE",
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("adminToken")}`,
-        },
-      });
-
-      if (res.ok) {
-        setMessage("Referral code deleted!");
-        fetchReferralCodes();
-        fetchStats();
-        setTimeout(() => setMessage(""), 3000);
-      } else {
-        const errorData = await res.json();
-        setMessage(errorData.message || "Error occurred");
-      }
+      await adminApi.delete(`/referral/${id}`);
+      setMessage("Referral code deleted!");
+      fetchReferralCodes();
+      fetchStats();
+      setTimeout(() => setMessage(""), 3000);
     } catch (err) {
-      setMessage("Error occurred");
+      setMessage(`Error: ${err.message}`);
     }
   };
 
   const handleToggleActive = async (id, currentStatus) => {
     try {
-      const res = await fetch(`${API}/referral/${id}`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${localStorage.getItem("adminToken")}`,
-        },
-        body: JSON.stringify({ isActive: !currentStatus }),
-      });
-
-      if (res.ok) {
-        setMessage("Status updated!");
-        fetchReferralCodes();
-        setTimeout(() => setMessage(""), 3000);
-      } else {
-        const errorData = await res.json();
-        setMessage(errorData.message || "Error occurred");
-      }
+      await adminApi.put(`/referral/${id}`, { isActive: !currentStatus });
+      setMessage("Status updated!");
+      fetchReferralCodes();
+      setTimeout(() => setMessage(""), 3000);
     } catch (err) {
-      setMessage("Error occurred");
+      setMessage(`Error: ${err.message}`);
     }
   };
 

@@ -2,8 +2,9 @@ const express = require("express");
 const router = express.Router();
 const User = require("../models/User");
 const Payment = require("../models/Payment");
+const { adminAuth } = require("../middlewares/sessionAuth");
 
-router.get("/", async (req, res) => {
+router.get("/", adminAuth, async (req, res) => {
   try {
     const limit = parseInt(req.query.limit) || 10;
     const skip = parseInt(req.query.skip) || 0;
@@ -26,7 +27,7 @@ router.get("/", async (req, res) => {
   }
 });
 
-router.put("/:id/custom-prices", async (req, res) => {
+router.put("/:id/custom-prices", adminAuth, async (req, res) => {
   const { customPrices, balance, hiddenProducts } = req.body;
   try {
     const user = await User.findById(req.params.id).lean();
@@ -99,7 +100,7 @@ router.put("/:id/custom-prices", async (req, res) => {
   }
 });
 
-router.delete("/:id", async (req, res) => {
+router.delete("/:id", adminAuth, async (req, res) => {
   try {
     await User.findByIdAndDelete(req.params.id);
     res.json({ message: "User deleted" });

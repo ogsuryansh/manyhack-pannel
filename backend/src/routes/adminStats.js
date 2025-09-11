@@ -3,9 +3,10 @@ const express = require("express");
 const router = express.Router();
 const User = require("../models/User");
 const Product = require("../models/Product");
-const Payment = require("../models/Payment"); 
+const Payment = require("../models/Payment");
+const { adminAuth } = require("../middlewares/sessionAuth"); 
 
-router.get("/", async (req, res) => {
+router.get("/", adminAuth, async (req, res) => {
   try {
     const totalUsers = await User.countDocuments();
     const totalProducts = await Product.countDocuments();
