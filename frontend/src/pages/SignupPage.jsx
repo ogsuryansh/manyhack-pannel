@@ -107,7 +107,7 @@ export default function SignupPage() {
             onChange={handleChange}
             required
           />
-          <div style={{ position: "relative" }}>
+          <div style={{ position: "relative", width: "100%" }}>
             <input
               className="auth-input"
               type="text"
@@ -117,7 +117,9 @@ export default function SignupPage() {
               onChange={handleReferralChange}
               required
               style={{
-                borderColor: referralValid === true ? "#22c55e" : referralValid === false ? "#ff6b81" : undefined
+                borderColor: referralValid === true ? "#22c55e" : referralValid === false ? "#ff6b81" : undefined,
+                width: "100%",
+                boxSizing: "border-box"
               }}
             />
             {checkingReferral && (

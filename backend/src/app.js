@@ -4,13 +4,34 @@ console.log("Loaded MONGO_URI:", process.env.MONGO_URI);
 const express = require("express");
 const cors = require("cors");
 const mongoose = require("mongoose");
+const session = require("express-session");
+const MongoStore = require("connect-mongo");
 const connectToDatabase = require("./utils/db");
 const serverless = require('serverless-http');
 
 const app = express();
 
-app.use(cors());
+app.use(cors({
+  origin: process.env.FRONTEND_URL || "http://localhost:3000",
+  credentials: true
+}));
 app.use(express.json());
+
+// Session configuration
+app.use(session({
+  secret: process.env.SESSION_SECRET || 'your-super-secret-session-key',
+  resave: false,
+  saveUninitialized: false,
+  store: MongoStore.create({
+    mongoUrl: process.env.MONGO_URI || 'mongodb://localhost:27017/manyhackpanel',
+    touchAfter: 24 * 3600 // lazy session update
+  }),
+  cookie: {
+    secure: process.env.NODE_ENV === 'production',
+    httpOnly: true,
+    maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
+  }
+}));
 
 // Connect to MongoDB at the top level
 connectToDatabase().then(() => {
@@ -34,6 +55,7 @@ app.use("/api/referral", require("./routes/referral"));
 require("./models/TopUpPlan");
 require("./models/ReferralCode");
 require("./models/BalanceHistory");
+require("./models/Session");
 
 // Test route
 app.get("/", (req, res) => {

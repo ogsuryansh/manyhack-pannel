@@ -1,8 +1,9 @@
 const User = require('../models/User');
 const ReferralCode = require('../models/ReferralCode');
 const BalanceHistory = require('../models/BalanceHistory');
+const Session = require('../models/Session');
 const bcrypt = require('bcryptjs');
-const jwt = require('jsonwebtoken');
+const { getDeviceInfo } = require('../utils/deviceUtils');
 
 exports.register = async (req, res) => {
   try {
@@ -148,13 +149,67 @@ exports.login = async (req, res) => {
       return res.status(400).json({ message: "Invalid credentials." });
     }
 
-    const token = jwt.sign(
-      { id: user._id, isAdmin: user.isAdmin },
-      process.env.JWT_SECRET || 'fallback-secret-key',
-      { expiresIn: "7d" }
-    );
+    // Get device information
+    const deviceInfo = getDeviceInfo(req);
+    
+    // Check if user is already logged in on a different device
+    if (user.activeSession && user.activeSession.deviceFingerprint !== deviceInfo.deviceFingerprint) {
+      // Invalidate previous session
+      await Session.findOneAndUpdate(
+        { sessionId: user.activeSession.sessionId },
+        { isActive: false, logoutTime: new Date() }
+      );
+      
+      // Mark previous session as inactive in user history
+      await User.findByIdAndUpdate(user._id, {
+        $set: {
+          'sessionHistory.$[elem].logoutTime': new Date(),
+          'sessionHistory.$[elem].isActive': false
+        }
+      }, {
+        arrayFilters: [{ 'elem.sessionId': user.activeSession.sessionId, 'elem.isActive': true }]
+      });
+    }
+
+    // Create new session
+    const newSession = new Session({
+      sessionId: deviceInfo.sessionId,
+      userId: user._id,
+      deviceFingerprint: deviceInfo.deviceFingerprint,
+      userAgent: deviceInfo.userAgent,
+      ipAddress: deviceInfo.ipAddress
+    });
+    await newSession.save();
+
+    // Update user's active session
+    await User.findByIdAndUpdate(user._id, {
+      activeSession: {
+        sessionId: deviceInfo.sessionId,
+        deviceFingerprint: deviceInfo.deviceFingerprint,
+        userAgent: deviceInfo.userAgent,
+        ipAddress: deviceInfo.ipAddress,
+        loginTime: new Date(),
+        lastActivity: new Date()
+      },
+      $push: {
+        sessionHistory: {
+          sessionId: deviceInfo.sessionId,
+          deviceFingerprint: deviceInfo.deviceFingerprint,
+          userAgent: deviceInfo.userAgent,
+          ipAddress: deviceInfo.ipAddress,
+          loginTime: new Date(),
+          isActive: true
+        }
+      }
+    });
+
+    // Store user info in session
+    req.session.userId = user._id;
+    req.session.sessionId = deviceInfo.sessionId;
+    req.session.deviceFingerprint = deviceInfo.deviceFingerprint;
+    
     res.json({
-      token,
+      message: "Login successful",
       user: {
         id: user._id,
         email: user.email,
@@ -164,6 +219,7 @@ exports.login = async (req, res) => {
       }
     });
   } catch (err) {
+    console.error('Login error:', err);
     res.status(500).json({ message: "Server error." });
   }
 };
@@ -189,6 +245,44 @@ exports.getBalanceHistory = async (req, res) => {
     res.json(processedHistory);
   } catch (err) {
     console.error('Error getting balance history:', err);
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
+// Logout user and clear session information
+exports.logout = async (req, res) => {
+  try {
+    const sessionId = req.session.sessionId;
+    
+    if (sessionId) {
+      // Mark session as inactive
+      await Session.findOneAndUpdate(
+        { sessionId: sessionId },
+        { isActive: false, logoutTime: new Date() }
+      );
+      
+      // Update user's active session
+      await User.findByIdAndUpdate(req.session.userId, {
+        $unset: { activeSession: 1 },
+        $set: {
+          'sessionHistory.$[elem].logoutTime': new Date(),
+          'sessionHistory.$[elem].isActive': false
+        }
+      }, {
+        arrayFilters: [{ 'elem.sessionId': sessionId, 'elem.isActive': true }]
+      });
+    }
+    
+    // Destroy session
+    req.session.destroy((err) => {
+      if (err) {
+        console.error('Session destruction error:', err);
+        return res.status(500).json({ message: "Server error" });
+      }
+      res.json({ message: "Logged out successfully" });
+    });
+  } catch (err) {
+    console.error('Logout error:', err);
     res.status(500).json({ message: "Server error" });
   }
 };

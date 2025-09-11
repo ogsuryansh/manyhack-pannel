@@ -1,12 +1,12 @@
 const express = require('express');
 const router = express.Router();
 const authController = require('../controllers/authController');
-const authMiddleware = require('../middlewares/auth');  
+const sessionAuth = require('../middlewares/sessionAuth');  
 
 router.post('/register', authController.register);
 router.post('/login', authController.login);
 
-router.get('/me', authMiddleware, async (req, res) => {
+router.get('/me', sessionAuth, async (req, res) => {
   try {
     const User = require('../models/User');
     const user = await User.findById(req.user.id);
@@ -19,6 +19,9 @@ router.get('/me', authMiddleware, async (req, res) => {
 });
 
 // Get user's balance history
-router.get('/balance-history', authMiddleware, authController.getBalanceHistory);
+router.get('/balance-history', sessionAuth, authController.getBalanceHistory);
+
+// Logout user
+router.post('/logout', sessionAuth, authController.logout);
 
 module.exports = router;

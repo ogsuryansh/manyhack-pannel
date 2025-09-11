@@ -2,8 +2,6 @@ import React, { useEffect, useState } from "react";
 import { useAuth } from "../context/useAuth";
 import { API } from "../api";
 
-const TELEGRAM_CHANNEL_URL = "https://t.me/+5lW1baqq4a5hYWRl";
-const TELEGRAM_DM_URL = "https://t.me/legitsells66";
 
 function ExpiryCountdown({ expiry }) {
   const [timeLeft, setTimeLeft] = useState("");
@@ -59,32 +57,6 @@ export default function MyKeyPage() {
   return (
     <div className="mykey-page">
       <h2 className="section-title" style={{ textAlign: "center" }}>My Keys</h2>
-      {myKeys.length > 0 && (
-        <div className="mykey-telegram-box">
-          <div>
-            <b>JOIN THIS TELEGRAM CHANNEL</b> for your loader APK and search the loader you purchased.
-            <br />
-            <button
-              className="mykey-telegram-btn"
-              onClick={() => window.open(TELEGRAM_CHANNEL_URL, "_blank")}
-            >
-              <TelegramIcon />
-              <span style={{ marginLeft: 8 }}>Join Channel</span>
-            </button>
-          </div>
-          <div style={{ marginTop: 8 }}>
-            Everything is uploaded there: <b>setup, loader APK, process</b>.<br />
-            For any queries, DM me on Telegram:{" "}
-            <button
-              className="mykey-telegram-btn"
-              onClick={() => window.open(TELEGRAM_DM_URL, "_blank")}
-            >
-              <TelegramIcon />
-              <span style={{ marginLeft: 8 }}>t.me/legitsells66</span>
-            </button>
-          </div>
-        </div>
-      )}
       <div className="mykey-list">
         {loading ? (
           <div>Loading...</div>
@@ -132,18 +104,5 @@ export default function MyKeyPage() {
         )}
       </div>
     </div>
-  );
-}
-
-// Telegram SVG icon
-function TelegramIcon() {
-  return (
-    <svg height="20" width="20" viewBox="0 0 240 240" style={{ verticalAlign: "middle" }}>
-      <circle cx="120" cy="120" r="120" fill="#37aee2" />
-      <path
-        d="M100 170l-40-15 160-65-120 80 10 30 30-10 80-120-65 160-15-40z"
-        fill="#fff"
-      />
-    </svg>
   );
 }

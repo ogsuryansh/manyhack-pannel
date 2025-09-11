@@ -13,20 +13,20 @@ export function AuthProvider({ children }) {
   const [token, setToken] = useState(getToken());
 
   const refreshUser = async () => {
-    const token = getToken();
-    if (!token) {
-      logout();
-      return;
-    }
     try {
       const res = await fetch(`${API}/auth/me`, {
-        headers: { Authorization: `Bearer ${token}` },
+        credentials: 'include' // Important for session cookies
       });
       if (res.ok) {
         const data = await res.json();
         setUser(data);
         localStorage.setItem("user", JSON.stringify(data));
       } else {
+        const errorData = await res.json();
+        if (errorData.code === "DEVICE_MISMATCH" || errorData.code === "SESSION_EXPIRED") {
+          // Show device mismatch message
+          alert("Login detected on another device. Please login again.");
+        }
         logout();
       }
     } catch (err) {
@@ -47,7 +47,17 @@ export function AuthProvider({ children }) {
     localStorage.setItem("user", JSON.stringify(user));
   };
 
-  const logout = () => {
+  const logout = async () => {
+    // Call backend logout to clear session
+    try {
+      await fetch(`${API}/auth/logout`, {
+        method: 'POST',
+        credentials: 'include'
+      });
+    } catch (err) {
+      console.error("Error logging out from backend:", err);
+    }
+    
     doLogout();
     setUser(null);
     setToken(null);

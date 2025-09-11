@@ -5,6 +5,7 @@ export async function login(username, password) {
   const res = await fetch(`${API_URL}/login`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
+    credentials: 'include', // Important for session cookies
     body: JSON.stringify({ username, password }),
   });
   let data;
@@ -15,7 +16,6 @@ export async function login(username, password) {
   }
   if (!res.ok) throw new Error(data.message || "Login failed");
   localStorage.setItem("user", JSON.stringify(data.user));
-  localStorage.setItem("token", data.token);
   return data.user;
 }
 
@@ -40,5 +40,7 @@ export function getCurrentUser() {
 }
 
 export function getToken() {
-  return localStorage.getItem("token");
+  // For session-based auth, we don't need tokens
+  // This is kept for compatibility but returns null
+  return null;
 }
