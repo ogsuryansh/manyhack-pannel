@@ -3,7 +3,7 @@ const router = express.Router();
 const Payment = require("../models/Payment");
 const User = require("../models/User");
 const auth = require("../middlewares/auth");
-const { adminAuth } = require("../middlewares/auth");
+const { adminAuth } = require("../middlewares/sessionAuth");
 const TopUpPlan = require("../models/TopUpPlan");
 
 router.get("/", async (req, res) => {

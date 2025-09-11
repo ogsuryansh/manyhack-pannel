@@ -2,7 +2,7 @@ const express = require("express");
 const router = express.Router();
 const ReferralCode = require("../models/ReferralCode");
 const User = require("../models/User");
-const { adminAuth } = require("../middlewares/auth");
+const { adminAuth } = require("../middlewares/sessionAuth");
 
 // Get all referral codes (admin only)
 router.get("/", adminAuth, async (req, res) => {

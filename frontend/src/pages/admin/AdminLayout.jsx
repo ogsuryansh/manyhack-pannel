@@ -16,8 +16,18 @@ export default function AdminLayout() {
   const navigate = useNavigate();
   const [sidebarOpen, setSidebarOpen] = useState(true);
 
-  const handleLogout = () => {
-    localStorage.removeItem("adminToken");
+  const handleLogout = async () => {
+    try {
+      // Call backend logout to clear session
+      await fetch(`${import.meta.env.VITE_API_URL || "http://localhost:5000/api"}/admin/logout`, {
+        method: 'POST',
+        credentials: 'include'
+      });
+    } catch (err) {
+      console.error("Error logging out from backend:", err);
+    }
+    
+    localStorage.removeItem("adminUser");
     navigate("/admin-login");
   };
 

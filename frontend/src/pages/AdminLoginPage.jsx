@@ -18,6 +18,7 @@ export default function AdminLoginPage() {
       const res = await fetch(`${API}/admin/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
+        credentials: 'include', // Important for session cookies
         body: JSON.stringify(form),
       });
       let data;
@@ -27,7 +28,7 @@ export default function AdminLoginPage() {
         data = {};
       }
       if (!res.ok) throw new Error(data.message || "Login failed");
-      localStorage.setItem("adminToken", data.token);
+      localStorage.setItem("adminUser", JSON.stringify(data.admin));
       navigate("/admin");
     } catch (err) {
       setError(err.message);
