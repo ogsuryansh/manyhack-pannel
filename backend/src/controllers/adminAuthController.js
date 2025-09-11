@@ -35,6 +35,14 @@ exports.adminLogin = async (req, res) => {
       req.session.sessionId = deviceInfo.sessionId;
       req.session.deviceFingerprint = deviceInfo.deviceFingerprint;
       req.session.isAdmin = true;
+      
+      // Force session save
+      req.session.save((err) => {
+        if (err) {
+          console.error('Session save error:', err);
+        }
+      });
+      
       console.log('Session stored:', req.session);
       
       console.log('Sending success response...');

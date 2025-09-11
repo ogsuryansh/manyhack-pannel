@@ -43,13 +43,21 @@ app.use(session({
   saveUninitialized: false,
   store: MongoStore.create({
     mongoUrl: process.env.MONGO_URI || 'mongodb://localhost:27017/manyhackpanel',
-    touchAfter: 24 * 3600 // lazy session update
+    touchAfter: 24 * 3600, // lazy session update
+    collectionName: 'sessions',
+    stringify: false,
+    serialize: (session) => {
+      return JSON.stringify(session);
+    },
+    unserialize: (serialized) => {
+      return JSON.parse(serialized);
+    }
   }),
   cookie: {
-    secure: false, // Set to false for local development
+    secure: process.env.NODE_ENV === 'production', // true for production (HTTPS)
     httpOnly: true,
     maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
-    sameSite: 'lax' // Use 'lax' for local development
+    sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax' // 'none' for production cross-origin
   }
 }));
 
@@ -152,6 +160,25 @@ app.post("/debug/admin-login", async (req, res) => {
         NODE_ENV: process.env.NODE_ENV,
         SESSION_SECRET: process.env.SESSION_SECRET ? 'SET' : 'NOT SET'
       }
+    });
+  } catch (error) {
+    res.status(500).json({ error: error.message, stack: error.stack });
+  }
+});
+
+// Debug route to check session store
+app.get("/debug/session-store", async (req, res) => {
+  try {
+    const mongoose = require('mongoose');
+    const sessions = await mongoose.connection.db.collection('sessions').find({}).toArray();
+    
+    res.json({
+      totalSessions: sessions.length,
+      sessions: sessions.map(s => ({
+        _id: s._id,
+        expires: s.expires,
+        session: s.session ? JSON.parse(s.session) : null
+      }))
     });
   } catch (error) {
     res.status(500).json({ error: error.message, stack: error.stack });
