@@ -40,6 +40,8 @@ exports.adminLogin = async (req, res) => {
       req.session.save((err) => {
         if (err) {
           console.error('Session save error:', err);
+        } else {
+          console.log('Session saved successfully in production');
         }
       });
       

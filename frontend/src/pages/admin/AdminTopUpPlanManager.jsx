@@ -1,8 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { API } from "../../api";
+import { adminApi } from "../../utils/adminApi";
 import { FaGift, FaRupeeSign, FaCheckCircle, FaTimesCircle, FaEdit, FaTrash } from "react-icons/fa";
-
-const getAdminToken = () => localStorage.getItem("adminToken");
 
 const AdminTopUpPlanManager = () => {
   const [plans, setPlans] = useState([]);
@@ -16,11 +15,7 @@ const AdminTopUpPlanManager = () => {
     setLoading(true);
     setError("");
     try {
-      const res = await fetch(`${API}/payments/topup-plans`, {
-        headers: { Authorization: `Bearer ${getAdminToken()}` },
-      });
-      if (!res.ok) throw new Error("Unable to fetch plans. Make sure you are logged in as admin.");
-      const data = await res.json();
+      const data = await adminApi.get('/payments/topup-plans');
       setPlans(data);
     } catch (err) {
       setError(err.message);
@@ -43,25 +38,20 @@ const AdminTopUpPlanManager = () => {
     setError("");
     setMessage("");
     try {
-      const method = editingId ? "PUT" : "POST";
-      const url = editingId
-        ? `${API}/payments/topup-plans/${editingId}`
-        : `${API}/payments/topup-plans`;
-      const res = await fetch(url, {
-        method,
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${getAdminToken()}`,
-        },
-        body: JSON.stringify({
-          amount: Number(form.amount),
-          bonus: Number(form.bonus),
-          isActive: form.isActive,
-        }),
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.message || "Failed to save plan");
-      setMessage(editingId ? "Plan updated" : "Plan created");
+      const planData = {
+        amount: Number(form.amount),
+        bonus: Number(form.bonus),
+        isActive: form.isActive,
+      };
+      
+      if (editingId) {
+        await adminApi.put(`/payments/topup-plans/${editingId}`, planData);
+        setMessage("Plan updated");
+      } else {
+        await adminApi.post('/payments/topup-plans', planData);
+        setMessage("Plan created");
+      }
+      
       setForm({ amount: "", bonus: "", isActive: true });
       setEditingId(null);
       fetchPlans();
@@ -86,12 +76,7 @@ const AdminTopUpPlanManager = () => {
     setError("");
     setMessage("");
     try {
-      const res = await fetch(`${API}/payments/topup-plans/${id}`, {
-        method: "DELETE",
-        headers: { Authorization: `Bearer ${getAdminToken()}` },
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.message || "Failed to delete");
+      await adminApi.delete(`/payments/topup-plans/${id}`);
       setMessage("Plan deleted");
       fetchPlans();
       setTimeout(() => setMessage(""), 3000);

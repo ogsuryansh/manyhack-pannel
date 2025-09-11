@@ -58,6 +58,8 @@ module.exports.adminAuth = async function (req, res, next) {
     console.log('Session userId:', req.session?.userId);
     console.log('Session isAdmin:', req.session?.isAdmin);
     console.log('Session sessionId:', req.session?.sessionId);
+    console.log('Session keys:', req.session ? Object.keys(req.session) : 'No session');
+    console.log('Request cookies:', req.headers.cookie);
     console.log('Full session object:', req.session);
     console.log('========================');
     
