@@ -22,6 +22,7 @@ import AdminProductManager from "./pages/admin/AdminProductManager";
 import AdminUserManager from "./pages/admin/AdminUserManager";
 import AdminPaymentManager from "./pages/admin/AdminPaymentManager";
 import AdminTopUpPlanManager from "./pages/admin/AdminTopUpPlanManager";
+import AdminReferralManager from "./pages/admin/AdminReferralManager";
 import { API } from "./api";
 
 function App() {
@@ -86,6 +87,7 @@ function App() {
           <Route path="user-manager" element={<AdminUserManager />} />
           <Route path="payment-manager" element={<AdminPaymentManager />} />
           <Route path="topup-plan-manager" element={<AdminTopUpPlanManager />} />
+          <Route path="referral-manager" element={<AdminReferralManager />} />
         </Route>
 
         <Route path="/terms-policy" element={<TermsAndPolicy />} />

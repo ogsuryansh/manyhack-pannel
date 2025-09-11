@@ -11,6 +11,12 @@ const userSchema = new mongoose.Schema({
   username: { type: String, required: true, unique: true },
   password: { type: String, required: true },
   isAdmin: { type: Boolean, default: false },
+  referralCode: { 
+    type: String, 
+    required: true,
+    uppercase: true,
+    trim: true
+  },
   wallet: [walletEntrySchema],
   customPrices: [
     {

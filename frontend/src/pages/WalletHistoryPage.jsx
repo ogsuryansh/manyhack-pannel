@@ -10,7 +10,7 @@ export default function WalletHistoryPage() {
 
   useEffect(() => {
     if (!user) return;
-    fetch(`${API}/payments/user`, {
+    fetch(`${API}/auth/balance-history`, {
       headers: {
         Authorization: `Bearer ${localStorage.getItem("token")}`,
       },
@@ -19,24 +19,28 @@ export default function WalletHistoryPage() {
       .then((data) => {
         setTransactions(Array.isArray(data) ? data : []);
         setLoading(false);
+      })
+      .catch((error) => {
+        console.error('Error fetching balance history:', error);
+        setLoading(false);
       });
   }, [user]);
 
   const moneyAdded = transactions
-    .filter((t) => t.type === "add_money" && t.status === "approved")
-    .reduce((sum, t) => sum + (t.meta && t.meta.bonus ? t.meta.bonus : t.amount), 0);
-  const moneyDeducted = transactions
-    .filter((t) => t.type === "deduct_money" && t.status === "approved")
+    .filter((t) => t.type === "topup" || t.type === "referral_reward")
     .reduce((sum, t) => sum + t.amount, 0);
+  const moneyDeducted = transactions
+    .filter((t) => t.type === "admin_adjustment" && t.amount < 0)
+    .reduce((sum, t) => sum + Math.abs(t.amount), 0);
   const moneyUsed = transactions
-    .filter((t) => t.type === "buy_key" && t.status === "approved")
+    .filter((t) => t.type === "purchase")
     .reduce((sum, t) => sum + t.amount, 0);
   const netBalance = moneyAdded - moneyUsed - moneyDeducted;
 
   const filteredTx = transactions.filter((t) => {
     if (filter === "all") return true;
-    if (filter === "credited") return t.type === "add_money" && t.status === "approved";
-    if (filter === "debited") return (t.type === "buy_key" || t.type === "deduct_money") && t.status === "approved";
+    if (filter === "credited") return t.type === "topup" || t.type === "referral_reward";
+    if (filter === "debited") return t.type === "purchase" || (t.type === "admin_adjustment" && t.amount < 0);
     return true;
   });
 
@@ -78,42 +82,35 @@ export default function WalletHistoryPage() {
           <div style={{ color: "#aaa", textAlign: "center", marginTop: 24 }}>No transactions found.</div>
         ) : (
           filteredTx.map((tx) => {
-            const credited = tx.type === "add_money" && tx.meta && tx.meta.bonus ? tx.meta.bonus : tx.amount;
-            const isOffer = tx.type === "add_money" && tx.meta && tx.meta.offer;
+            const isCredit = tx.type === "topup" || tx.type === "referral_reward";
+            const isDebit = tx.type === "purchase" || (tx.type === "admin_adjustment" && tx.amount < 0);
             return (
               <div className="wallet-history-card" key={tx._id}>
                 <div className="wallet-history-row">
                   <span>{new Date(tx.createdAt).toLocaleDateString()}</span>
                   <span
-                    className={`wallet-history-amount ${
-                      tx.type === "add_money" ? "credit" : "debit"
-                    }`}
+                    className={`wallet-history-amount ${isCredit ? "credit" : "debit"}`}
                   >
-                    {tx.type === "add_money" ? "+" : "-"}₹{tx.type === "add_money" ? credited : tx.amount}
+                    {isCredit ? "+" : "-"}₹{Math.abs(tx.amount)}
                   </span>
                 </div>
                 <div className="wallet-history-row">
                   <span>
-                    {tx.type === "add_money"
-                      ? "Added to wallet"
-                      : tx.type === "deduct_money"
-                      ? "Deducted by admin"
-                      : tx.type === "buy_key"
-                      ? `Used for ${tx.productId?.name || "Product"}`
-                      : ""}
+                    {tx.type === "topup"
+                      ? "Top-up added to wallet"
+                      : tx.type === "referral_reward"
+                      ? tx.description || "Referral reward"
+                      : tx.type === "purchase"
+                      ? `Purchase: ${tx.description || "Product"}`
+                      : tx.type === "admin_adjustment"
+                      ? tx.description || "Admin adjustment"
+                      : tx.description || "Transaction"}
                   </span>
-                  <span>Status: {tx.status}</span>
-                </div>
-                {isOffer && (
-                  <div className="wallet-history-row" style={{ color: "#22c55e", fontSize: "0.95em" }}>
-                    <span>
-                      <b>Offer:</b> Paid ₹{tx.amount}, Credited ₹{credited}
-                    </span>
-                  </div>
-                )}
-                <div className="wallet-history-row">
-                  <span>UTR: {tx.utr || "NA"}</span>
-                  <span>Contact: {tx.payerName || "NA"}</span>
+                  <span>
+                    {tx.type === "referral_reward" && tx.referralCode && tx.referralCode !== 'N/A' 
+                      ? `Code: ${tx.referralCode}` 
+                      : `Type: ${tx.type}`}
+                  </span>
                 </div>
               </div>
             );

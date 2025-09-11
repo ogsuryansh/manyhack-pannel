@@ -30,7 +30,10 @@ app.use("/api/keys", require("./routes/key"));
 app.use("/api/payments", require("./routes/payment"));
 app.use("/api/settings", require("./routes/settings"));
 app.use("/api/notice", require("./routes/notice"));
+app.use("/api/referral", require("./routes/referral"));
 require("./models/TopUpPlan");
+require("./models/ReferralCode");
+require("./models/BalanceHistory");
 
 // Test route
 app.get("/", (req, res) => {

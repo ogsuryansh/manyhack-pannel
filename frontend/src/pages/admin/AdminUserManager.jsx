@@ -240,7 +240,10 @@ export default function AdminUserManager() {
                   </td>
                   <td>{userContacts[user._id] || "NA"}</td>
                   <td>
-                    <button onClick={() => handleEditPrices(user)}>
+                    <button 
+                      className="admin-user-action-btn"
+                      onClick={() => handleEditPrices(user)}
+                    >
                       Edit Prices/Wallet
                     </button>
                     <button
@@ -286,9 +289,21 @@ export default function AdminUserManager() {
       </table>
 
       <div style={{ marginTop: 16, textAlign: "center" }}>
-        <button onClick={() => setPage(page-1)} disabled={page===0}>Previous</button>
+        <button 
+          className="admin-user-action-btn"
+          onClick={() => setPage(page-1)} 
+          disabled={page===0}
+        >
+          Previous
+        </button>
         <span style={{ margin: "0 12px" }}>Page {page+1} of {Math.ceil(total/pageSize)}</span>
-        <button onClick={() => setPage(page+1)} disabled={(page+1)*pageSize >= total}>Next</button>
+        <button 
+          className="admin-user-action-btn"
+          onClick={() => setPage(page+1)} 
+          disabled={(page+1)*pageSize >= total}
+        >
+          Next
+        </button>
       </div>
 
       {editingUser && (
@@ -466,6 +481,7 @@ export default function AdminUserManager() {
               </ul>
             </div>
             <button
+              className="admin-user-save-btn"
               onClick={async () => {
                 // Save all custom prices and hidden products in one go
                 const res = await fetch(
@@ -493,7 +509,12 @@ export default function AdminUserManager() {
             >
               Save All
             </button>
-            <button onClick={() => setEditingUser(null)}>Cancel</button>
+            <button 
+              className="admin-user-cancel-btn"
+              onClick={() => setEditingUser(null)}
+            >
+              Cancel
+            </button>
           </div>
         </div>
       )}

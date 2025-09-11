@@ -2,78 +2,69 @@ import React, { useState } from "react";
 import { Link, Outlet, useLocation, useNavigate } from "react-router-dom";
 
 const adminTabs = [
-  { label: "Dashboard", to: "/admin/dashboard" },
-  { label: "Product Manager", to: "/admin/product-manager" },
-  { label: "User Manager", to: "/admin/user-manager" },
-  { label: "Key Manager", to: "/admin/key-manager" }, 
-  { label: "Payment Manager", to: "/admin/payment-manager" },
-  { label: "Top-Up Plan Manager", to: "/admin/topup-plan-manager" },
+  { label: "Dashboard", to: "/admin/dashboard", icon: "📊" },
+  { label: "Product Manager", to: "/admin/product-manager", icon: "📦" },
+  { label: "User Manager", to: "/admin/user-manager", icon: "👥" },
+  { label: "Key Manager", to: "/admin/key-manager", icon: "🔑" }, 
+  { label: "Payment Manager", to: "/admin/payment-manager", icon: "💳" },
+  { label: "Top-Up Plan Manager", to: "/admin/topup-plan-manager", icon: "💰" },
+  { label: "Referral Manager", to: "/admin/referral-manager", icon: "🔗" },
 ];
 
 export default function AdminLayout() {
   const location = useLocation();
   const navigate = useNavigate();
-  const [menuOpen, setMenuOpen] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(true);
 
   const handleLogout = () => {
     localStorage.removeItem("adminToken");
     navigate("/admin-login");
   };
+
   return (
-    <div>
-      <nav className="admin-navbar">
-        <div className="admin-navbar-title">Admin Panel</div>
-        <div className="admin-navbar-tabs desktop-only">
-          {adminTabs.map(tab => (
-            <Link
-              key={tab.to}
-              to={tab.to}
-              className={`admin-navbar-link${location.pathname === tab.to ? " active" : ""}`}
-            >
-              {tab.label}
-            </Link>
-          ))}
-        </div>
-        <div className="admin-navbar-actions desktop-only">
-          <button className="admin-logout-btn" onClick={handleLogout}>
-            <span role="img" aria-label="logout">🚪</span>
-            Logout
+    <div className="admin-layout">
+      {/* Sidebar */}
+      <div className={`admin-sidebar ${sidebarOpen ? 'open' : 'closed'}`}>
+        <div className="admin-sidebar-header">
+          <div className="admin-sidebar-title">
+            <span className="admin-logo">⚡</span>
+            <span className="admin-title-text">Admin Panel</span>
+          </div>
+          <button 
+            className="admin-sidebar-toggle"
+            onClick={() => setSidebarOpen(!sidebarOpen)}
+          >
+            {sidebarOpen ? '◀' : '▶'}
           </button>
         </div>
-        <div className="admin-hamburger mobile-only" onClick={() => setMenuOpen(v => !v)}>
-          <div className={`bar${menuOpen ? " open" : ""}`}></div>
-          <div className={`bar${menuOpen ? " open" : ""}`}></div>
-          <div className={`bar${menuOpen ? " open" : ""}`}></div>
-        </div>
-      </nav>
-      {/* Slide-out menu for mobile */}
-      <div className={`admin-slide-menu${menuOpen ? " open" : ""}`} onClick={() => setMenuOpen(false)}>
-        <div className="admin-slide-menu-content" onClick={e => e.stopPropagation()}>
-          <div className="admin-slide-title">Admin Menu</div>
+        
+        <nav className="admin-sidebar-nav">
           {adminTabs.map(tab => (
             <Link
               key={tab.to}
               to={tab.to}
-              className={`admin-navbar-link${location.pathname === tab.to ? " active" : ""}`}
-              onClick={() => setMenuOpen(false)}
+              className={`admin-sidebar-link ${location.pathname === tab.to ? "active" : ""}`}
+              title={sidebarOpen ? "" : tab.label}
             >
-              {tab.label}
+              <span className="admin-sidebar-icon">{tab.icon}</span>
+              {sidebarOpen && <span className="admin-sidebar-text">{tab.label}</span>}
             </Link>
           ))}
-          <button 
-            className="admin-navbar-link admin-logout-btn-mobile" 
-            onClick={() => {
-              handleLogout();
-              setMenuOpen(false);
-            }}
-          >
-            <span role="img" aria-label="logout">🚪</span>
-            Logout
+        </nav>
+
+        <div className="admin-sidebar-footer">
+          <button className="admin-sidebar-logout" onClick={handleLogout}>
+            <span className="admin-sidebar-icon">🚪</span>
+            {sidebarOpen && <span className="admin-sidebar-text">Logout</span>}
           </button>
         </div>
       </div>
-      <div className="admin-content">
-        <Outlet />
+
+      {/* Main Content */}
+      <div className={`admin-main-content ${sidebarOpen ? 'sidebar-open' : 'sidebar-closed'}`}>
+        <div className="admin-content">
+          <Outlet />
+        </div>
       </div>
     </div>
   );

@@ -7,7 +7,7 @@ module.exports = function (req, res, next) {
   }
   const token = authHeader.split(" ")[1];
   try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'fallback-secret-key');
     req.user = decoded; 
     next();
   } catch (err) {
@@ -23,7 +23,7 @@ module.exports.adminAuth = function (req, res, next) {
   }
   const token = authHeader.split(" ")[1];
   try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'fallback-secret-key');
     // Check if it's an admin token or a regular user with admin privileges
     if (decoded.isAdmin || decoded.role === 'admin') {
       req.user = decoded;

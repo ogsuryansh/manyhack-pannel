@@ -19,11 +19,11 @@ export async function login(username, password) {
   return data.user;
 }
 
-export async function register(email, username, password) {
+export async function register(email, username, password, referralCode) {
   const res = await fetch(`${API_URL}/register`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ email, username, password }),
+    body: JSON.stringify({ email, username, password, referralCode }),
   });
   if (!res.ok) throw new Error((await res.json()).message || "Register failed");
   return await res.json();
