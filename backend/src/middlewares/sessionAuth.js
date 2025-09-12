@@ -51,83 +51,72 @@ module.exports = async function (req, res, next) {
 // Admin session middleware
 module.exports.adminAuth = async function (req, res, next) {
   try {
-    if (process.env.NODE_ENV !== 'production') {
-      console.log('\n=== ADMIN AUTH DEBUG ===');
-      console.log('Request URL:', req.url);
-      console.log('Request method:', req.method);
-      console.log('Request headers:', JSON.stringify(req.headers, null, 2));
-      console.log('Session exists:', !!req.session);
-      console.log('Session ID from cookie:', req.sessionID);
-      console.log('Session userId:', req.session?.userId);
-      console.log('Session isAdmin:', req.session?.isAdmin);
-      console.log('Session sessionId:', req.session?.sessionId);
-      console.log('Session keys:', req.session ? Object.keys(req.session) : 'No session');
-      console.log('Request cookies:', req.headers.cookie);
-      console.log('Full session object:', JSON.stringify(req.session, null, 2));
-    }
+    console.log('\n=== ADMIN AUTH DEBUG ===');
+    console.log('Request URL:', req.url);
+    console.log('Request method:', req.method);
+    console.log('Request origin:', req.headers.origin);
+    console.log('Request cookies:', req.headers.cookie);
+    console.log('Session exists:', !!req.session);
+    console.log('Session ID from cookie:', req.sessionID);
+    console.log('Session userId:', req.session?.userId);
+    console.log('Session isAdmin:', req.session?.isAdmin);
+    console.log('Session sessionId:', req.session?.sessionId);
+    console.log('Session keys:', req.session ? Object.keys(req.session) : 'No session');
     
     // Check if session cookie exists
     if (!req.headers.cookie) {
-      if (process.env.NODE_ENV !== 'production') {
-        console.log('❌ NO COOKIES FOUND IN REQUEST');
-      }
+      console.log('❌ NO COOKIES FOUND IN REQUEST');
       return res.status(401).json({ 
-        message: "No cookies found",
+        message: "No cookies found - please log in again",
         debug: {
           url: req.url,
           method: req.method,
           origin: req.headers.origin,
-          userAgent: req.headers['user-agent']
+          userAgent: req.headers['user-agent'],
+          timestamp: new Date().toISOString()
         }
       });
     }
     
     // Check if session exists
     if (!req.session) {
-      if (process.env.NODE_ENV !== 'production') {
-        console.log('❌ NO SESSION OBJECT FOUND');
-      }
+      console.log('❌ NO SESSION OBJECT FOUND');
       return res.status(401).json({ 
-        message: "No session object",
+        message: "No session found - please log in again",
         debug: {
           url: req.url,
           method: req.method,
           origin: req.headers.origin,
           sessionId: req.sessionID,
-          cookies: req.headers.cookie
+          cookies: req.headers.cookie,
+          timestamp: new Date().toISOString()
         }
       });
     }
     
     // Check if user is logged in via session
     if (!req.session.userId) {
-      if (process.env.NODE_ENV !== 'production') {
-        console.log('❌ NO USER ID IN SESSION');
-        console.log('Session data:', JSON.stringify(req.session, null, 2));
-      }
+      console.log('❌ NO USER ID IN SESSION');
+      console.log('Session data:', JSON.stringify(req.session, null, 2));
       return res.status(401).json({ 
-        message: "No active session",
+        message: "No active session - please log in again",
         debug: {
           url: req.url,
           method: req.method,
           origin: req.headers.origin,
           sessionId: req.sessionID,
           sessionKeys: req.session ? Object.keys(req.session) : 'No session',
-          cookies: req.headers.cookie
+          cookies: req.headers.cookie,
+          timestamp: new Date().toISOString()
         }
       });
     }
     
-    if (process.env.NODE_ENV !== 'production') {
-      console.log('✅ Session validation passed');
-      console.log('========================\n');
-    }
+    console.log('✅ Session validation passed');
 
     // For admin users, just check session data
     if (req.session.userId === 'admin') {
-      if (process.env.NODE_ENV !== 'production') {
-        console.log('Admin session validated');
-      }
+      console.log('Admin session validated');
     } else {
       // For regular users, check User model
       const user = await User.findById(req.session.userId);
@@ -149,9 +138,13 @@ module.exports.adminAuth = async function (req, res, next) {
       sessionId: req.session.sessionId
     };
 
+    console.log('========================\n');
     next();
   } catch (err) {
     console.error('Admin session auth error:', err);
-    res.status(500).json({ message: "Server error" });
+    res.status(500).json({ 
+      message: "Server error",
+      error: process.env.NODE_ENV === 'production' ? 'Internal server error' : err.message
+    });
   }
 };

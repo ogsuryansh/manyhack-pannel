@@ -117,8 +117,8 @@ const sessionConfig = {
     secure: process.env.NODE_ENV === 'production', // true for production (HTTPS)
     httpOnly: true,
     maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
-    sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax' // 'none' for production cross-origin
-    // Removed domain restriction to let browser handle it
+    sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax', // 'none' for production cross-origin
+    domain: process.env.NODE_ENV === 'production' ? '.gaminggarage.store' : undefined // Set domain for production
   }
 };
 
@@ -198,6 +198,31 @@ app.get("/api/session-debug", (req, res) => {
       sessionId: req.session.sessionId,
       keys: Object.keys(req.session)
     } : null,
+    cookies: req.headers.cookie,
+    origin: req.headers.origin,
+    userAgent: req.headers['user-agent'],
+    timestamp: new Date().toISOString(),
+    environment: process.env.NODE_ENV
+  });
+});
+
+// Admin session test endpoint
+app.get("/api/admin/session-test", (req, res) => {
+  console.log('=== ADMIN SESSION TEST ===');
+  console.log('Request origin:', req.headers.origin);
+  console.log('Request cookies:', req.headers.cookie);
+  console.log('Session ID:', req.sessionID);
+  console.log('Session exists:', !!req.session);
+  console.log('Session userId:', req.session?.userId);
+  console.log('Session isAdmin:', req.session?.isAdmin);
+  console.log('==========================');
+  
+  res.json({
+    message: "Admin session test",
+    sessionId: req.sessionID,
+    sessionExists: !!req.session,
+    isAdmin: req.session?.isAdmin || false,
+    userId: req.session?.userId || null,
     cookies: req.headers.cookie,
     origin: req.headers.origin,
     timestamp: new Date().toISOString()

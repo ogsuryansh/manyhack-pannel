@@ -17,12 +17,34 @@ export default function AdminDashboard() {
     fetch(`${API}/admin/stats`, {
       credentials: 'include'
     })
-      .then(res => res.json())
+      .then(async res => {
+        console.log('Admin stats response status:', res.status);
+        console.log('Admin stats response headers:', res.headers);
+        
+        if (!res.ok) {
+          const errorText = await res.text();
+          console.error('Admin stats error response:', errorText);
+          throw new Error(`HTTP ${res.status}: ${errorText}`);
+        }
+        
+        const contentType = res.headers.get('content-type');
+        if (!contentType || !contentType.includes('application/json')) {
+          const text = await res.text();
+          console.error('Non-JSON response received:', text);
+          throw new Error('Server returned non-JSON response');
+        }
+        
+        return res.json();
+      })
       .then(data => {
+        console.log('Admin stats data received:', data);
         setStats(data);
         setLoading(false);
       })
-      .catch(() => setLoading(false));
+      .catch(err => {
+        console.error('Admin stats fetch error:', err);
+        setLoading(false);
+      });
     fetch(`${API}/notice`, {
       credentials: 'include'
     })
