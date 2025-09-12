@@ -30,22 +30,46 @@ exports.adminLogin = async (req, res) => {
       console.log('Using express-session store for session management');
 
       // Store admin info in session
+      console.log('\n=== SESSION CREATION DEBUG ===');
+      console.log('Session ID before setting data:', req.sessionID);
+      console.log('Session exists before setting data:', !!req.session);
+      console.log('Session keys before setting data:', req.session ? Object.keys(req.session) : 'No session');
+      
       console.log('Storing admin info in session...');
       req.session.userId = 'admin';
       req.session.sessionId = deviceInfo.sessionId;
       req.session.deviceFingerprint = deviceInfo.deviceFingerprint;
       req.session.isAdmin = true;
       
-      // Force session save
-      req.session.save((err) => {
-        if (err) {
-          console.error('Session save error:', err);
-        } else {
-          console.log('Session saved successfully in production');
-        }
+      console.log('Session data after setting:', {
+        userId: req.session.userId,
+        sessionId: req.session.sessionId,
+        deviceFingerprint: req.session.deviceFingerprint,
+        isAdmin: req.session.isAdmin
       });
       
-      console.log('Session stored:', req.session);
+      // Force session save and wait for completion
+      console.log('Saving session to MongoDB...');
+      await new Promise((resolve, reject) => {
+        req.session.save((err) => {
+          if (err) {
+            console.error('❌ Session save error:', err);
+            reject(err);
+          } else {
+            console.log('✅ Session saved successfully to MongoDB');
+            resolve();
+          }
+        });
+      });
+      
+      // Verify session was saved
+      console.log('Verifying session after save...');
+      console.log('Session ID after save:', req.sessionID);
+      console.log('Session userId after save:', req.session.userId);
+      console.log('Session isAdmin after save:', req.session.isAdmin);
+      console.log('Session keys after save:', Object.keys(req.session));
+      console.log('Full session object after save:', JSON.stringify(req.session, null, 2));
+      console.log('===============================\n');
       
       console.log('Sending success response...');
       return res.json({

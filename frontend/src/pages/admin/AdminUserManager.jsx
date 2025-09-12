@@ -37,8 +37,8 @@ export default function AdminUserManager() {
   useEffect(() => {
     setLoading(true);
     Promise.all([
-      fetch(`${API}/admin/users?limit=${pageSize}&skip=${page*pageSize}&search=${encodeURIComponent(debouncedSearch)}`).then((res) => res.json()),
-      fetch(`${API}/products`).then((res) => res.json()),
+      fetch(`${API}/admin/users?limit=${pageSize}&skip=${page*pageSize}&search=${encodeURIComponent(debouncedSearch)}`, { credentials: 'include' }).then((res) => res.json()),
+      fetch(`${API}/products`, { credentials: 'include' }).then((res) => res.json()),
     ]).then(([usersData, productsData]) => {
       setUsers(usersData.users || []);
       setTotal(usersData.total || 0);
@@ -50,7 +50,7 @@ export default function AdminUserManager() {
   // Fetch purchases and contact for each user
   useEffect(() => {
     users.forEach((user) => {
-      fetch(`${API}/keys/user/${user._id}`)
+      fetch(`${API}/keys/user/${user._id}`, { credentials: 'include' })
         .then((res) => (res.ok ? res.json() : []))
         .then((keys) => {
           setUserPurchases((prev) => ({
@@ -60,7 +60,7 @@ export default function AdminUserManager() {
               : [],
           }));
         });
-      fetch(`${API}/payments/user/${user._id}`)
+      fetch(`${API}/payments/user/${user._id}`, { credentials: 'include' })
         .then((res) => (res.ok ? res.json() : []))
         .then((payments) => {
           const latest = Array.isArray(payments)
@@ -143,7 +143,7 @@ export default function AdminUserManager() {
       setMessage({ type: "error", text: "Failed to update user." });
     }
     setEditingUser(null);
-    fetch(`${API}/admin/users`)
+    fetch(`${API}/admin/users`, { credentials: 'include' })
       .then((res) => res.json())
       .then((data) => setUsers(data));
   };
@@ -153,6 +153,7 @@ export default function AdminUserManager() {
     if (!window.confirm("Are you sure you want to delete this user?")) return;
     await fetch(`${API}/admin/users/${userId}`, {
       method: "DELETE",
+      credentials: 'include'
     });
     setUsers(users.filter((u) => u._id !== userId));
   };
@@ -502,7 +503,7 @@ export default function AdminUserManager() {
                   setMessage({ type: "error", text: "Failed to update user." });
                 }
                 setEditingUser(null);
-                fetch(`${API}/admin/users`)
+                fetch(`${API}/admin/users`, { credentials: 'include' })
                   .then((res) => res.json())
                   .then((data) => setUsers(data));
               }}

@@ -14,6 +14,7 @@ const app = express();
 app.use(cors({
   origin: [
     'http://localhost:3000',
+    'http://localhost:5173',
     'https://gaminggarage.store',
     'https://www.gaminggarage.store'
   ],
@@ -27,10 +28,10 @@ app.use(express.json());
 
 // Request logging middleware
 app.use((req, res, next) => {
-  console.log('=== REQUEST DEBUG ===');
+  console.log('\n=== REQUEST DEBUG ===');
   console.log('Method:', req.method);
   console.log('URL:', req.url);
-  console.log('Headers:', req.headers);
+  console.log('Headers:', JSON.stringify(req.headers, null, 2));
   console.log('Body:', req.body);
   console.log('====================');
   next();
@@ -39,12 +40,12 @@ app.use((req, res, next) => {
 // Session configuration
 app.use(session({
   secret: process.env.SESSION_SECRET || 'your-super-secret-session-key',
-  resave: false,
-  saveUninitialized: false,
+  resave: true,
+  saveUninitialized: true,
   store: MongoStore.create({
     mongoUrl: process.env.MONGO_URI || 'mongodb://localhost:27017/manyhackpanel',
-    touchAfter: 24 * 3600, // lazy session update
     collectionName: 'sessions',
+    touchAfter: 24 * 3600, // lazy session update
     stringify: false,
     serialize: (session) => {
       return JSON.stringify(session);
@@ -54,12 +55,24 @@ app.use(session({
     }
   }),
   cookie: {
-    secure: process.env.NODE_ENV === 'production', // true for production (HTTPS)
+    secure: false, // false for development (HTTP)
     httpOnly: true,
     maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
-    sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax' // 'none' for production cross-origin
+    sameSite: 'lax', // 'lax' for development
+    domain: 'localhost' // Explicitly set domain for localhost
   }
 }));
+
+// Session debugging middleware
+app.use((req, res, next) => {
+  console.log('\n=== SESSION MIDDLEWARE DEBUG ===');
+  console.log('Session ID:', req.sessionID);
+  console.log('Session exists:', !!req.session);
+  console.log('Session keys:', req.session ? Object.keys(req.session) : 'No session');
+  console.log('Cookies in request:', req.headers.cookie);
+  console.log('================================\n');
+  next();
+});
 
 // Connect to MongoDB at the top level
 connectToDatabase().then(() => {

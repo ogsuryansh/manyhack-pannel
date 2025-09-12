@@ -14,20 +14,26 @@ export default function AdminDashboard() {
   const [siteMsg, setSiteMsg] = useState("");
 
   useEffect(() => {
-    fetch(`${API}/admin/stats`)
+    fetch(`${API}/admin/stats`, {
+      credentials: 'include'
+    })
       .then(res => res.json())
       .then(data => {
         setStats(data);
         setLoading(false);
       })
       .catch(() => setLoading(false));
-    fetch(`${API}/notice`)
+    fetch(`${API}/notice`, {
+      credentials: 'include'
+    })
       .then(res => res.json())
       .then(data => {
         setNoticeInput(data.text || "");
       });
     // Fetch website name/title
-    fetch(`${API}/settings/site`)
+    fetch(`${API}/settings/site`, {
+      credentials: 'include'
+    })
       .then(res => res.json())
       .then(data => {
         setSiteName(data.websiteName || "");
@@ -39,6 +45,7 @@ export default function AdminDashboard() {
     const res = await fetch(`${API}/notice`, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
+      credentials: 'include',
       body: JSON.stringify({ text: noticeInput }),
     });
     if (res.ok) {
@@ -53,7 +60,10 @@ export default function AdminDashboard() {
   const handleRefreshAll = async () => {
     setRefreshMsg("");
     try {
-      const res = await fetch(`${API}/settings/refresh-version`, { method: "POST" });
+      const res = await fetch(`${API}/settings/refresh-version`, { 
+        method: "POST",
+        credentials: 'include'
+      });
       const data = await res.json();
       if (res.ok && data.success) {
         setRefreshMsg("All user websites will refresh within 1 minute!");
@@ -71,6 +81,7 @@ export default function AdminDashboard() {
     const res = await fetch(`${API}/settings/site`, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
+      credentials: 'include',
       body: JSON.stringify({ websiteName: siteName, websiteTitle: siteTitle }),
     });
     if (res.ok) {

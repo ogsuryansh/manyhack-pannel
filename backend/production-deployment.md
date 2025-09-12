@@ -51,3 +51,4 @@ The backend is configured to allow:
 - [ ] Test admin login functionality
 - [ ] Test user registration and login
 - [ ] Verify device security works (login from different devices)
+

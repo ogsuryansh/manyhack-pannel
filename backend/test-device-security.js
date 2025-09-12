@@ -117,3 +117,4 @@ async function testDeviceSecurity() {
 }
 
 testDeviceSecurity();
+

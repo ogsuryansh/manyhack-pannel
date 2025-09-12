@@ -66,3 +66,4 @@ export const adminApi = {
     return response.json();
   }
 };
+
