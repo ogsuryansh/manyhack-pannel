@@ -18,26 +18,69 @@ module.exports = async function (req, res, next) {
       return res.status(401).json({ message: "No active session" });
     }
 
-    // For now, just check if session data exists
-    // We'll rely on express-session store for session management
-    console.log('Session validation passed - using express-session store');
-
-    // For admin users, we don't need to check User model
+    // For admin users, skip device restriction
     if (req.session.userId === 'admin') {
-      console.log('Admin session validated');
-    } else {
-      // For regular users, check User model
-      const user = await User.findById(req.session.userId);
-      if (!user) {
-        req.session.destroy();
-        return res.status(401).json({ message: "User not found" });
-      }
+      console.log('Admin session validated - no device restriction');
+      req.user = {
+        id: req.session.userId,
+        isAdmin: true,
+        sessionId: req.session.sessionId
+      };
+      next();
+      return;
     }
+
+    // For regular users, enforce device restriction
+    const user = await User.findById(req.session.userId);
+    if (!user) {
+      req.session.destroy();
+      return res.status(401).json({ message: "User not found" });
+    }
+
+    // Check if user has an active session
+    if (!user.activeSession) {
+      console.log('No active session in user record');
+      req.session.destroy();
+      return res.status(401).json({ 
+        message: "No active session found. Please login again.",
+        code: "SESSION_EXPIRED"
+      });
+    }
+
+    // Get current device info
+    const currentDeviceInfo = getDeviceInfo(req);
+    
+    // Check if current session matches the active session
+    if (user.activeSession.sessionId !== req.session.sessionId) {
+      console.log('Session ID mismatch - different session');
+      req.session.destroy();
+      return res.status(401).json({ 
+        message: "Login detected on another device. Please login again.",
+        code: "DEVICE_MISMATCH"
+      });
+    }
+
+    // Check if device fingerprint matches (prevents multiple tabs)
+    if (user.activeSession.deviceFingerprint !== currentDeviceInfo.deviceFingerprint) {
+      console.log('Device fingerprint mismatch - different device/tab');
+      req.session.destroy();
+      return res.status(401).json({ 
+        message: "Login detected on another device. Please login again.",
+        code: "DEVICE_MISMATCH"
+      });
+    }
+
+    // Update last activity
+    await User.findByIdAndUpdate(user._id, {
+      'activeSession.lastActivity': new Date()
+    });
+
+    console.log('User session validated with device restriction');
 
     // Add user info to request
     req.user = {
       id: req.session.userId,
-      isAdmin: req.session.isAdmin || (req.session.userId === 'admin'),
+      isAdmin: false,
       sessionId: req.session.sessionId
     };
 

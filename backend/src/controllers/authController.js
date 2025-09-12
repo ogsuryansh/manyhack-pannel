@@ -152,26 +152,28 @@ exports.login = async (req, res) => {
     // Get device information
     const deviceInfo = getDeviceInfo(req);
     
-    // Check if user is already logged in on a different device
-    if (user.activeSession && user.activeSession.deviceFingerprint !== deviceInfo.deviceFingerprint) {
-      // Invalidate previous session
-      await Session.findOneAndUpdate(
-        { sessionId: user.activeSession.sessionId },
-        { isActive: false, logoutTime: new Date() }
-      );
-      
-      // Mark previous session as inactive in user history
-      await User.findByIdAndUpdate(user._id, {
-        $set: {
-          'sessionHistory.$[elem].logoutTime': new Date(),
-          'sessionHistory.$[elem].isActive': false
+    // For regular users (not admin), enforce single device restriction
+    if (!user.isAdmin) {
+      // Check if user is already logged in on ANY device
+      if (user.activeSession) {
+        // Check if it's the same device (same fingerprint)
+        if (user.activeSession.deviceFingerprint !== deviceInfo.deviceFingerprint) {
+          // Different device - reject login
+          return res.status(401).json({ 
+            message: "You are already logged in on another device. Please logout from the other device first or contact support.",
+            code: "DEVICE_ALREADY_LOGGED_IN"
+          });
+        } else {
+          // Same device - check if session is still valid
+          if (user.activeSession.sessionId !== req.session.sessionId) {
+            // Same device but different session - update session
+            console.log('Same device, updating session');
+          }
         }
-      }, {
-        arrayFilters: [{ 'elem.sessionId': user.activeSession.sessionId, 'elem.isActive': true }]
-      });
+      }
     }
 
-    // Create new session
+    // Create new session in Session model
     const newSession = new Session({
       sessionId: deviceInfo.sessionId,
       userId: user._id,
@@ -207,6 +209,7 @@ exports.login = async (req, res) => {
     req.session.userId = user._id;
     req.session.sessionId = deviceInfo.sessionId;
     req.session.deviceFingerprint = deviceInfo.deviceFingerprint;
+    req.session.isAdmin = user.isAdmin;
     
     res.json({
       message: "Login successful",

@@ -25,7 +25,25 @@ const userSchema = new mongoose.Schema({
       price: Number
     }
   ],
-  hiddenProducts: [{ type: mongoose.Schema.Types.ObjectId, ref: "Product" }], 
+  hiddenProducts: [{ type: mongoose.Schema.Types.ObjectId, ref: "Product" }],
+  // Device restriction fields for regular users only
+  activeSession: {
+    sessionId: String,
+    deviceFingerprint: String,
+    userAgent: String,
+    ipAddress: String,
+    loginTime: Date,
+    lastActivity: Date
+  },
+  sessionHistory: [{
+    sessionId: String,
+    deviceFingerprint: String,
+    userAgent: String,
+    ipAddress: String,
+    loginTime: Date,
+    logoutTime: Date,
+    isActive: { type: Boolean, default: true }
+  }]
 }, { timestamps: true });
 
 module.exports = mongoose.model('User', userSchema);

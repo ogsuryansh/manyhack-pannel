@@ -26,6 +26,9 @@ export function AuthProvider({ children }) {
         if (errorData.code === "DEVICE_MISMATCH" || errorData.code === "SESSION_EXPIRED") {
           // Show device mismatch message
           alert("Login detected on another device. Please login again.");
+        } else if (errorData.code === "DEVICE_ALREADY_LOGGED_IN") {
+          // Show device already logged in message
+          alert("You are already logged in on another device. Please logout from the other device first.");
         }
         logout();
       }

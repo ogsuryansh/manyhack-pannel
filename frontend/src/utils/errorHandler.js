@@ -3,7 +3,7 @@ export const handleApiError = async (response) => {
   if (!response.ok) {
     const errorData = await response.json().catch(() => ({}));
     
-    if (errorData.code === "DEVICE_MISMATCH") {
+    if (errorData.code === "DEVICE_MISMATCH" || errorData.code === "DEVICE_ALREADY_LOGGED_IN") {
       // Clear local storage and redirect to login
       localStorage.removeItem("token");
       localStorage.removeItem("user");

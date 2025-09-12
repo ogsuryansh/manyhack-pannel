@@ -20,7 +20,11 @@ export default function LoginPage() {
       login(user);
       navigate("/"); // Redirect to dashboard
     } catch (err) {
-      setError(err.message);
+      if (err.message.includes("already logged in")) {
+        setError("You are already logged in on another device. Please logout from the other device first or contact support.");
+      } else {
+        setError(err.message);
+      }
     }
   };
 
