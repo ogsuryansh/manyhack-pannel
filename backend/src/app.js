@@ -12,30 +12,51 @@ const serverless = require('serverless-http');
 const app = express();
 
 app.use(cors({
-  origin: [
-    'http://localhost:3000',
-    'http://localhost:5173',
-    'https://gaminggarage.store',
-    'https://www.gaminggarage.store'
-  ],
+  origin: function (origin, callback) {
+    // Allow requests with no origin (like mobile apps or curl requests)
+    if (!origin) return callback(null, true);
+    
+    const allowedOrigins = [
+      'http://localhost:3000',
+      'http://localhost:5173',
+      'https://gaminggarage.store',
+      'https://www.gaminggarage.store'
+    ];
+    
+    if (allowedOrigins.indexOf(origin) !== -1) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'Cookie']
 }));
 
+// Handle preflight requests
+app.options('*', (req, res) => {
+  res.header('Access-Control-Allow-Origin', req.headers.origin || 'https://gaminggarage.store');
+  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+  res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, Cookie');
+  res.header('Access-Control-Allow-Credentials', 'true');
+  res.sendStatus(200);
+});
 
 app.use(express.json());
 
-// Request logging middleware
-app.use((req, res, next) => {
-  console.log('\n=== REQUEST DEBUG ===');
-  console.log('Method:', req.method);
-  console.log('URL:', req.url);
-  console.log('Headers:', JSON.stringify(req.headers, null, 2));
-  console.log('Body:', req.body);
-  console.log('====================');
-  next();
-});
+// Request logging middleware (only in development)
+if (process.env.NODE_ENV !== 'production') {
+  app.use((req, res, next) => {
+    console.log('\n=== REQUEST DEBUG ===');
+    console.log('Method:', req.method);
+    console.log('URL:', req.url);
+    console.log('Headers:', JSON.stringify(req.headers, null, 2));
+    console.log('Body:', req.body);
+    console.log('====================');
+    next();
+  });
+}
 
 // Session configuration
 app.use(session({
@@ -55,24 +76,26 @@ app.use(session({
     }
   }),
   cookie: {
-    secure: false, // false for development (HTTP)
+    secure: process.env.NODE_ENV === 'production', // true for production (HTTPS)
     httpOnly: true,
     maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
-    sameSite: 'lax', // 'lax' for development
-    domain: 'localhost' // Explicitly set domain for localhost
+    sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax', // 'none' for production cross-origin
+    domain: process.env.NODE_ENV === 'production' ? '.gaminggarage.store' : 'localhost' // Set domain based on environment
   }
 }));
 
-// Session debugging middleware
-app.use((req, res, next) => {
-  console.log('\n=== SESSION MIDDLEWARE DEBUG ===');
-  console.log('Session ID:', req.sessionID);
-  console.log('Session exists:', !!req.session);
-  console.log('Session keys:', req.session ? Object.keys(req.session) : 'No session');
-  console.log('Cookies in request:', req.headers.cookie);
-  console.log('================================\n');
-  next();
-});
+// Session debugging middleware (only in development)
+if (process.env.NODE_ENV !== 'production') {
+  app.use((req, res, next) => {
+    console.log('\n=== SESSION MIDDLEWARE DEBUG ===');
+    console.log('Session ID:', req.sessionID);
+    console.log('Session exists:', !!req.session);
+    console.log('Session keys:', req.session ? Object.keys(req.session) : 'No session');
+    console.log('Cookies in request:', req.headers.cookie);
+    console.log('================================\n');
+    next();
+  });
+}
 
 // Connect to MongoDB at the top level
 connectToDatabase().then(() => {
@@ -198,6 +221,7 @@ app.get("/debug/session-store", async (req, res) => {
   }
 });
 
+// API route not found handler
 app.use((req, res, next) => {
   if (req.path.startsWith("/api/")) {
     return res.status(404).json({ message: "API route not found" });
