@@ -18,6 +18,7 @@ export default function AdminKeyManager() {
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState({ type: "", text: "" });
   const [allStats, setAllStats] = useState({});
+  const [deleteAllLoading, setDeleteAllLoading] = useState(false);
 
   // Fetch all stats once
   useEffect(() => {
@@ -147,6 +148,55 @@ export default function AdminKeyManager() {
     setEditKeyValue("");
   };
 
+  // Delete all keys for selected product and duration
+  const handleDeleteAll = async () => {
+    if (!selectedProduct || !selectedDuration) {
+      setMessage({ type: "error", text: "Please select a product and duration first." });
+      return;
+    }
+
+    const confirmMessage = `Are you sure you want to delete ALL keys for this product and duration?\n\nThis action cannot be undone!\n\nProduct: ${products.find(p => p._id === selectedProduct)?.name}\nDuration: ${selectedDuration}\n\nType "DELETE ALL" to confirm:`;
+    
+    const userInput = window.prompt(confirmMessage);
+    if (userInput !== "DELETE ALL") {
+      setMessage({ type: "info", text: "Delete all operation cancelled." });
+      return;
+    }
+
+    setDeleteAllLoading(true);
+    setMessage({ type: "", text: "" });
+
+    try {
+      const res = await fetch(`${API}/keys/bulk/${selectedProduct}/${encodeURIComponent(selectedDuration)}`, {
+        method: "DELETE",
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        setMessage({ 
+          type: "success", 
+          text: `Successfully deleted ${data.deletedCount} keys!` 
+        });
+        
+        // Refresh the keys list and stats
+        setKeys([]);
+        setStats({ total: 0, available: 0, assigned: 0, expired: 0 });
+        
+        // Refresh all stats
+        fetch(`${API}/keys/all-stats`)
+          .then(res => res.json())
+          .then(setAllStats);
+      } else {
+        const error = await res.json();
+        setMessage({ type: "error", text: error.message || "Failed to delete keys." });
+      }
+    } catch (err) {
+      setMessage({ type: "error", text: "Network error. Please try again." });
+    } finally {
+      setDeleteAllLoading(false);
+    }
+  };
+
   return (
     <div className="admin-key-manager">
       <h3>Key Manager</h3>
@@ -214,6 +264,46 @@ export default function AdminKeyManager() {
           Add Keys
         </button>
       </form>
+      
+      {/* Delete All Keys Button */}
+      <div style={{ marginTop: "16px", textAlign: "center" }}>
+        <button
+          className="admin-key-delete-all-btn"
+          onClick={handleDeleteAll}
+          disabled={!selectedProduct || !selectedDuration || deleteAllLoading}
+          style={{
+            backgroundColor: "#ff4757",
+            color: "white",
+            border: "none",
+            padding: "12px 24px",
+            borderRadius: "8px",
+            cursor: deleteAllLoading ? "not-allowed" : "pointer",
+            opacity: (!selectedProduct || !selectedDuration || deleteAllLoading) ? 0.6 : 1,
+            fontWeight: "600",
+            fontSize: "14px",
+            transition: "all 0.2s ease",
+            position: "relative"
+          }}
+        >
+          {deleteAllLoading ? (
+            <>
+              <div className="loader loader-sm" style={{ marginRight: "8px" }}></div>
+              Deleting All Keys...
+            </>
+          ) : (
+            "🗑️ Delete All Keys"
+          )}
+        </button>
+        <div style={{ 
+          fontSize: "12px", 
+          color: "#666", 
+          marginTop: "8px",
+          maxWidth: "300px",
+          margin: "8px auto 0"
+        }}>
+          This will delete ALL keys for the selected product and duration. This action cannot be undone!
+        </div>
+      </div>
       <div className="admin-key-stats">
         <span>
           Total: <b>{stats.total}</b>

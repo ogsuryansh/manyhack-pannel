@@ -141,6 +141,42 @@ router.delete("/:id", async (req, res) => {
   }
 });
 
+// Delete all keys for a specific product and duration
+router.delete("/bulk/:productId/:duration", async (req, res) => {
+  try {
+    const { productId, duration } = req.params;
+    
+    // Verify product exists
+    const product = await Product.findById(productId);
+    if (!product) {
+      return res.status(404).json({ message: "Product not found" });
+    }
+    
+    // Verify duration is valid for this product
+    const validDuration = product.prices.some((pr) => pr.duration === duration);
+    if (!validDuration) {
+      return res.status(400).json({ message: "Invalid duration for this product" });
+    }
+    
+    // Delete all keys for this product and duration
+    const result = await Key.deleteMany({ 
+      productId: productId, 
+      duration: decodeURIComponent(duration) 
+    });
+    
+    // Clear cache to reflect deleted keys immediately
+    statsCache = { data: null, ts: 0 };
+    
+    res.json({ 
+      message: `Deleted ${result.deletedCount} keys successfully`,
+      deletedCount: result.deletedCount
+    });
+  } catch (err) {
+    console.error("Error in DELETE /api/keys/bulk/:productId/:duration:", err);
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
 router.post("/buy", auth, async (req, res) => {
   try {
     const { productId, duration, quantity } = req.body;
