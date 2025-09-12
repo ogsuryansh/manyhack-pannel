@@ -15,7 +15,6 @@ export default function AdminLoginPage() {
     e.preventDefault();
     setError("");
     try {
-      console.log('Attempting admin login with:', form);
       const res = await fetch(`${API}/admin/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -23,15 +22,12 @@ export default function AdminLoginPage() {
         body: JSON.stringify(form),
       });
       
-      console.log('Admin login response status:', res.status);
-      console.log('Admin login response headers:', res.headers);
       
       let data;
       try {
         const contentType = res.headers.get('content-type');
         if (contentType && contentType.includes('application/json')) {
           data = await res.json();
-          console.log('Admin login response data:', data);
         } else {
           console.error('Admin login returned non-JSON response');
           const text = await res.text();
@@ -50,8 +46,6 @@ export default function AdminLoginPage() {
         throw new Error(data.message || "Login failed");
       }
       
-      console.log('Admin login successful, storing in localStorage and navigating...');
-      console.log('Session data from login:', data.sessionData);
       localStorage.setItem("adminUser", JSON.stringify(data.admin));
       
       // Small delay to ensure session is properly saved

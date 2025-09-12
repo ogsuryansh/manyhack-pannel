@@ -18,7 +18,6 @@ const AddBalancePage = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    console.log("[DEBUG] User token:", token);
     if (!token) {
       setError("You must be logged in to view top-up plans. Please log in as a user.");
       setLoading(false);

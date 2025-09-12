@@ -26,7 +26,6 @@ export default function AdminRoute({ children }) {
           const contentType = res.headers.get('content-type');
           if (contentType && contentType.includes('application/json')) {
             const data = await res.json();
-            console.log('Admin check response:', data);
             setIsAuthenticated(data.isLoggedIn);
           } else {
             console.error('Admin check returned non-JSON response');
@@ -36,7 +35,6 @@ export default function AdminRoute({ children }) {
             setIsAuthenticated(false);
           }
         } else {
-          console.log('Admin check failed, clearing localStorage');
           localStorage.removeItem("adminUser");
           setIsAuthenticated(false);
         }

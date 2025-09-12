@@ -18,8 +18,6 @@ export default function AdminDashboard() {
       credentials: 'include'
     })
       .then(async res => {
-        console.log('Admin stats response status:', res.status);
-        console.log('Admin stats response headers:', res.headers);
         
         if (!res.ok) {
           const errorText = await res.text();
@@ -37,7 +35,6 @@ export default function AdminDashboard() {
         return res.json();
       })
       .then(data => {
-        console.log('Admin stats data received:', data);
         setStats(data);
         setLoading(false);
       })
