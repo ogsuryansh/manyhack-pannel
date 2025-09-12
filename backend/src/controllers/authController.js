@@ -154,23 +154,34 @@ exports.login = async (req, res) => {
     
     // For regular users (not admin), enforce single device restriction
     if (!user.isAdmin) {
+      console.log('Checking device restriction for user:', user.username);
+      console.log('User active session:', user.activeSession);
+      console.log('Current device fingerprint:', deviceInfo.deviceFingerprint);
+      
       // Check if user is already logged in on ANY device
       if (user.activeSession) {
+        console.log('User has active session, checking device match...');
         // Check if it's the same device (same fingerprint)
         if (user.activeSession.deviceFingerprint !== deviceInfo.deviceFingerprint) {
+          console.log('Different device detected - rejecting login');
           // Different device - reject login
           return res.status(401).json({ 
             message: "You are already logged in on another device. Please logout from the other device first or contact support.",
             code: "DEVICE_ALREADY_LOGGED_IN"
           });
         } else {
+          console.log('Same device detected - allowing login');
           // Same device - check if session is still valid
           if (user.activeSession.sessionId !== req.session.sessionId) {
             // Same device but different session - update session
             console.log('Same device, updating session');
           }
         }
+      } else {
+        console.log('No active session found - allowing login');
       }
+    } else {
+      console.log('Admin user - no device restriction');
     }
 
     // Create new session in Session model
@@ -260,17 +271,24 @@ exports.getBalanceHistory = async (req, res) => {
 exports.logout = async (req, res) => {
   try {
     const sessionId = req.session.sessionId;
+    const userId = req.session.userId;
     
-    if (sessionId) {
-      // Mark session as inactive
+    console.log('Logout process started for user:', userId, 'session:', sessionId);
+    
+    if (sessionId && userId) {
+      // Mark session as inactive in Session model
       await Session.findOneAndUpdate(
         { sessionId: sessionId },
         { isActive: false, logoutTime: new Date() }
       );
       
-      // Update user's active session
-      await User.findByIdAndUpdate(req.session.userId, {
-        $unset: { activeSession: 1 },
+      // Clear user's active session completely
+      await User.findByIdAndUpdate(userId, {
+        $unset: { activeSession: 1 }
+      });
+      
+      // Update session history to mark as inactive
+      await User.findByIdAndUpdate(userId, {
         $set: {
           'sessionHistory.$[elem].logoutTime': new Date(),
           'sessionHistory.$[elem].isActive': false
@@ -278,6 +296,8 @@ exports.logout = async (req, res) => {
       }, {
         arrayFilters: [{ 'elem.sessionId': sessionId, 'elem.isActive': true }]
       });
+      
+      console.log('User active session cleared for user:', userId);
     }
     
     // Destroy session
@@ -286,6 +306,7 @@ exports.logout = async (req, res) => {
         console.error('Session destruction error:', err);
         return res.status(500).json({ message: "Server error" });
       }
+      console.log('Session destroyed successfully');
       res.json({ message: "Logged out successfully" });
     });
   } catch (err) {

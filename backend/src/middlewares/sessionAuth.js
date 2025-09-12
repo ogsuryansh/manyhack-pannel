@@ -39,7 +39,8 @@ module.exports = async function (req, res, next) {
 
     // Check if user has an active session
     if (!user.activeSession) {
-      console.log('No active session in user record');
+      console.log('No active session in user record - user can login');
+      // Don't destroy session here, let the user login
       req.session.destroy();
       return res.status(401).json({ 
         message: "No active session found. Please login again.",
