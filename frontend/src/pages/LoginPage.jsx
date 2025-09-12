@@ -5,6 +5,7 @@ import { useAuth } from "../context/useAuth";
 export default function LoginPage() {
   const [form, setForm] = useState({ username: "", password: "" });
   const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
   const { login } = useAuth();
 
@@ -15,6 +16,8 @@ export default function LoginPage() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
+    setLoading(true);
+    
     try {
       const user = await apiLogin(form.username, form.password);
       login(user);
@@ -25,6 +28,8 @@ export default function LoginPage() {
       } else {
         setError(err.message);
       }
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -64,7 +69,25 @@ export default function LoginPage() {
               {error}
             </div>
           )}
-          <button className="auth-btn" type="submit">Login</button>
+          <button 
+            className="auth-btn" 
+            type="submit" 
+            disabled={loading}
+            style={{ 
+              opacity: loading ? 0.7 : 1,
+              cursor: loading ? 'not-allowed' : 'pointer',
+              position: 'relative'
+            }}
+          >
+            {loading ? (
+              <>
+                <div className="loader loader-sm" style={{ marginRight: '8px' }}></div>
+                Logging in...
+              </>
+            ) : (
+              'Login'
+            )}
+          </button>
           <div className="auth-bottom-text">
             Don't have an account? <Link to="/signup" className="auth-link">Register</Link>
           </div>

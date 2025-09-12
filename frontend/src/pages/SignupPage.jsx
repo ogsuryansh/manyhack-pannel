@@ -8,6 +8,7 @@ export default function SignupPage() {
   const [success, setSuccess] = useState("");
   const [referralValid, setReferralValid] = useState(null);
   const [checkingReferral, setCheckingReferral] = useState(false);
+  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
   const handleChange = (e) => {
@@ -58,12 +59,15 @@ export default function SignupPage() {
       return;
     }
 
+    setLoading(true);
     try {
       await apiRegister(form.email, form.username, form.password, form.referralCode);
       setSuccess("Registration successful! Redirecting to login...");
       setTimeout(() => navigate("/login"), 1500); // Redirect after 1.5s
     } catch (err) {
       setError(err.message);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -168,7 +172,25 @@ export default function SignupPage() {
               {success}
             </div>
           )}
-          <button className="auth-btn" type="submit">Register</button>
+          <button 
+            className="auth-btn" 
+            type="submit" 
+            disabled={loading}
+            style={{ 
+              opacity: loading ? 0.7 : 1,
+              cursor: loading ? 'not-allowed' : 'pointer',
+              position: 'relative'
+            }}
+          >
+            {loading ? (
+              <>
+                <div className="loader loader-sm" style={{ marginRight: '8px' }}></div>
+                Registering...
+              </>
+            ) : (
+              'Register'
+            )}
+          </button>
           <div className="auth-bottom-text">
             Already a user? <Link to="/login" className="auth-link">Login</Link>
           </div>

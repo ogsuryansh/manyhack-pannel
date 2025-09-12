@@ -5,6 +5,7 @@ import { API } from "../api";
 export default function AdminLoginPage() {
   const [form, setForm] = useState({ username: "", password: "" });
   const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
   const handleChange = (e) => {
@@ -14,6 +15,7 @@ export default function AdminLoginPage() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
+    setLoading(true);
     try {
       const res = await fetch(`${API}/admin/login`, {
         method: "POST",
@@ -55,6 +57,8 @@ export default function AdminLoginPage() {
     } catch (err) {
       console.error('Admin login error:', err);
       setError(err.message);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -91,7 +95,25 @@ export default function AdminLoginPage() {
               {error}
             </div>
           )}
-          <button className="auth-btn" type="submit">Login as Admin</button>
+          <button 
+            className="auth-btn" 
+            type="submit" 
+            disabled={loading}
+            style={{ 
+              opacity: loading ? 0.7 : 1,
+              cursor: loading ? 'not-allowed' : 'pointer',
+              position: 'relative'
+            }}
+          >
+            {loading ? (
+              <>
+                <div className="loader loader-sm" style={{ marginRight: '8px' }}></div>
+                Logging in...
+              </>
+            ) : (
+              'Login as Admin'
+            )}
+          </button>
         </form>
       </div>
     </div>
