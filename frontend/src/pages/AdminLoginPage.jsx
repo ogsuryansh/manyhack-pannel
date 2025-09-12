@@ -15,22 +15,38 @@ export default function AdminLoginPage() {
     e.preventDefault();
     setError("");
     try {
+      console.log('Attempting admin login with:', form);
       const res = await fetch(`${API}/admin/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: 'include', // Important for session cookies
         body: JSON.stringify(form),
       });
+      
+      console.log('Admin login response status:', res.status);
+      console.log('Admin login response headers:', res.headers);
+      
       let data;
       try {
         data = await res.json();
-      } catch {
-        data = {};
+        console.log('Admin login response data:', data);
+      } catch (parseError) {
+        console.error('Failed to parse admin login response:', parseError);
+        const text = await res.text();
+        console.error('Raw response:', text);
+        throw new Error('Invalid response from server');
       }
-      if (!res.ok) throw new Error(data.message || "Login failed");
+      
+      if (!res.ok) {
+        console.error('Admin login failed:', data);
+        throw new Error(data.message || "Login failed");
+      }
+      
+      console.log('Admin login successful, storing in localStorage and navigating...');
       localStorage.setItem("adminUser", JSON.stringify(data.admin));
       navigate("/admin");
     } catch (err) {
+      console.error('Admin login error:', err);
       setError(err.message);
     }
   };

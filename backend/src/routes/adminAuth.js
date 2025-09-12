@@ -13,6 +13,27 @@ router.get("/debug", (req, res) => {
   });
 });
 
+// Check if admin is logged in (for frontend verification)
+router.get("/check", (req, res) => {
+  console.log('=== ADMIN CHECK DEBUG ===');
+  console.log('Session ID:', req.sessionID);
+  console.log('Session exists:', !!req.session);
+  console.log('Session userId:', req.session?.userId);
+  console.log('Session isAdmin:', req.session?.isAdmin);
+  console.log('Session keys:', req.session ? Object.keys(req.session) : 'No session');
+  console.log('========================');
+  
+  const isLoggedIn = req.session && req.session.userId === 'admin' && req.session.isAdmin;
+  
+  res.json({
+    isLoggedIn,
+    sessionId: req.sessionID,
+    userId: req.session?.userId,
+    isAdmin: req.session?.isAdmin,
+    timestamp: new Date().toISOString()
+  });
+});
+
 router.post("/login", adminAuthController.adminLogin);
 router.post("/logout", adminAuth, adminAuthController.adminLogout);
 
