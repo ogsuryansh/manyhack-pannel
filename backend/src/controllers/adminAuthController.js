@@ -4,6 +4,10 @@ exports.adminLogin = async (req, res) => {
   try {
     console.log('=== ADMIN LOGIN DEBUG ===');
     console.log('Request body:', req.body);
+    console.log('Request URL:', req.url);
+    console.log('Request method:', req.method);
+    console.log('Session ID:', req.sessionID);
+    console.log('Session exists:', !!req.session);
     console.log('Environment ADMIN_USERNAME:', process.env.ADMIN_USERNAME);
     console.log('Environment ADMIN_PASSWORD:', process.env.ADMIN_PASSWORD ? 'SET' : 'NOT SET');
     console.log('Session secret:', process.env.SESSION_SECRET ? 'SET' : 'NOT SET');
@@ -15,6 +19,11 @@ exports.adminLogin = async (req, res) => {
       console.log('Missing username or password');
       return res.status(400).json({ message: "Username and password are required" });
     }
+    
+    console.log('Checking credentials...');
+    console.log('Provided username:', username);
+    console.log('Expected username:', process.env.ADMIN_USERNAME);
+    console.log('Credentials match:', username === process.env.ADMIN_USERNAME && password === process.env.ADMIN_PASSWORD);
     
     if (
       username === process.env.ADMIN_USERNAME &&
@@ -50,10 +59,14 @@ exports.adminLogin = async (req, res) => {
       
       // Force session save and wait for completion
       console.log('Saving session to MongoDB...');
+      console.log('Session ID before save:', req.sessionID);
+      console.log('Session data before save:', JSON.stringify(req.session, null, 2));
+      
       await new Promise((resolve, reject) => {
         req.session.save((err) => {
           if (err) {
             console.error('❌ Session save error:', err);
+            console.error('Error details:', err.message, err.stack);
             reject(err);
           } else {
             console.log('✅ Session saved successfully to MongoDB');
@@ -89,6 +102,7 @@ exports.adminLogin = async (req, res) => {
       console.log('===============================\n');
       
       console.log('Sending success response...');
+      console.log('Final session data before response:', JSON.stringify(req.session, null, 2));
       return res.json({
         message: "Admin login successful",
         admin: { 
@@ -104,6 +118,8 @@ exports.adminLogin = async (req, res) => {
     console.error('=== ADMIN LOGIN ERROR ===');
     console.error('Error message:', err.message);
     console.error('Error stack:', err.stack);
+    console.error('Request body:', req.body);
+    console.error('Session ID:', req.sessionID);
     console.error('========================');
     res.status(500).json({ message: "Server error" });
   }

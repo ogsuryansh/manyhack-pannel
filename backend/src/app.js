@@ -164,6 +164,13 @@ if (process.env.NODE_ENV !== 'production') {
 // Connect to MongoDB at the top level
 connectToDatabase().then(() => {
   console.log("MongoDB connected (serverless)");
+  
+  // Test session store after MongoDB connection
+  if (app.locals.sessionStore) {
+    console.log("Session store is available");
+  } else {
+    console.log("⚠️ Session store not available");
+  }
 }).catch((err) => {
   console.error("MongoDB connection error:", err);
   process.exit(1);
@@ -355,6 +362,7 @@ app.post("/debug/create-test-session", async (req, res) => {
     console.log('=== CREATING TEST SESSION ===');
     console.log('Session ID before:', req.sessionID);
     console.log('Session exists before:', !!req.session);
+    console.log('Session store exists:', !!req.sessionStore);
     
     // Create test session data
     req.session.testData = {
@@ -370,6 +378,7 @@ app.post("/debug/create-test-session", async (req, res) => {
       req.session.save((err) => {
         if (err) {
           console.error('Session save error:', err);
+          console.error('Error details:', err.message, err.stack);
           reject(err);
         } else {
           console.log('Session saved successfully');
@@ -380,6 +389,20 @@ app.post("/debug/create-test-session", async (req, res) => {
     
     console.log('Session ID after save:', req.sessionID);
     console.log('Session data after save:', JSON.stringify(req.session, null, 2));
+    
+    // Verify session was stored
+    if (req.sessionStore) {
+      req.sessionStore.get(req.sessionID, (err, session) => {
+        if (err) {
+          console.error('Error retrieving session:', err);
+        } else if (session) {
+          console.log('✅ Session verified in store:', JSON.stringify(session, null, 2));
+        } else {
+          console.log('❌ Session not found in store after save');
+        }
+      });
+    }
+    
     console.log('=============================');
     
     res.json({

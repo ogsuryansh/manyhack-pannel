@@ -13,6 +13,23 @@ router.get("/debug", (req, res) => {
   });
 });
 
+// Test admin login endpoint
+router.post("/test-login", (req, res) => {
+  console.log('=== TEST ADMIN LOGIN ENDPOINT ===');
+  console.log('Request body:', req.body);
+  console.log('Session ID:', req.sessionID);
+  console.log('Session exists:', !!req.session);
+  console.log('================================');
+  
+  res.json({
+    message: "Test admin login endpoint reached",
+    requestBody: req.body,
+    sessionId: req.sessionID,
+    sessionExists: !!req.session,
+    timestamp: new Date().toISOString()
+  });
+});
+
 // Check if admin is logged in (for frontend verification)
 router.get("/check", (req, res) => {
   console.log('=== ADMIN CHECK DEBUG ===');
