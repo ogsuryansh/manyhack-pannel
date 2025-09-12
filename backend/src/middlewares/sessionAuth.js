@@ -71,7 +71,15 @@ module.exports.adminAuth = async function (req, res, next) {
       if (process.env.NODE_ENV !== 'production') {
         console.log('❌ NO COOKIES FOUND IN REQUEST');
       }
-      return res.status(401).json({ message: "No cookies found" });
+      return res.status(401).json({ 
+        message: "No cookies found",
+        debug: {
+          url: req.url,
+          method: req.method,
+          origin: req.headers.origin,
+          userAgent: req.headers['user-agent']
+        }
+      });
     }
     
     // Check if session exists
@@ -79,7 +87,16 @@ module.exports.adminAuth = async function (req, res, next) {
       if (process.env.NODE_ENV !== 'production') {
         console.log('❌ NO SESSION OBJECT FOUND');
       }
-      return res.status(401).json({ message: "No session object" });
+      return res.status(401).json({ 
+        message: "No session object",
+        debug: {
+          url: req.url,
+          method: req.method,
+          origin: req.headers.origin,
+          sessionId: req.sessionID,
+          cookies: req.headers.cookie
+        }
+      });
     }
     
     // Check if user is logged in via session
@@ -88,7 +105,17 @@ module.exports.adminAuth = async function (req, res, next) {
         console.log('❌ NO USER ID IN SESSION');
         console.log('Session data:', JSON.stringify(req.session, null, 2));
       }
-      return res.status(401).json({ message: "No active session" });
+      return res.status(401).json({ 
+        message: "No active session",
+        debug: {
+          url: req.url,
+          method: req.method,
+          origin: req.headers.origin,
+          sessionId: req.sessionID,
+          sessionKeys: req.session ? Object.keys(req.session) : 'No session',
+          cookies: req.headers.cookie
+        }
+      });
     }
     
     if (process.env.NODE_ENV !== 'production') {
