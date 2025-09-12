@@ -119,11 +119,11 @@ const sessionConfig = {
     }
   }),
   cookie: {
-    secure: process.env.NODE_ENV === 'production', // true for production (HTTPS)
+    secure: false, // Set to false for development and testing
     httpOnly: true,
     maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
-    sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax', // 'none' for production cross-origin
-    domain: process.env.NODE_ENV === 'production' ? '.gaminggarage.store' : undefined // Set domain for production
+    sameSite: 'lax', // Use 'lax' for better compatibility
+    domain: undefined // Don't set domain for better compatibility
   }
 };
 

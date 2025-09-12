@@ -89,6 +89,12 @@ exports.adminLogin = async (req, res) => {
               id: 'admin',
               username, 
               isAdmin: true 
+            },
+            sessionId: req.sessionID,
+            sessionData: {
+              userId: req.session.userId,
+              isAdmin: req.session.isAdmin,
+              sessionId: req.session.sessionId
             }
           });
         }

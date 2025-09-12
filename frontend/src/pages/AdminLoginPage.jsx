@@ -51,8 +51,13 @@ export default function AdminLoginPage() {
       }
       
       console.log('Admin login successful, storing in localStorage and navigating...');
+      console.log('Session data from login:', data.sessionData);
       localStorage.setItem("adminUser", JSON.stringify(data.admin));
-      navigate("/admin");
+      
+      // Small delay to ensure session is properly saved
+      setTimeout(() => {
+        navigate("/admin");
+      }, 100);
     } catch (err) {
       console.error('Admin login error:', err);
       setError(err.message);

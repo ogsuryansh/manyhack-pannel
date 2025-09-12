@@ -48,11 +48,14 @@ router.get("/debug-credentials", (req, res) => {
 // Check if admin is logged in (for frontend verification)
 router.get("/check", (req, res) => {
   console.log('=== ADMIN CHECK DEBUG ===');
+  console.log('Request origin:', req.headers.origin);
+  console.log('Request cookies:', req.headers.cookie);
   console.log('Session ID:', req.sessionID);
   console.log('Session exists:', !!req.session);
   console.log('Session userId:', req.session?.userId);
   console.log('Session isAdmin:', req.session?.isAdmin);
   console.log('Session keys:', req.session ? Object.keys(req.session) : 'No session');
+  console.log('Session data:', JSON.stringify(req.session, null, 2));
   console.log('========================');
   
   const isLoggedIn = req.session && req.session.userId === 'admin' && req.session.isAdmin;
@@ -62,6 +65,9 @@ router.get("/check", (req, res) => {
     sessionId: req.sessionID,
     userId: req.session?.userId,
     isAdmin: req.session?.isAdmin,
+    sessionExists: !!req.session,
+    sessionKeys: req.session ? Object.keys(req.session) : [],
+    cookies: req.headers.cookie,
     timestamp: new Date().toISOString()
   });
 });
