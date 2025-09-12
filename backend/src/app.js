@@ -96,12 +96,12 @@ app.use((req, res, next) => {
   next();
 });
 
-// Session configuration
-const sessionConfig = {
-  secret: process.env.SESSION_SECRET || 'your-super-secret-session-key',
-  resave: true,
-  saveUninitialized: true,
-  store: MongoStore.create({
+// Connect to MongoDB first, then configure sessions
+connectToDatabase().then(() => {
+  console.log("MongoDB connected (serverless)");
+  
+  // Create session store after MongoDB connection
+  const sessionStore = MongoStore.create({
     mongoUrl: process.env.MONGO_URI || 'mongodb://localhost:27017/manyhackpanel',
     collectionName: 'sessions',
     touchAfter: 24 * 3600, // lazy session update
@@ -117,88 +117,83 @@ const sessionConfig = {
         return {};
       }
     }
-  }),
-  cookie: {
-    secure: false, // Set to false for development and testing
-    httpOnly: true,
-    maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
-    sameSite: 'lax', // Use 'lax' for better compatibility
-    domain: undefined // Don't set domain for better compatibility
-  }
-};
-
-// Log session configuration in development
-if (process.env.NODE_ENV !== 'production') {
-  console.log('Session configuration:', {
-    secure: sessionConfig.cookie.secure,
-    sameSite: sessionConfig.cookie.sameSite,
-    domain: sessionConfig.cookie.domain,
-    NODE_ENV: process.env.NODE_ENV
   });
-}
-
-app.use(session(sessionConfig));
-
-// Session initialization middleware
-app.use((req, res, next) => {
-  if (!req.session) {
-    console.log('⚠️ No session object found, creating new session');
-    req.session = {};
+  
+  console.log('✅ Session store created successfully');
+  
+  // Session configuration
+  const sessionConfig = {
+    secret: process.env.SESSION_SECRET || 'your-super-secret-session-key',
+    resave: true,
+    saveUninitialized: true,
+    store: sessionStore,
+    cookie: {
+      secure: false, // Set to false for development and testing
+      httpOnly: true,
+      maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+      sameSite: 'lax', // Use 'lax' for better compatibility
+      domain: undefined // Don't set domain for better compatibility
+    }
+  };
+  
+  // Log session configuration in development
+  if (process.env.NODE_ENV !== 'production') {
+    console.log('Session configuration:', {
+      secure: false,
+      sameSite: 'lax',
+      domain: undefined,
+      NODE_ENV: process.env.NODE_ENV
+    });
   }
-  next();
-});
-
-// Session debugging middleware (only in development)
-if (process.env.NODE_ENV !== 'production') {
+  
+  // Apply session middleware after store is created
+  app.use(session(sessionConfig));
+  
+  // Session initialization middleware
   app.use((req, res, next) => {
-    console.log('\n=== SESSION MIDDLEWARE DEBUG ===');
-    console.log('Session ID:', req.sessionID);
-    console.log('Session exists:', !!req.session);
-    console.log('Session keys:', req.session ? Object.keys(req.session) : 'No session');
-    console.log('Cookies in request:', req.headers.cookie);
-    console.log('================================\n');
+    if (!req.session) {
+      console.log('⚠️ No session object found, creating new session');
+      req.session = {};
+    }
     next();
   });
-}
-
-// Connect to MongoDB at the top level
-connectToDatabase().then(() => {
-  console.log("MongoDB connected (serverless)");
   
-  // Test session store after MongoDB connection
-  if (app.locals.sessionStore) {
-    console.log("Session store is available");
-  } else {
-    console.log("⚠️ Session store not available");
+  // Session debugging middleware (only in development)
+  if (process.env.NODE_ENV !== 'production') {
+    app.use((req, res, next) => {
+      console.log('\n=== SESSION MIDDLEWARE DEBUG ===');
+      console.log('Session ID:', req.sessionID);
+      console.log('Session exists:', !!req.session);
+      console.log('Session keys:', req.session ? Object.keys(req.session) : 'No session');
+      console.log('Cookies in request:', req.headers.cookie);
+      console.log('================================\n');
+      next();
+    });
   }
-}).catch((err) => {
-  console.error("MongoDB connection error:", err);
-  process.exit(1);
-});
-
-// Routes - Order matters! More specific routes first
-app.use("/api/admin", require("./routes/adminAuth"));
-app.use("/api/admin/users", require("./routes/adminUser"));
-app.use("/api/admin/stats", require("./routes/adminStats"));
-app.use("/api/auth", require("./routes/auth"));
-app.use("/api/products", require("./routes/product"));
-app.use("/api/keys", require("./routes/key"));
-app.use("/api/payments", require("./routes/payment"));
-app.use("/api/settings", require("./routes/settings"));
-app.use("/api/notice", require("./routes/notice"));
-app.use("/api/referral", require("./routes/referral"));
-require("./models/TopUpPlan");
-require("./models/ReferralCode");
-require("./models/BalanceHistory");
-require("./models/Session");
-
-// Test route
-app.get("/", (req, res) => {
-  res.send("API is running...");
-});
-
-// CORS test endpoint
-app.get("/api/cors-test", (req, res) => {
+  
+  // Routes - Order matters! More specific routes first
+  app.use("/api/admin", require("./routes/adminAuth"));
+  app.use("/api/admin/users", require("./routes/adminUser"));
+  app.use("/api/admin/stats", require("./routes/adminStats"));
+  app.use("/api/auth", require("./routes/auth"));
+  app.use("/api/products", require("./routes/product"));
+  app.use("/api/keys", require("./routes/key"));
+  app.use("/api/payments", require("./routes/payment"));
+  app.use("/api/settings", require("./routes/settings"));
+  app.use("/api/notice", require("./routes/notice"));
+  app.use("/api/referral", require("./routes/referral"));
+  require("./models/TopUpPlan");
+  require("./models/ReferralCode");
+  require("./models/BalanceHistory");
+  require("./models/Session");
+  
+  // Test route
+  app.get("/", (req, res) => {
+    res.send("API is running...");
+  });
+  
+  // CORS test endpoint
+  app.get("/api/cors-test", (req, res) => {
   res.json({
     message: "CORS is working!",
     origin: req.headers.origin,
@@ -473,10 +468,15 @@ app.use((err, req, res, next) => {
 module.exports = app;
 module.exports.handler = serverless(app);
 
-// For local development
-if (require.main === module) {
-  const PORT = process.env.PORT || 5000;
-  app.listen(PORT, () => {
-    console.log(`Server running on port ${PORT}`);
-  });
-}
+  // For local development
+  if (require.main === module) {
+    const PORT = process.env.PORT || 5000;
+    app.listen(PORT, () => {
+      console.log(`Server running on port ${PORT}`);
+    });
+  }
+  
+}).catch((err) => {
+  console.error("MongoDB connection error:", err);
+  process.exit(1);
+});
