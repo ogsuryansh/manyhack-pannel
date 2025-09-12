@@ -43,6 +43,7 @@ exports.adminLogin = async (req, res) => {
       console.log('Session ID before setting data:', req.sessionID);
       console.log('Session exists before setting data:', !!req.session);
       console.log('Session keys before setting data:', req.session ? Object.keys(req.session) : 'No session');
+      console.log('Session store exists:', !!req.sessionStore);
       
       console.log('Storing admin info in session...');
       req.session.userId = 'admin';
@@ -57,60 +58,57 @@ exports.adminLogin = async (req, res) => {
         isAdmin: req.session.isAdmin
       });
       
+      // Force session to be marked as modified
+      req.session.touch();
+      
       // Force session save and wait for completion
       console.log('Saving session to MongoDB...');
       console.log('Session ID before save:', req.sessionID);
       console.log('Session data before save:', JSON.stringify(req.session, null, 2));
       
-      await new Promise((resolve, reject) => {
+      // Ensure session is marked as modified
+      req.session.regenerate((err) => {
+        if (err) {
+          console.error('❌ Session regenerate error:', err);
+          return res.status(500).json({ message: "Session error" });
+        }
+        
+        // Set session data again after regeneration
+        req.session.userId = 'admin';
+        req.session.sessionId = deviceInfo.sessionId;
+        req.session.deviceFingerprint = deviceInfo.deviceFingerprint;
+        req.session.isAdmin = true;
+        
+        console.log('Session regenerated, data set again:', {
+          userId: req.session.userId,
+          isAdmin: req.session.isAdmin
+        });
+        
+        // Save the regenerated session
         req.session.save((err) => {
           if (err) {
             console.error('❌ Session save error:', err);
             console.error('Error details:', err.message, err.stack);
-            reject(err);
+            return res.status(500).json({ message: "Session save error" });
           } else {
             console.log('✅ Session saved successfully to MongoDB');
             console.log('Session ID after save:', req.sessionID);
             console.log('Session data after save:', JSON.stringify(req.session, null, 2));
-            resolve();
+            
+            // Send success response
+            res.json({
+              message: "Admin login successful",
+              admin: { 
+                id: 'admin',
+                username, 
+                isAdmin: true 
+              }
+            });
           }
         });
       });
       
-      // Additional verification - check if session was actually stored
-      console.log('Verifying session storage...');
-      const sessionStore = req.sessionStore;
-      if (sessionStore) {
-        sessionStore.get(req.sessionID, (err, session) => {
-          if (err) {
-            console.error('❌ Error retrieving session:', err);
-          } else if (session) {
-            console.log('✅ Session verified in store:', JSON.stringify(session, null, 2));
-          } else {
-            console.log('❌ Session not found in store after save');
-          }
-        });
-      }
-      
-      // Verify session was saved
-      console.log('Verifying session after save...');
-      console.log('Session ID after save:', req.sessionID);
-      console.log('Session userId after save:', req.session.userId);
-      console.log('Session isAdmin after save:', req.session.isAdmin);
-      console.log('Session keys after save:', Object.keys(req.session));
-      console.log('Full session object after save:', JSON.stringify(req.session, null, 2));
-      console.log('===============================\n');
-      
-      console.log('Sending success response...');
-      console.log('Final session data before response:', JSON.stringify(req.session, null, 2));
-      return res.json({
-        message: "Admin login successful",
-        admin: { 
-          id: 'admin',
-          username, 
-          isAdmin: true 
-        }
-      });
+      // Note: Response is sent from within the session.save callback above
     }
     console.log('Invalid credentials - username or password mismatch');
     return res.status(401).json({ message: "Invalid admin credentials" });
