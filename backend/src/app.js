@@ -471,10 +471,6 @@ app.use((err, req, res, next) => {
   res.status(500).send("Internal server error");
 });
 
-// Export for Vercel serverless
-module.exports = app;
-module.exports.handler = serverless(app);
-
 // For local development
 if (require.main === module) {
   const PORT = process.env.PORT || 5000;
@@ -482,3 +478,7 @@ if (require.main === module) {
     console.log(`Server running on port ${PORT}`);
   });
 }
+
+// Export for Vercel serverless
+module.exports = app;
+module.exports.handler = serverless(app);
