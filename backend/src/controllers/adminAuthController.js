@@ -115,9 +115,10 @@ exports.adminLogin = async (req, res) => {
       });
       
       // Note: Response is sent from within the session.save callback above
+    } else {
+      console.log('Invalid credentials - username or password mismatch');
+      return res.status(401).json({ message: "Invalid admin credentials" });
     }
-    console.log('Invalid credentials - username or password mismatch');
-    return res.status(401).json({ message: "Invalid admin credentials" });
   } catch (err) {
     console.error('=== ADMIN LOGIN ERROR ===');
     console.error('Error message:', err.message);
