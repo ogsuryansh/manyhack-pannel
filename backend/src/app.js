@@ -110,7 +110,12 @@ const sessionConfig = {
       return JSON.stringify(session);
     },
     unserialize: (serialized) => {
-      return JSON.parse(serialized);
+      try {
+        return JSON.parse(serialized);
+      } catch (err) {
+        console.error('Session unserialize error:', err);
+        return {};
+      }
     }
   }),
   cookie: {
@@ -133,6 +138,15 @@ if (process.env.NODE_ENV !== 'production') {
 }
 
 app.use(session(sessionConfig));
+
+// Session initialization middleware
+app.use((req, res, next) => {
+  if (!req.session) {
+    console.log('⚠️ No session object found, creating new session');
+    req.session = {};
+  }
+  next();
+});
 
 // Session debugging middleware (only in development)
 if (process.env.NODE_ENV !== 'production') {
@@ -313,13 +327,69 @@ app.get("/debug/session-store", async (req, res) => {
     
     res.json({
       totalSessions: sessions.length,
-      sessions: sessions.map(s => ({
-        _id: s._id,
-        expires: s.expires,
-        session: s.session ? JSON.parse(s.session) : null
-      }))
+      sessions: sessions.map(s => {
+        try {
+          return {
+            _id: s._id,
+            expires: s.expires,
+            session: s.session ? JSON.parse(s.session) : null
+          };
+        } catch (err) {
+          return {
+            _id: s._id,
+            expires: s.expires,
+            session: null,
+            parseError: err.message
+          };
+        }
+      })
     });
   } catch (error) {
+    res.status(500).json({ error: error.message, stack: error.stack });
+  }
+});
+
+// Debug route to test session creation
+app.post("/debug/create-test-session", async (req, res) => {
+  try {
+    console.log('=== CREATING TEST SESSION ===');
+    console.log('Session ID before:', req.sessionID);
+    console.log('Session exists before:', !!req.session);
+    
+    // Create test session data
+    req.session.testData = {
+      userId: 'test-admin',
+      isAdmin: true,
+      timestamp: new Date().toISOString()
+    };
+    
+    console.log('Session data set:', req.session.testData);
+    
+    // Save session
+    await new Promise((resolve, reject) => {
+      req.session.save((err) => {
+        if (err) {
+          console.error('Session save error:', err);
+          reject(err);
+        } else {
+          console.log('Session saved successfully');
+          resolve();
+        }
+      });
+    });
+    
+    console.log('Session ID after save:', req.sessionID);
+    console.log('Session data after save:', JSON.stringify(req.session, null, 2));
+    console.log('=============================');
+    
+    res.json({
+      message: 'Test session created',
+      sessionId: req.sessionID,
+      sessionData: req.session,
+      timestamp: new Date().toISOString()
+    });
+  } catch (error) {
+    console.error('Test session creation error:', error);
     res.status(500).json({ error: error.message, stack: error.stack });
   }
 });

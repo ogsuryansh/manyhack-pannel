@@ -57,10 +57,27 @@ exports.adminLogin = async (req, res) => {
             reject(err);
           } else {
             console.log('✅ Session saved successfully to MongoDB');
+            console.log('Session ID after save:', req.sessionID);
+            console.log('Session data after save:', JSON.stringify(req.session, null, 2));
             resolve();
           }
         });
       });
+      
+      // Additional verification - check if session was actually stored
+      console.log('Verifying session storage...');
+      const sessionStore = req.sessionStore;
+      if (sessionStore) {
+        sessionStore.get(req.sessionID, (err, session) => {
+          if (err) {
+            console.error('❌ Error retrieving session:', err);
+          } else if (session) {
+            console.log('✅ Session verified in store:', JSON.stringify(session, null, 2));
+          } else {
+            console.log('❌ Session not found in store after save');
+          }
+        });
+      }
       
       // Verify session was saved
       console.log('Verifying session after save...');
