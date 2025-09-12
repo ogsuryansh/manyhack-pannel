@@ -23,9 +23,18 @@ export default function AdminRoute({ children }) {
         });
         
         if (res.ok) {
-          const data = await res.json();
-          console.log('Admin check response:', data);
-          setIsAuthenticated(data.isLoggedIn);
+          const contentType = res.headers.get('content-type');
+          if (contentType && contentType.includes('application/json')) {
+            const data = await res.json();
+            console.log('Admin check response:', data);
+            setIsAuthenticated(data.isLoggedIn);
+          } else {
+            console.error('Admin check returned non-JSON response');
+            const text = await res.text();
+            console.error('Response text:', text);
+            localStorage.removeItem("adminUser");
+            setIsAuthenticated(false);
+          }
         } else {
           console.log('Admin check failed, clearing localStorage');
           localStorage.removeItem("adminUser");

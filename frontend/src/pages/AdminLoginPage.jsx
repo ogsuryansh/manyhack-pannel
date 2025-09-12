@@ -28,8 +28,16 @@ export default function AdminLoginPage() {
       
       let data;
       try {
-        data = await res.json();
-        console.log('Admin login response data:', data);
+        const contentType = res.headers.get('content-type');
+        if (contentType && contentType.includes('application/json')) {
+          data = await res.json();
+          console.log('Admin login response data:', data);
+        } else {
+          console.error('Admin login returned non-JSON response');
+          const text = await res.text();
+          console.error('Raw response:', text);
+          throw new Error('Server returned non-JSON response');
+        }
       } catch (parseError) {
         console.error('Failed to parse admin login response:', parseError);
         const text = await res.text();
