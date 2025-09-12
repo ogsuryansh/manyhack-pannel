@@ -257,7 +257,7 @@ app.get("/debug/env", (req, res) => {
     SESSION_SECRET: process.env.SESSION_SECRET ? "SET" : "NOT SET",
     FRONTEND_URL: process.env.FRONTEND_URL,
     MONGO_URI: process.env.MONGO_URI ? "SET" : "NOT SET",
-    ADMIN_USERNAME: process.env.ADMIN_USERNAME ? "SET" : "NOT SET",
+    ADMIN_USERNAME: process.env.ADMIN_USERNAME || "NOT SET",
     ADMIN_PASSWORD: process.env.ADMIN_PASSWORD ? "SET" : "NOT SET",
     JWT_SECRET: process.env.JWT_SECRET ? "SET" : "NOT SET"
   });

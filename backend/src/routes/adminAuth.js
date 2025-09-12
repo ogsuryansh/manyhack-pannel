@@ -30,6 +30,21 @@ router.post("/test-login", (req, res) => {
   });
 });
 
+// Debug admin credentials
+router.get("/debug-credentials", (req, res) => {
+  console.log('=== ADMIN CREDENTIALS DEBUG ===');
+  console.log('ADMIN_USERNAME:', process.env.ADMIN_USERNAME);
+  console.log('ADMIN_PASSWORD:', process.env.ADMIN_PASSWORD ? 'SET' : 'NOT SET');
+  console.log('================================');
+  
+  res.json({
+    message: "Admin credentials debug",
+    ADMIN_USERNAME: process.env.ADMIN_USERNAME || "NOT SET",
+    ADMIN_PASSWORD: process.env.ADMIN_PASSWORD ? "SET" : "NOT SET",
+    timestamp: new Date().toISOString()
+  });
+});
+
 // Check if admin is logged in (for frontend verification)
 router.get("/check", (req, res) => {
   console.log('=== ADMIN CHECK DEBUG ===');
