@@ -86,4 +86,25 @@ router.post('/cleanup-empty-sessions', async (req, res) => {
   }
 });
 
+// Force logout route to clear user session
+router.post('/force-logout/:userId', async (req, res) => {
+  try {
+    const User = require('../models/User');
+    const userId = req.params.userId;
+    
+    // Clear user's active session
+    await User.findByIdAndUpdate(userId, {
+      $unset: { activeSession: 1 }
+    });
+    
+    res.json({ 
+      message: `Force logged out user: ${userId}`,
+      userId: userId
+    });
+  } catch (error) {
+    console.error('Error force logging out user:', error);
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
 module.exports = router;

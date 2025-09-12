@@ -270,34 +270,39 @@ exports.getBalanceHistory = async (req, res) => {
 // Logout user and clear session information
 exports.logout = async (req, res) => {
   try {
-    const sessionId = req.session.sessionId;
-    const userId = req.session.userId;
+    const sessionId = req.session?.sessionId;
+    const userId = req.session?.userId;
     
     console.log('Logout process started for user:', userId, 'session:', sessionId);
     
     if (sessionId && userId) {
-      // Mark session as inactive in Session model
-      await Session.findOneAndUpdate(
-        { sessionId: sessionId },
-        { isActive: false, logoutTime: new Date() }
-      );
-      
-      // Clear user's active session completely
-      await User.findByIdAndUpdate(userId, {
-        $unset: { activeSession: 1 }
-      });
-      
-      // Update session history to mark as inactive
-      await User.findByIdAndUpdate(userId, {
-        $set: {
-          'sessionHistory.$[elem].logoutTime': new Date(),
-          'sessionHistory.$[elem].isActive': false
-        }
-      }, {
-        arrayFilters: [{ 'elem.sessionId': sessionId, 'elem.isActive': true }]
-      });
-      
-      console.log('User active session cleared for user:', userId);
+      try {
+        // Mark session as inactive in Session model
+        await Session.findOneAndUpdate(
+          { sessionId: sessionId },
+          { isActive: false, logoutTime: new Date() }
+        );
+        
+        // Clear user's active session completely
+        await User.findByIdAndUpdate(userId, {
+          $unset: { activeSession: 1 }
+        });
+        
+        // Update session history to mark as inactive
+        await User.findByIdAndUpdate(userId, {
+          $set: {
+            'sessionHistory.$[elem].logoutTime': new Date(),
+            'sessionHistory.$[elem].isActive': false
+          }
+        }, {
+          arrayFilters: [{ 'elem.sessionId': sessionId, 'elem.isActive': true }]
+        });
+        
+        console.log('User active session cleared for user:', userId);
+      } catch (dbError) {
+        console.error('Database error during logout:', dbError);
+        // Continue with session destruction even if DB operations fail
+      }
     }
     
     // Destroy session

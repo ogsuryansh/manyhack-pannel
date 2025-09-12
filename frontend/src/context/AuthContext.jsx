@@ -53,17 +53,29 @@ export function AuthProvider({ children }) {
   const logout = async () => {
     // Call backend logout to clear session
     try {
-      await fetch(`${API}/auth/logout`, {
+      const response = await fetch(`${API}/auth/logout`, {
         method: 'POST',
         credentials: 'include'
       });
+      
+      if (!response.ok) {
+        console.error("Logout failed with status:", response.status);
+        const errorText = await response.text();
+        console.error("Logout error response:", errorText);
+      } else {
+        console.log("Backend logout successful");
+      }
     } catch (err) {
       console.error("Error logging out from backend:", err);
     }
     
+    // Always clear local state regardless of backend response
     doLogout();
     setUser(null);
     setToken(null);
+    
+    // Force page reload to clear any cached state
+    window.location.href = '/login';
   };
 
   return (
