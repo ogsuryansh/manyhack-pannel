@@ -159,7 +159,7 @@ exports.login = async (req, res) => {
       console.log('Current device fingerprint:', deviceInfo.deviceFingerprint);
       
       // Check if user is already logged in on ANY device
-      if (user.activeSession) {
+      if (user.activeSession && user.activeSession.deviceFingerprint) {
         console.log('User has active session, checking device match...');
         // Check if it's the same device (same fingerprint)
         if (user.activeSession.deviceFingerprint !== deviceInfo.deviceFingerprint) {
@@ -178,7 +178,7 @@ exports.login = async (req, res) => {
           }
         }
       } else {
-        console.log('No active session found - allowing login');
+        console.log('No active session found or empty session - allowing login');
       }
     } else {
       console.log('Admin user - no device restriction');

@@ -38,8 +38,8 @@ module.exports = async function (req, res, next) {
     }
 
     // Check if user has an active session
-    if (!user.activeSession) {
-      console.log('No active session in user record - user can login');
+    if (!user.activeSession || !user.activeSession.deviceFingerprint) {
+      console.log('No active session in user record or empty session - user can login');
       // Don't destroy session here, let the user login
       req.session.destroy();
       return res.status(401).json({ 

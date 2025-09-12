@@ -60,4 +60,30 @@ router.post('/clear-session/:userId', async (req, res) => {
   }
 });
 
+// Debug route to clean up all empty active sessions
+router.post('/cleanup-empty-sessions', async (req, res) => {
+  try {
+    const User = require('../models/User');
+    const result = await User.updateMany(
+      { 
+        $or: [
+          { activeSession: { $exists: false } },
+          { activeSession: null },
+          { activeSession: {} },
+          { 'activeSession.deviceFingerprint': { $exists: false } }
+        ]
+      },
+      { $unset: { activeSession: 1 } }
+    );
+    
+    res.json({ 
+      message: `Cleaned up ${result.modifiedCount} users with empty active sessions`,
+      modifiedCount: result.modifiedCount
+    });
+  } catch (error) {
+    console.error('Error cleaning up sessions:', error);
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
 module.exports = router;
