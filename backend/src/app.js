@@ -11,7 +11,8 @@ const serverless = require('serverless-http');
 
 const app = express();
 
-app.use(cors({
+// CORS configuration
+const corsOptions = {
   origin: function (origin, callback) {
     // Allow requests with no origin (like mobile apps or curl requests)
     if (!origin) return callback(null, true);
@@ -26,40 +27,77 @@ app.use(cors({
     if (allowedOrigins.indexOf(origin) !== -1) {
       callback(null, true);
     } else {
+      console.log('CORS blocked origin:', origin);
       callback(new Error('Not allowed by CORS'));
     }
   },
   credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'Cookie']
-}));
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
+  allowedHeaders: [
+    'Origin',
+    'X-Requested-With',
+    'Content-Type',
+    'Accept',
+    'Authorization',
+    'Cookie',
+    'Cache-Control',
+    'Pragma'
+  ],
+  exposedHeaders: ['Set-Cookie'],
+  optionsSuccessStatus: 200,
+  preflightContinue: false
+};
 
-// Handle preflight requests
-app.options('*', (req, res) => {
-  res.header('Access-Control-Allow-Origin', req.headers.origin || 'https://gaminggarage.store');
-  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
-  res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, Cookie');
+app.use(cors(corsOptions));
+
+// Additional CORS headers for all responses
+app.use((req, res, next) => {
+  const origin = req.headers.origin;
+  const allowedOrigins = [
+    'http://localhost:3000',
+    'http://localhost:5173',
+    'https://gaminggarage.store',
+    'https://www.gaminggarage.store'
+  ];
+  
+  if (allowedOrigins.includes(origin)) {
+    res.header('Access-Control-Allow-Origin', origin);
+  }
+  
   res.header('Access-Control-Allow-Credentials', 'true');
-  res.sendStatus(200);
+  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS, PATCH');
+  res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization, Cookie, Cache-Control, Pragma');
+  res.header('Access-Control-Expose-Headers', 'Set-Cookie');
+  
+  // Handle preflight requests
+  if (req.method === 'OPTIONS') {
+    res.status(200).end();
+    return;
+  }
+  
+  next();
 });
 
 app.use(express.json());
 
-// Request logging middleware (only in development)
-if (process.env.NODE_ENV !== 'production') {
-  app.use((req, res, next) => {
+// Request logging middleware
+app.use((req, res, next) => {
+  if (process.env.NODE_ENV !== 'production') {
     console.log('\n=== REQUEST DEBUG ===');
     console.log('Method:', req.method);
     console.log('URL:', req.url);
     console.log('Headers:', JSON.stringify(req.headers, null, 2));
     console.log('Body:', req.body);
     console.log('====================');
-    next();
-  });
-}
+  } else {
+    // Minimal logging in production
+    console.log(`${req.method} ${req.url} - Origin: ${req.headers.origin || 'none'}`);
+  }
+  next();
+});
 
 // Session configuration
-app.use(session({
+const sessionConfig = {
   secret: process.env.SESSION_SECRET || 'your-super-secret-session-key',
   resave: true,
   saveUninitialized: true,
@@ -82,7 +120,19 @@ app.use(session({
     sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax', // 'none' for production cross-origin
     domain: process.env.NODE_ENV === 'production' ? '.gaminggarage.store' : 'localhost' // Set domain based on environment
   }
-}));
+};
+
+// Log session configuration in development
+if (process.env.NODE_ENV !== 'production') {
+  console.log('Session configuration:', {
+    secure: sessionConfig.cookie.secure,
+    sameSite: sessionConfig.cookie.sameSite,
+    domain: sessionConfig.cookie.domain,
+    NODE_ENV: process.env.NODE_ENV
+  });
+}
+
+app.use(session(sessionConfig));
 
 // Session debugging middleware (only in development)
 if (process.env.NODE_ENV !== 'production') {
@@ -105,11 +155,11 @@ connectToDatabase().then(() => {
   process.exit(1);
 });
 
-// Routes
-app.use("/api/auth", require("./routes/auth"));
+// Routes - Order matters! More specific routes first
 app.use("/api/admin", require("./routes/adminAuth"));
 app.use("/api/admin/users", require("./routes/adminUser"));
 app.use("/api/admin/stats", require("./routes/adminStats"));
+app.use("/api/auth", require("./routes/auth"));
 app.use("/api/products", require("./routes/product"));
 app.use("/api/keys", require("./routes/key"));
 app.use("/api/payments", require("./routes/payment"));
@@ -124,6 +174,16 @@ require("./models/Session");
 // Test route
 app.get("/", (req, res) => {
   res.send("API is running...");
+});
+
+// CORS test endpoint
+app.get("/api/cors-test", (req, res) => {
+  res.json({
+    message: "CORS is working!",
+    origin: req.headers.origin,
+    timestamp: new Date().toISOString(),
+    environment: process.env.NODE_ENV || 'development'
+  });
 });
 
 // Debug route to check environment variables
@@ -227,6 +287,28 @@ app.use((req, res, next) => {
     return res.status(404).json({ message: "API route not found" });
   }
   next();
+});
+
+// CORS error handler
+app.use((err, req, res, next) => {
+  if (err.message === 'Not allowed by CORS') {
+    console.log('CORS Error:', err.message);
+    console.log('Origin:', req.headers.origin);
+    console.log('URL:', req.url);
+    console.log('Method:', req.method);
+    
+    return res.status(403).json({
+      message: 'CORS policy violation',
+      origin: req.headers.origin,
+      allowedOrigins: [
+        'http://localhost:3000',
+        'http://localhost:5173',
+        'https://gaminggarage.store',
+        'https://www.gaminggarage.store'
+      ]
+    });
+  }
+  next(err);
 });
 
 // Global error handling middleware
