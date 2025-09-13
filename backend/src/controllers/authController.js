@@ -167,7 +167,7 @@ exports.login = async (req, res) => {
           console.log('Different device detected - rejecting login');
           // Different device - reject login
           return res.status(401).json({ 
-            message: "You are already logged in on another device. Please reset device lock from your current device first.",
+            message: "You are already logged in on another device. Please reset device lock from your current device first (available after 24 hours).",
             code: "DEVICE_LOCKED"
           });
         } else {
@@ -304,12 +304,36 @@ exports.resetDeviceLock = async (req, res) => {
       });
     }
     
+    // Get user's current device lock status
+    const user = await User.findById(userId).select('deviceLock');
+    
+    if (!user.deviceLock || !user.deviceLock.isLocked) {
+      return res.status(400).json({ 
+        message: "No active device lock found." 
+      });
+    }
+    
+    // Check if 24 hours have passed since device lock was created
+    const lockTime = new Date(user.deviceLock.lockedAt);
+    const now = new Date();
+    const hoursSinceLock = (now - lockTime) / (1000 * 60 * 60); // Convert to hours
+    
+    if (hoursSinceLock < 24) {
+      const remainingHours = Math.ceil(24 - hoursSinceLock);
+      return res.status(400).json({ 
+        message: `Device lock can only be reset after 24 hours. Please wait ${remainingHours} more hour(s).`,
+        code: "RESET_COOLDOWN",
+        remainingHours: remainingHours,
+        lockedAt: user.deviceLock.lockedAt
+      });
+    }
+    
     // Clear device lock
     await User.findByIdAndUpdate(userId, {
       $unset: { deviceLock: 1 }
     });
     
-    console.log('Device lock reset for user:', userId);
+    console.log('Device lock reset for user:', userId, 'after 24+ hours');
     res.json({ 
       message: "Device lock reset successfully. You can now login on other devices.",
       success: true
@@ -334,11 +358,28 @@ exports.getDeviceStatus = async (req, res) => {
       });
     }
     
+    let canReset = false;
+    let remainingHours = 0;
+    
+    if (user.deviceLock && user.deviceLock.isLocked) {
+      const lockTime = new Date(user.deviceLock.lockedAt);
+      const now = new Date();
+      const hoursSinceLock = (now - lockTime) / (1000 * 60 * 60);
+      
+      if (hoursSinceLock >= 24) {
+        canReset = true;
+      } else {
+        remainingHours = Math.ceil(24 - hoursSinceLock);
+      }
+    }
+    
     res.json({
       isAdmin: false,
       deviceLock: user.deviceLock,
       isLocked: user.deviceLock ? user.deviceLock.isLocked : false,
-      lockedAt: user.deviceLock ? user.deviceLock.lockedAt : null
+      lockedAt: user.deviceLock ? user.deviceLock.lockedAt : null,
+      canReset: canReset,
+      remainingHours: remainingHours
     });
   } catch (err) {
     console.error('Get device status error:', err);
