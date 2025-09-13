@@ -39,9 +39,25 @@ export default function MyKeyPage() {
     fetch(`${API}/keys/user`, {
       credentials: 'include', // Important for session cookies
     })
-      .then((res) => res.json())
+      .then((res) => {
+        if (!res.ok) {
+          throw new Error(`HTTP ${res.status}: ${res.statusText}`);
+        }
+        return res.json();
+      })
       .then((data) => {
-        setMyKeys(data);
+        // Ensure data is an array before setting it
+        if (Array.isArray(data)) {
+          setMyKeys(data);
+        } else {
+          console.error('Expected array but got:', data);
+          setMyKeys([]);
+        }
+        setLoading(false);
+      })
+      .catch((error) => {
+        console.error('Error fetching user keys:', error);
+        setMyKeys([]);
         setLoading(false);
       });
   }, [user]);
@@ -61,7 +77,7 @@ export default function MyKeyPage() {
         ) : myKeys.length === 0 ? (
           <div style={{ textAlign: "center", color: "#aaa" }}>No keys found.</div>
         ) : (
-          myKeys.map((k) => (
+          Array.isArray(myKeys) ? myKeys.map((k) => (
             <div className="mykey-card" key={k._id}>
               <div className="mykey-row">
                 <span className="mykey-product">{k.productId?.name || "NA"}</span>
@@ -98,7 +114,7 @@ export default function MyKeyPage() {
                 </span>
               </div>
             </div>
-          ))
+          )) : <div style={{ textAlign: "center", color: "#aaa" }}>Error loading keys.</div>
         )}
       </div>
     </div>
