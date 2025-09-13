@@ -8,6 +8,21 @@ router.post('/login', authController.login);
 
 router.get('/me', sessionAuth, async (req, res) => {
   try {
+    // Handle admin users
+    if (req.user.id === 'admin' || req.user.isAdmin) {
+      return res.json({
+        id: 'admin',
+        username: 'admin',
+        email: 'admin@gaminggarage.store',
+        isAdmin: true,
+        wallet: [],
+        usdBalance: 0,
+        referralCode: 'ADMIN',
+        customPrices: [],
+        hiddenProducts: []
+      });
+    }
+    
     const User = require('../models/User');
     const user = await User.findById(req.user.id);
     if (!user) return res.status(404).json({ message: "User not found" });

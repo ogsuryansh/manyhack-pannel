@@ -39,6 +39,13 @@ router.get("/", async (req, res) => {
 });
 
 router.post("/add-money", sessionAuth, async (req, res) => {
+  // Check if user is admin - admin users cannot add money
+  if (req.user.id === 'admin' || req.user.isAdmin) {
+    return res.status(403).json({ 
+      message: "Admin users cannot add money. Please use a regular user account." 
+    });
+  }
+  
   const { amount, utr, payerName, meta } = req.body;
   const payment = new Payment({
     userId: req.user.id,
@@ -235,6 +242,13 @@ router.get("/topup-plans/active", sessionAuth, async (req, res) => {
 // USER: Top-up wallet with a plan
 router.post("/topup", sessionAuth, async (req, res) => {
   try {
+    // Check if user is admin - admin users cannot top up wallet
+    if (req.user.id === 'admin' || req.user.isAdmin) {
+      return res.status(403).json({ 
+        message: "Admin users cannot top up wallet. Please use a regular user account." 
+      });
+    }
+    
     const { planId } = req.body;
     const plan = await TopUpPlan.findById(planId);
     if (!plan || !plan.isActive) return res.status(400).json({ message: "Invalid plan" });

@@ -180,7 +180,19 @@ router.delete("/bulk/:productId/:duration", async (req, res) => {
 router.post("/buy", sessionAuth, async (req, res) => {
   try {
     const { productId, duration, quantity } = req.body;
+    
+    // Check if user is admin - admin users cannot buy keys
+    if (req.user.id === 'admin' || req.user.isAdmin) {
+      return res.status(403).json({ 
+        message: "Admin users cannot purchase keys. Please use a regular user account." 
+      });
+    }
+    
     const user = await User.findById(req.user.id);
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+    
     const now = new Date();
 
     let availableBalance = 0;
