@@ -43,7 +43,14 @@ const userSchema = new mongoose.Schema({
     loginTime: Date,
     logoutTime: Date,
     isActive: { type: Boolean, default: true }
-  }]
+  }],
+  // Single device lock system
+  deviceLock: {
+    isLocked: { type: Boolean, default: false },
+    lockedAt: Date,
+    currentDevice: String, // device fingerprint
+    currentSessionId: String
+  }
 }, { timestamps: true });
 
 module.exports = mongoose.model('User', userSchema);

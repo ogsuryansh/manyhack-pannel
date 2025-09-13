@@ -6,6 +6,7 @@ import { useNavigate } from "react-router-dom";
 import { API } from "../api";
 import AddMoneyModal from "../components/AddMoneyModal";
 import TelegramButton from "../components/TelegramButton";
+import DeviceLockStatus from "../components/DeviceLockStatus";
 
 export default function Dashboard() {
   const { user, refreshUser } = useAuth();
@@ -100,6 +101,10 @@ export default function Dashboard() {
           Login to see your balance.
         </div>
       )}
+      
+      {/* Device Lock Status - only show for logged-in users */}
+      {user && <DeviceLockStatus />}
+      
       <div className="balance-row" style={{ alignItems: "center" }}>
         <BalanceCard label="INR Balance" value={inrBalance} currency="INR" />
         <BalanceCard label="USD Balance" value={usdBalance} currency="USD" />

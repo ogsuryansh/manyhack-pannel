@@ -149,41 +149,37 @@ exports.login = async (req, res) => {
       return res.status(400).json({ message: "Invalid credentials." });
     }
 
-    // Get device information, reusing existing session if same device
-    const existingSessionId = user.activeSession?.sessionId;
-    const deviceInfo = getDeviceInfo(req, existingSessionId);
+    // Get device information
+    const deviceInfo = getDeviceInfo(req);
     
     // For regular users (not admin), enforce single device restriction
-    // Temporarily disabled to prevent false logouts due to IP changes
-    if (false && !user.isAdmin) {
-      console.log('Checking device restriction for user:', user.username);
-      console.log('User active session:', user.activeSession);
+    if (!user.isAdmin) {
+      console.log('Checking device lock for user:', user.username);
+      console.log('User device lock:', user.deviceLock);
       console.log('Current device fingerprint:', deviceInfo.deviceFingerprint);
       
-      // Check if user is already logged in on ANY device
-      if (user.activeSession && user.activeSession.deviceFingerprint) {
-        console.log('User has active session, checking device match...');
+      // Check if user has device lock enabled
+      if (user.deviceLock && user.deviceLock.isLocked) {
+        console.log('User has device lock enabled');
+        
         // Check if it's the same device (same fingerprint)
-        if (user.activeSession.deviceFingerprint !== deviceInfo.deviceFingerprint) {
+        if (user.deviceLock.currentDevice !== deviceInfo.deviceFingerprint) {
           console.log('Different device detected - rejecting login');
           // Different device - reject login
           return res.status(401).json({ 
-            message: "You are already logged in on another device. Please logout from the other device first or contact support.",
-            code: "DEVICE_ALREADY_LOGGED_IN"
+            message: "You are already logged in on another device. Please reset device lock from your current device first.",
+            code: "DEVICE_LOCKED"
           });
         } else {
           console.log('Same device detected - allowing login');
-          // Same device - check if session is still valid
-          if (user.activeSession.sessionId !== req.session.sessionId) {
-            // Same device but different session - update session
-            console.log('Same device, updating session');
-          }
+          // Same device - allow login and update session
         }
       } else {
-        console.log('No active session found or empty session - allowing login');
+        console.log('No device lock found - setting up device lock');
+        // No device lock - set up device lock for this user
       }
     } else {
-      console.log('Device restriction temporarily disabled for all users');
+      console.log('Admin user - no device restriction');
     }
 
     // Create new session in Session model
@@ -196,8 +192,8 @@ exports.login = async (req, res) => {
     });
     await newSession.save();
 
-    // Update user's active session
-    await User.findByIdAndUpdate(user._id, {
+    // Update user's active session and device lock
+    const updateData = {
       activeSession: {
         sessionId: deviceInfo.sessionId,
         deviceFingerprint: deviceInfo.deviceFingerprint,
@@ -216,7 +212,19 @@ exports.login = async (req, res) => {
           isActive: true
         }
       }
-    });
+    };
+
+    // For regular users, set up or maintain device lock
+    if (!user.isAdmin) {
+      updateData.deviceLock = {
+        isLocked: true,
+        lockedAt: new Date(),
+        currentDevice: deviceInfo.deviceFingerprint,
+        currentSessionId: deviceInfo.sessionId
+      };
+    }
+
+    await User.findByIdAndUpdate(user._id, updateData);
 
     // Store user info in session
     console.log('Storing session data:', {
@@ -285,6 +293,59 @@ exports.getBalanceHistory = async (req, res) => {
   }
 };
 
+// Reset device lock for current user
+exports.resetDeviceLock = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    
+    if (req.user.isAdmin) {
+      return res.status(400).json({ 
+        message: "Admin users don't have device lock restrictions." 
+      });
+    }
+    
+    // Clear device lock
+    await User.findByIdAndUpdate(userId, {
+      $unset: { deviceLock: 1 }
+    });
+    
+    console.log('Device lock reset for user:', userId);
+    res.json({ 
+      message: "Device lock reset successfully. You can now login on other devices.",
+      success: true
+    });
+  } catch (err) {
+    console.error('Reset device lock error:', err);
+    res.status(500).json({ message: "Server error." });
+  }
+};
+
+// Get device lock status for current user
+exports.getDeviceStatus = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const user = await User.findById(userId).select('deviceLock isAdmin');
+    
+    if (req.user.isAdmin) {
+      return res.json({ 
+        isAdmin: true,
+        deviceLock: null,
+        message: "Admin users don't have device lock restrictions."
+      });
+    }
+    
+    res.json({
+      isAdmin: false,
+      deviceLock: user.deviceLock,
+      isLocked: user.deviceLock ? user.deviceLock.isLocked : false,
+      lockedAt: user.deviceLock ? user.deviceLock.lockedAt : null
+    });
+  } catch (err) {
+    console.error('Get device status error:', err);
+    res.status(500).json({ message: "Server error." });
+  }
+};
+
 // Logout user and clear session information
 exports.logout = async (req, res) => {
   try {
@@ -301,9 +362,12 @@ exports.logout = async (req, res) => {
           { isActive: false, logoutTime: new Date() }
         );
         
-        // Clear user's active session completely
+        // Clear user's active session and device lock completely
         await User.findByIdAndUpdate(userId, {
-          $unset: { activeSession: 1 }
+          $unset: { 
+            activeSession: 1,
+            deviceLock: 1
+          }
         });
         
         // Update session history to mark as inactive

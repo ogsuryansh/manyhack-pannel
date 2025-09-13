@@ -36,6 +36,10 @@ router.get('/me', sessionAuth, async (req, res) => {
 // Get user's balance history
 router.get('/balance-history', sessionAuth, authController.getBalanceHistory);
 
+// Device lock management routes
+router.post('/reset-device-lock', sessionAuth, authController.resetDeviceLock);
+router.get('/device-status', sessionAuth, authController.getDeviceStatus);
+
 // Logout user
 router.post('/logout', sessionAuth, authController.logout);
 

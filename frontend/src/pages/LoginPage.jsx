@@ -23,8 +23,8 @@ export default function LoginPage() {
       login(user);
       navigate("/"); // Redirect to dashboard
     } catch (err) {
-      if (err.message.includes("already logged in")) {
-        setError("You are already logged in on another device. Please logout from the other device first or contact support.");
+      if (err.message.includes("already logged in") || err.message.includes("device lock")) {
+        setError("You are already logged in on another device. Please reset device lock from your current device first.");
       } else {
         setError(err.message);
       }
