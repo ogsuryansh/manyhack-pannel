@@ -1,6 +1,6 @@
 const express = require("express");
 const router = express.Router();
-const auth = require("../middlewares/auth");
+const sessionAuth = require("../middlewares/sessionAuth");
 const User = require("../models/User");
 const Product = require("../models/Product");
 const Key = require("../models/Key");
@@ -177,7 +177,7 @@ router.delete("/bulk/:productId/:duration", async (req, res) => {
   }
 });
 
-router.post("/buy", auth, async (req, res) => {
+router.post("/buy", sessionAuth, async (req, res) => {
   try {
     const { productId, duration, quantity } = req.body;
     const user = await User.findById(req.user.id);

@@ -262,8 +262,8 @@ export default function BuyKeyPage() {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        Authorization: `Bearer ${localStorage.getItem("token")}`,
       },
+      credentials: 'include', // Important for session cookies
       body: JSON.stringify({
         productId: selected._id,
         duration,
@@ -279,7 +279,20 @@ export default function BuyKeyPage() {
         navigate("/my-key");
       }, 2500);
     } else {
-      const errorData = await res.json();
+      let errorData = {};
+      try {
+        const contentType = res.headers.get('content-type');
+        if (contentType && contentType.includes('application/json')) {
+          errorData = await res.json();
+        } else {
+          const text = await res.text();
+          console.error('Non-JSON error response:', text);
+          errorData = { message: `Server error (${res.status}): ${text.substring(0, 100)}` };
+        }
+      } catch (parseError) {
+        console.error('Failed to parse error response:', parseError);
+        errorData = { message: `Failed to parse server response (${res.status})` };
+      }
       setSuccess(`Failed to purchase key(s): ${errorData.message || "Unknown error"}`);
       setBuying(false);
     }
