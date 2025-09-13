@@ -10,12 +10,22 @@ module.exports = async function (req, res, next) {
     console.log('Session exists:', !!req.session);
     console.log('Session userId:', req.session?.userId);
     console.log('Session sessionId:', req.session?.sessionId);
+    console.log('Session keys:', req.session ? Object.keys(req.session) : 'No session');
+    console.log('Session ID from req:', req.sessionID);
     console.log('==========================');
     
     // Check if user is logged in via session
     if (!req.session || !req.session.userId) {
-      console.log('No active session found');
-      return res.status(401).json({ message: "No active session" });
+      console.log('No active session found - session exists:', !!req.session, 'userId:', req.session?.userId);
+      return res.status(401).json({ 
+        message: "No active session", 
+        debug: {
+          sessionExists: !!req.session,
+          userId: req.session?.userId,
+          sessionId: req.session?.sessionId,
+          sessionKeys: req.session ? Object.keys(req.session) : 'No session'
+        }
+      });
     }
 
     // For admin users, skip device restriction

@@ -219,10 +219,26 @@ exports.login = async (req, res) => {
     });
 
     // Store user info in session
+    console.log('Storing session data:', {
+      userId: user._id,
+      sessionId: deviceInfo.sessionId,
+      deviceFingerprint: deviceInfo.deviceFingerprint,
+      isAdmin: user.isAdmin
+    });
+    
     req.session.userId = user._id;
     req.session.sessionId = deviceInfo.sessionId;
     req.session.deviceFingerprint = deviceInfo.deviceFingerprint;
     req.session.isAdmin = user.isAdmin;
+    
+    // Force session save
+    req.session.save((err) => {
+      if (err) {
+        console.error('Session save error:', err);
+      } else {
+        console.log('Session saved successfully');
+      }
+    });
     
     res.json({
       message: "Login successful",
