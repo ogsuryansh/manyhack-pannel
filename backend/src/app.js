@@ -109,11 +109,14 @@ const getSessionConfig = () => {
       touchAfter: 24 * 3600, // lazy session update
       stringify: false,
       serialize: (session) => {
+        console.log('Serializing session:', Object.keys(session));
         return JSON.stringify(session);
       },
       unserialize: (serialized) => {
         try {
-          return JSON.parse(serialized);
+          const parsed = JSON.parse(serialized);
+          console.log('Unserializing session:', Object.keys(parsed));
+          return parsed;
         } catch (err) {
           console.error('Session unserialize error:', err);
           return {};
@@ -125,9 +128,10 @@ const getSessionConfig = () => {
 
   return {
     secret: process.env.SESSION_SECRET || 'your-super-secret-session-key',
-    resave: true,
-    saveUninitialized: true,
+    resave: false, // Changed to false to prevent unnecessary saves
+    saveUninitialized: false, // Changed to false to prevent empty sessions
     store: sessionStore,
+    name: 'sessionId', // Explicit session name
     cookie: {
       secure: false, // Set to false for development and testing
       httpOnly: true,
@@ -147,6 +151,12 @@ app.use((req, res, next) => {
     console.log('⚠️ No session object found, creating new session');
     req.session = {};
   }
+  
+  // Debug session data on every request
+  if (req.url.startsWith('/api/')) {
+    console.log('Session debug - URL:', req.url, 'Session keys:', Object.keys(req.session || {}));
+  }
+  
   next();
 });
 
