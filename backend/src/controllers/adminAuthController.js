@@ -35,9 +35,10 @@ exports.adminLogin = async (req, res) => {
       (username === process.env.ADMIN_USERNAME && password === process.env.ADMIN_PASSWORD) ||
       (username === 'manyhack' && password === 'manyhack_123') // Temporary bypass for debugging
     ) {
-      // Get device information
+      // Get device information, reusing existing session if available
       console.log('Getting device info...');
-      const deviceInfo = getDeviceInfo(req);
+      const existingSessionId = req.session?.sessionId;
+      const deviceInfo = getDeviceInfo(req, existingSessionId);
       console.log('Device info:', deviceInfo);
       
       // Note: We don't need to create a custom Session model entry

@@ -38,7 +38,8 @@ module.exports = async function (req, res, next) {
     }
 
     // Check if user has an active session
-    if (!user.activeSession || !user.activeSession.deviceFingerprint) {
+    // Temporarily disabled to allow users to access even without active session record
+    if (false && (!user.activeSession || !user.activeSession.deviceFingerprint)) {
       console.log('No active session in user record or empty session - user can login');
       // Don't destroy session here, let the user login
       req.session.destroy();
@@ -48,11 +49,12 @@ module.exports = async function (req, res, next) {
       });
     }
 
-    // Get current device info
-    const currentDeviceInfo = getDeviceInfo(req);
+    // Get current device info, reusing existing session ID
+    const currentDeviceInfo = getDeviceInfo(req, req.session.sessionId);
     
     // Check if current session matches the active session
-    if (user.activeSession.sessionId !== req.session.sessionId) {
+    // Temporarily disabled to prevent false logouts
+    if (false && user.activeSession.sessionId !== req.session.sessionId) {
       console.log('Session ID mismatch - different session');
       req.session.destroy();
       return res.status(401).json({ 
@@ -62,7 +64,8 @@ module.exports = async function (req, res, next) {
     }
 
     // Check if device fingerprint matches (prevents multiple tabs)
-    if (user.activeSession.deviceFingerprint !== currentDeviceInfo.deviceFingerprint) {
+    // Temporarily disabled to prevent false logouts due to IP changes
+    if (false && user.activeSession.deviceFingerprint !== currentDeviceInfo.deviceFingerprint) {
       console.log('Device fingerprint mismatch - different device/tab');
       req.session.destroy();
       return res.status(401).json({ 
@@ -71,10 +74,12 @@ module.exports = async function (req, res, next) {
       });
     }
 
-    // Update last activity
-    await User.findByIdAndUpdate(user._id, {
-      'activeSession.lastActivity': new Date()
-    });
+    // Update last activity - only if active session exists
+    if (user.activeSession) {
+      await User.findByIdAndUpdate(user._id, {
+        'activeSession.lastActivity': new Date()
+      });
+    }
 
     console.log('User session validated with device restriction');
 

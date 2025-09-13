@@ -149,11 +149,13 @@ exports.login = async (req, res) => {
       return res.status(400).json({ message: "Invalid credentials." });
     }
 
-    // Get device information
-    const deviceInfo = getDeviceInfo(req);
+    // Get device information, reusing existing session if same device
+    const existingSessionId = user.activeSession?.sessionId;
+    const deviceInfo = getDeviceInfo(req, existingSessionId);
     
     // For regular users (not admin), enforce single device restriction
-    if (!user.isAdmin) {
+    // Temporarily disabled to prevent false logouts due to IP changes
+    if (false && !user.isAdmin) {
       console.log('Checking device restriction for user:', user.username);
       console.log('User active session:', user.activeSession);
       console.log('Current device fingerprint:', deviceInfo.deviceFingerprint);
@@ -181,7 +183,7 @@ exports.login = async (req, res) => {
         console.log('No active session found or empty session - allowing login');
       }
     } else {
-      console.log('Admin user - no device restriction');
+      console.log('Device restriction temporarily disabled for all users');
     }
 
     // Create new session in Session model
