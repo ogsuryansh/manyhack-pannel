@@ -32,7 +32,7 @@ export default function AdminKeyManager() {
       .then((data) => setProducts(data));
   }, []);
 
-  // Fetch keys for selected product+duration, use allStats for stats
+  // Fetch keys for selected product+duration, calculate stats from actual keys data
   useEffect(() => {
     if (!selectedProduct || !selectedDuration) {
       setKeys([]);
@@ -47,16 +47,20 @@ export default function AdminKeyManager() {
       .then((res) => res.json())
       .then((keysData) => {
         setKeys(keysData);
-        // Use allStats for available
-        const statKey = `${selectedProduct}_${selectedDuration}`;
-        setStats((prev) => ({
-          ...prev,
-          available: allStats[statKey]?.available || 0,
-        }));
+        
+        // Calculate stats from actual keys data
+        const total = keysData.length;
+        const available = keysData.filter(key => !key.assignedTo).length;
+        const assigned = keysData.filter(key => key.assignedTo).length;
+        const expired = keysData.filter(key => 
+          key.expiresAt && new Date(key.expiresAt) < new Date()
+        ).length;
+        
+        setStats({ total, available, assigned, expired });
         setLoading(false);
       })
       .catch(() => setLoading(false));
-  }, [selectedProduct, selectedDuration, allStats]);
+  }, [selectedProduct, selectedDuration]);
 
   // Get durations for selected product
   const durations =
@@ -88,21 +92,24 @@ export default function AdminKeyManager() {
       setMessage({ type: "success", text: "Keys added successfully!" });
       setBulkKeys("");
       setLoading(true);
-      Promise.all([
-        fetch(
-          `${API}/keys?productId=${selectedProduct}&duration=${encodeURIComponent(
-            selectedDuration
-          )}`
-        ).then((res) => res.json()),
-        fetch(
-          `${API}/keys/stats?productId=${selectedProduct}&duration=${encodeURIComponent(
-            selectedDuration
-          )}`
-        ).then((res) => res.json()),
-      ])
-        .then(([keysData, statsData]) => {
+      fetch(
+        `${API}/keys?productId=${selectedProduct}&duration=${encodeURIComponent(
+          selectedDuration
+        )}`
+      )
+        .then((res) => res.json())
+        .then((keysData) => {
           setKeys(keysData);
-          setStats(statsData);
+          
+          // Calculate stats from actual keys data
+          const total = keysData.length;
+          const available = keysData.filter(key => !key.assignedTo).length;
+          const assigned = keysData.filter(key => key.assignedTo).length;
+          const expired = keysData.filter(key => 
+            key.expiresAt && new Date(key.expiresAt) < new Date()
+          ).length;
+          
+          setStats({ total, available, assigned, expired });
           setLoading(false);
         })
         .catch(() => setLoading(false));
@@ -127,7 +134,18 @@ export default function AdminKeyManager() {
   const handleDelete = async (id) => {
     if (!window.confirm("Delete this key?")) return;
     await fetch(`${API}/keys/${id}`, { method: "DELETE" });
-    setKeys(keys.filter((k) => k._id !== id));
+    const updatedKeys = keys.filter((k) => k._id !== id);
+    setKeys(updatedKeys);
+    
+    // Recalculate stats
+    const total = updatedKeys.length;
+    const available = updatedKeys.filter(key => !key.assignedTo).length;
+    const assigned = updatedKeys.filter(key => key.assignedTo).length;
+    const expired = updatedKeys.filter(key => 
+      key.expiresAt && new Date(key.expiresAt) < new Date()
+    ).length;
+    
+    setStats({ total, available, assigned, expired });
   };
 
   // Start editing a key
@@ -143,7 +161,18 @@ export default function AdminKeyManager() {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ key: editKeyValue }),
     });
-    setKeys(keys.map((k) => (k._id === id ? { ...k, key: editKeyValue } : k)));
+    const updatedKeys = keys.map((k) => (k._id === id ? { ...k, key: editKeyValue } : k));
+    setKeys(updatedKeys);
+    
+    // Recalculate stats
+    const total = updatedKeys.length;
+    const available = updatedKeys.filter(key => !key.assignedTo).length;
+    const assigned = updatedKeys.filter(key => key.assignedTo).length;
+    const expired = updatedKeys.filter(key => 
+      key.expiresAt && new Date(key.expiresAt) < new Date()
+    ).length;
+    
+    setStats({ total, available, assigned, expired });
     setEditKeyId(null);
     setEditKeyValue("");
   };

@@ -29,16 +29,23 @@ module.exports = async function (req, res, next) {
       });
     }
     
-    // TEMPORARY FIX: Create a mock user for testing
+    // Check if session exists but has no userId (session corruption)
+    if (req.session && !req.session.userId) {
+      console.log('Session exists but corrupted - clearing session');
+      req.session.destroy();
+      return res.status(401).json({ 
+        message: "Session corrupted. Please login again.",
+        code: "SESSION_CORRUPTED"
+      });
+    }
+    
+    // Check if no session at all
     if (!req.session || !req.session.userId) {
-      console.log('Using temporary mock user for testing');
-      req.user = {
-        id: '68c518ed2387aabcd406ea80', // Use a real user ID from your database
-        isAdmin: false,
-        sessionId: 'temp-session'
-      };
-      next();
-      return;
+      console.log('No active session found');
+      return res.status(401).json({ 
+        message: "No active session. Please login again.",
+        code: "NO_SESSION"
+      });
     }
 
     // For admin users, skip device restriction
@@ -49,6 +56,9 @@ module.exports = async function (req, res, next) {
         isAdmin: true,
         sessionId: req.session.sessionId
       };
+      
+      // Update admin session activity
+      req.session.lastActivity = new Date();
       next();
       return;
     }
