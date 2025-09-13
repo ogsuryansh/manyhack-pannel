@@ -111,17 +111,47 @@ router.post('/force-logout/:userId', async (req, res) => {
     const User = require('../models/User');
     const userId = req.params.userId;
     
-    // Clear user's active session
+    // Clear user's active session and device lock
     await User.findByIdAndUpdate(userId, {
-      $unset: { activeSession: 1 }
+      $unset: { 
+        activeSession: 1,
+        deviceLock: 1
+      }
     });
     
     res.json({ 
-      message: `Force logged out user: ${userId}`,
+      message: `Force logged out user and cleared device lock: ${userId}`,
       userId: userId
     });
   } catch (error) {
     console.error('Error force logging out user:', error);
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
+// Debug route to check all users with device locks
+router.get('/debug-device-locks', async (req, res) => {
+  try {
+    const User = require('../models/User');
+    const users = await User.find({
+      $or: [
+        { 'deviceLock.isLocked': true },
+        { 'activeSession.deviceFingerprint': { $exists: true } }
+      ]
+    }).select('username email deviceLock activeSession isAdmin');
+    
+    res.json({
+      message: `Found ${users.length} users with device locks or active sessions`,
+      users: users.map(user => ({
+        username: user.username,
+        email: user.email,
+        isAdmin: user.isAdmin,
+        deviceLock: user.deviceLock,
+        activeSession: user.activeSession
+      }))
+    });
+  } catch (error) {
+    console.error('Error checking device locks:', error);
     res.status(500).json({ message: "Server error" });
   }
 });

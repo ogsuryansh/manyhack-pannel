@@ -175,8 +175,17 @@ exports.login = async (req, res) => {
           // Same device - allow login and update session
         }
       } else {
-        console.log('No device lock found - setting up device lock');
-        // No device lock - set up device lock for this user
+        console.log('No device lock found - checking for existing sessions');
+        // Check if user has any active sessions first
+        if (user.activeSession && user.activeSession.deviceFingerprint) {
+          console.log('User has active session on different device - rejecting login');
+          return res.status(401).json({ 
+            message: "You are already logged in on another device. Please logout from the other device first.",
+            code: "ACTIVE_SESSION_EXISTS"
+          });
+        }
+        console.log('No active session found - setting up device lock');
+        // No device lock and no active session - set up device lock for this user
       }
     } else {
       console.log('Admin user - no device restriction');
@@ -410,6 +419,8 @@ exports.logout = async (req, res) => {
             deviceLock: 1
           }
         });
+        
+        console.log('Cleared active session and device lock for user:', userId);
         
         // Update session history to mark as inactive
         await User.findByIdAndUpdate(userId, {
