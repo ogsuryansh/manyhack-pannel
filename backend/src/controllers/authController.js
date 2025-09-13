@@ -302,20 +302,41 @@ exports.getBalanceHistory = async (req, res) => {
   }
 };
 
-// Reset device lock for current user
+// Reset device lock for user (with password verification)
 exports.resetDeviceLock = async (req, res) => {
   try {
-    const userId = req.user.id;
+    const { username, password } = req.body;
     
-    if (req.user.isAdmin) {
+    if (!username || !password) {
+      return res.status(400).json({ 
+        message: "Username and password are required." 
+      });
+    }
+    
+    // Find user by username
+    const user = await User.findOne({ username });
+    if (!user) {
+      return res.status(400).json({ 
+        message: "Invalid username or password." 
+      });
+    }
+    
+    // Verify password
+    const bcrypt = require('bcryptjs');
+    const isMatch = await bcrypt.compare(password, user.password);
+    if (!isMatch) {
+      return res.status(400).json({ 
+        message: "Invalid username or password." 
+      });
+    }
+    
+    if (user.isAdmin) {
       return res.status(400).json({ 
         message: "Admin users don't have device lock restrictions." 
       });
     }
     
     // Get user's current device lock status
-    const user = await User.findById(userId).select('deviceLock');
-    
     if (!user.deviceLock || !user.deviceLock.isLocked) {
       return res.status(400).json({ 
         message: "No active device lock found." 
@@ -338,11 +359,11 @@ exports.resetDeviceLock = async (req, res) => {
     }
     
     // Clear device lock
-    await User.findByIdAndUpdate(userId, {
+    await User.findByIdAndUpdate(user._id, {
       $unset: { deviceLock: 1 }
     });
     
-    console.log('Device lock reset for user:', userId, 'after 24+ hours');
+    console.log('Device lock reset for user:', user.username, 'after 24+ hours');
     res.json({ 
       message: "Device lock reset successfully. You can now login on other devices.",
       success: true
@@ -412,15 +433,14 @@ exports.logout = async (req, res) => {
           { isActive: false, logoutTime: new Date() }
         );
         
-        // Clear user's active session and device lock completely
+        // Clear user's active session but KEEP device lock
         await User.findByIdAndUpdate(userId, {
           $unset: { 
-            activeSession: 1,
-            deviceLock: 1
+            activeSession: 1
           }
         });
         
-        console.log('Cleared active session and device lock for user:', userId);
+        console.log('Cleared active session but kept device lock for user:', userId);
         
         // Update session history to mark as inactive
         await User.findByIdAndUpdate(userId, {

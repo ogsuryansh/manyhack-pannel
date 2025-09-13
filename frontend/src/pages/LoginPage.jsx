@@ -2,10 +2,13 @@ import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { login as apiLogin } from "../services/authService";
 import { useAuth } from "../context/useAuth";
+import { API } from "../api";
 export default function LoginPage() {
   const [form, setForm] = useState({ username: "", password: "" });
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [resetLoading, setResetLoading] = useState(false);
+  const [resetMessage, setResetMessage] = useState("");
   const navigate = useNavigate();
   const { login } = useAuth();
 
@@ -30,6 +33,48 @@ export default function LoginPage() {
       }
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleResetDevice = async () => {
+    if (!form.username || !form.password) {
+      setResetMessage("Please enter username and password first.");
+      return;
+    }
+
+    if (!window.confirm('Are you sure you want to reset your device lock? This will allow you to login on other devices.')) {
+      return;
+    }
+
+    setResetLoading(true);
+    setResetMessage("");
+
+    try {
+      const response = await fetch(`${API}/auth/reset-device-lock`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+        body: JSON.stringify({
+          username: form.username,
+          password: form.password
+        })
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        setResetMessage("Device lock reset successfully! You can now login on other devices.");
+        setError(""); // Clear any login errors
+      } else {
+        setResetMessage(data.message || 'Failed to reset device lock');
+      }
+    } catch (error) {
+      console.error('Error resetting device lock:', error);
+      setResetMessage('Network error. Please try again.');
+    } finally {
+      setResetLoading(false);
     }
   };
 
@@ -69,6 +114,16 @@ export default function LoginPage() {
               {error}
             </div>
           )}
+          {resetMessage && (
+            <div style={{ 
+              color: resetMessage.includes('successfully') ? "#22c55e" : "var(--accent)", 
+              textAlign: "center",
+              fontSize: "14px",
+              marginBottom: "12px"
+            }}>
+              {resetMessage}
+            </div>
+          )}
           <button 
             className="auth-btn" 
             type="submit" 
@@ -86,6 +141,36 @@ export default function LoginPage() {
               </>
             ) : (
               'Login'
+            )}
+          </button>
+          
+          {/* Reset Device Lock Button */}
+          <button 
+            type="button"
+            onClick={handleResetDevice}
+            disabled={resetLoading || loading}
+            style={{
+              width: '100%',
+              padding: '12px',
+              marginTop: '12px',
+              backgroundColor: '#ff6b81',
+              color: 'white',
+              border: 'none',
+              borderRadius: '8px',
+              cursor: resetLoading || loading ? 'not-allowed' : 'pointer',
+              opacity: resetLoading || loading ? 0.6 : 1,
+              fontSize: '14px',
+              fontWeight: '600',
+              position: 'relative'
+            }}
+          >
+            {resetLoading ? (
+              <>
+                <div className="loader loader-sm" style={{ marginRight: '8px' }}></div>
+                Resetting Device Lock...
+              </>
+            ) : (
+              '🔓 Reset Device Lock'
             )}
           </button>
           <div className="auth-bottom-text">

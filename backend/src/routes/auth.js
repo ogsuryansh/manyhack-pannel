@@ -37,7 +37,7 @@ router.get('/me', sessionAuth, async (req, res) => {
 router.get('/balance-history', sessionAuth, authController.getBalanceHistory);
 
 // Device lock management routes
-router.post('/reset-device-lock', sessionAuth, authController.resetDeviceLock);
+router.post('/reset-device-lock', authController.resetDeviceLock);
 router.get('/device-status', sessionAuth, authController.getDeviceStatus);
 
 // Logout user
@@ -111,11 +111,10 @@ router.post('/force-logout/:userId', async (req, res) => {
     const User = require('../models/User');
     const userId = req.params.userId;
     
-    // Clear user's active session and device lock
+    // Clear user's active session but KEEP device lock
     await User.findByIdAndUpdate(userId, {
       $unset: { 
-        activeSession: 1,
-        deviceLock: 1
+        activeSession: 1
       }
     });
     
