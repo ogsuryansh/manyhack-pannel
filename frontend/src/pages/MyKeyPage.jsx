@@ -37,9 +37,7 @@ export default function MyKeyPage() {
   useEffect(() => {
     if (!user) return;
     fetch(`${API}/keys/user`, {
-      headers: {
-        Authorization: `Bearer ${localStorage.getItem("token")}`,
-      },
+      credentials: 'include', // Important for session cookies
     })
       .then((res) => res.json())
       .then((data) => {

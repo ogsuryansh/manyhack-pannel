@@ -32,7 +32,7 @@ const AddBalancePage = () => {
       setError("");
       try {
         const res = await fetch(`${API}/payments/topup-plans/active`, {
-          headers: { Authorization: `Bearer ${token}` },
+          credentials: 'include', // Important for session cookies
         });
         if (!res.ok) throw new Error("Failed to fetch plans. Please make sure you are logged in as a user.");
         const data = await res.json();

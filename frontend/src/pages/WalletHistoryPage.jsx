@@ -11,9 +11,7 @@ export default function WalletHistoryPage() {
   useEffect(() => {
     if (!user) return;
     fetch(`${API}/auth/balance-history`, {
-      headers: {
-        Authorization: `Bearer ${localStorage.getItem("token")}`,
-      },
+      credentials: 'include', // Important for session cookies
     })
       .then((res) => res.json())
       .then((data) => {

@@ -25,8 +25,8 @@ function AddMoneyModal({ upiId, onClose, onSuccess }) {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        Authorization: `Bearer ${localStorage.getItem("token")}`,
       },
+      credentials: 'include', // Important for session cookies
       body: JSON.stringify({
         amount,
         utr,

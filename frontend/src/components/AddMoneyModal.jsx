@@ -36,8 +36,8 @@ export default function AddMoneyModal({ upiId, onClose, paymentEnabled = true, o
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        Authorization: `Bearer ${localStorage.getItem("token")}`,
       },
+      credentials: 'include', // Important for session cookies
       body: JSON.stringify({
         amount,
         utr,

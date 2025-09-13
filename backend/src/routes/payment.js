@@ -2,7 +2,7 @@ const express = require("express");
 const router = express.Router();
 const Payment = require("../models/Payment");
 const User = require("../models/User");
-const auth = require("../middlewares/auth");
+const sessionAuth = require("../middlewares/sessionAuth");
 const { adminAuth } = require("../middlewares/sessionAuth");
 const TopUpPlan = require("../models/TopUpPlan");
 
@@ -38,7 +38,7 @@ router.get("/", async (req, res) => {
   }
 });
 
-router.post("/add-money", auth, async (req, res) => {
+router.post("/add-money", sessionAuth, async (req, res) => {
   const { amount, utr, payerName, meta } = req.body;
   const payment = new Payment({
     userId: req.user.id,
@@ -142,7 +142,7 @@ router.put("/:id/reject", async (req, res) => {
   res.json(payment);
 });
 
-router.get("/user", auth, async (req, res) => {
+router.get("/user", sessionAuth, async (req, res) => {
   try {
     const payments = await Payment.find({ userId: req.user.id })
       .populate({ path: "productId", select: "name", strictPopulate: false })
@@ -223,7 +223,7 @@ router.delete("/topup-plans/:id", adminAuth, async (req, res) => {
 });
 
 // USER: Get active top-up plans
-router.get("/topup-plans/active", auth, async (req, res) => {
+router.get("/topup-plans/active", sessionAuth, async (req, res) => {
   try {
     const plans = await TopUpPlan.find({ isActive: true });
     res.json(plans);
@@ -233,7 +233,7 @@ router.get("/topup-plans/active", auth, async (req, res) => {
 });
 
 // USER: Top-up wallet with a plan
-router.post("/topup", auth, async (req, res) => {
+router.post("/topup", sessionAuth, async (req, res) => {
   try {
     const { planId } = req.body;
     const plan = await TopUpPlan.findById(planId);

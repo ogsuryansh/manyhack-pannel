@@ -39,7 +39,7 @@ router.get("/stats", async (req, res) => {
   }
 });
 
-router.get("/user", auth, async (req, res) => {
+router.get("/user", sessionAuth, async (req, res) => {
   try {
     const keys = await Key.find({ assignedTo: req.user.id })
       .populate("productId", "name")
