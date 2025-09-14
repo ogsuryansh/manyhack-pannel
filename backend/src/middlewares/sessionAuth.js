@@ -167,9 +167,11 @@ module.exports.adminAuth = async function (req, res, next) {
       });
     }
 
-    // Ensure session is properly maintained
-    req.session.touch(); // Mark session as modified
-    req.session.lastAccess = new Date(); // Update last access time
+    // Ensure session is properly maintained (only if session exists)
+    if (req.session) {
+      req.session.touch(); // Mark session as modified
+      req.session.lastAccess = new Date(); // Update last access time
+    }
 
     // Add user info to request
     req.user = {

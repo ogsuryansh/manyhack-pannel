@@ -1,22 +1,18 @@
 // Session maintenance middleware to prevent session corruption
 module.exports = (req, res, next) => {
   try {
-    // Only apply to admin routes
-    if (req.url.includes('/admin/') && req.session) {
+    // Only apply to admin routes that require authentication (not login/check routes)
+    const isAdminRoute = req.url.includes('/admin/');
+    const isLoginRoute = req.url.includes('/admin/login');
+    const isCheckRoute = req.url.includes('/admin/check');
+    const isAuthRoute = isLoginRoute || isCheckRoute;
+    
+    if (isAdminRoute && !isAuthRoute && req.session && req.session.userId) {
       console.log('🔧 Session maintenance for admin route:', req.url);
       
       // Ensure session is properly maintained
       req.session.touch(); // Mark session as modified
       req.session.lastAccess = new Date(); // Update last access time
-      
-      // Add session health check
-      if (!req.session.userId) {
-        console.log('❌ Session corrupted - no userId found');
-        return res.status(401).json({ 
-          message: "Session corrupted - please log in again",
-          code: "SESSION_CORRUPTED"
-        });
-      }
       
       // Ensure admin session integrity
       if (req.session.userId === 'admin' && !req.session.isAdmin) {

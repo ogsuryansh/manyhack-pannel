@@ -143,36 +143,36 @@ const getSessionConfig = () => {
 const sessionMiddleware = session(getSessionConfig());
 app.use(sessionMiddleware);
 
-// Debug session middleware
-app.use((req, res, next) => {
-  console.log('🔍 Session middleware debug:');
-  console.log('  - Session ID:', req.sessionID);
-  console.log('  - Session exists:', !!req.session);
-  console.log('  - Session keys:', req.session ? Object.keys(req.session) : 'No session');
-  console.log('  - Response headers before next:', res.getHeaders());
-  next();
-});
+// Debug session middleware (disabled for production)
+// app.use((req, res, next) => {
+//   console.log('🔍 Session middleware debug:');
+//   console.log('  - Session ID:', req.sessionID);
+//   console.log('  - Session exists:', !!req.session);
+//   console.log('  - Session keys:', req.session ? Object.keys(req.session) : 'No session');
+//   console.log('  - Response headers before next:', res.getHeaders());
+//   next();
+// });
 
-// Session recovery middleware
-app.use(require('./middlewares/sessionRecovery'));
+// Session recovery middleware (temporarily disabled)
+// app.use(require('./middlewares/sessionRecovery'));
 
-// Session maintenance middleware
-app.use(require('./middlewares/sessionMaintenance'));
+// Session maintenance middleware (temporarily disabled)
+// app.use(require('./middlewares/sessionMaintenance'));
 
-// Session initialization middleware
-app.use((req, res, next) => {
-  if (!req.session) {
-    console.log('⚠️ No session object found, creating new session');
-    req.session = {};
-  }
-  
-  // Debug session data on every request
-  if (req.url.startsWith('/api/')) {
-    console.log('Session debug - URL:', req.url, 'Session keys:', Object.keys(req.session || {}));
-  }
-  
-  next();
-});
+// Session initialization middleware (temporarily disabled)
+// app.use((req, res, next) => {
+//   if (!req.session) {
+//     console.log('⚠️ No session object found, creating new session');
+//     req.session = {};
+//   }
+//   
+//   // Debug session data on every request
+//   if (req.url.startsWith('/api/')) {
+//     console.log('Session debug - URL:', req.url, 'Session keys:', Object.keys(req.session || {}));
+//   }
+//   
+//   next();
+// });
 
 // Session debugging middleware (only in development)
 if (process.env.NODE_ENV !== 'production') {
