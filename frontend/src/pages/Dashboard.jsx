@@ -60,9 +60,23 @@ export default function Dashboard() {
         }
       };
 
-      // Refresh every 10 seconds to catch admin changes more quickly
-      const interval = setInterval(refreshUserData, 10000);
-      return () => clearInterval(interval);
+      // Refresh every 5 seconds to catch admin changes more quickly
+      const interval = setInterval(refreshUserData, 5000);
+      
+      // Also refresh when page becomes visible (user switches back to tab)
+      const handleVisibilityChange = () => {
+        if (!document.hidden) {
+          console.log('🔄 Dashboard: Page became visible, refreshing data...');
+          refreshUserData();
+        }
+      };
+      
+      document.addEventListener('visibilitychange', handleVisibilityChange);
+      
+      return () => {
+        clearInterval(interval);
+        document.removeEventListener('visibilitychange', handleVisibilityChange);
+      };
     }
   }, [user, refreshUser]);
 

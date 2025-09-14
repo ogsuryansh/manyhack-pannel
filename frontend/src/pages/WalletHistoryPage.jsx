@@ -39,8 +39,15 @@ export default function WalletHistoryPage() {
           
           if (res.ok) {
             const data = await res.json();
-            setTransactions(Array.isArray(data) ? data : []);
-            console.log('✅ WalletHistory: Balance history refreshed');
+            const newTransactions = Array.isArray(data) ? data : [];
+            
+            // Only update if transactions actually changed
+            if (JSON.stringify(newTransactions) !== JSON.stringify(transactions)) {
+              setTransactions(newTransactions);
+              console.log('✅ WalletHistory: Balance history updated with', newTransactions.length, 'transactions');
+            } else {
+              console.log('🔄 WalletHistory: No changes in balance history');
+            }
           } else {
             console.error('❌ WalletHistory: Failed to refresh balance history:', res.status);
           }
@@ -49,11 +56,25 @@ export default function WalletHistoryPage() {
         }
       };
 
-      // Refresh every 10 seconds to catch admin changes more quickly
-      const interval = setInterval(refreshHistory, 10000);
-      return () => clearInterval(interval);
+      // Refresh every 5 seconds to catch admin changes more quickly
+      const interval = setInterval(refreshHistory, 5000);
+      
+      // Also refresh when page becomes visible (user switches back to tab)
+      const handleVisibilityChange = () => {
+        if (!document.hidden) {
+          console.log('🔄 WalletHistory: Page became visible, refreshing history...');
+          refreshHistory();
+        }
+      };
+      
+      document.addEventListener('visibilitychange', handleVisibilityChange);
+      
+      return () => {
+        clearInterval(interval);
+        document.removeEventListener('visibilitychange', handleVisibilityChange);
+      };
     }
-  }, [user]);
+  }, [user, transactions]);
 
   const moneyAdded = transactions
     .filter((t) => t.type === "topup" || t.type === "referral_reward")

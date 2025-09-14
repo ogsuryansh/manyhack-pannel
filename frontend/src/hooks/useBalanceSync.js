@@ -1,9 +1,11 @@
 import { useEffect, useRef } from 'react';
 import { useAuth } from '../context/useAuth';
+import { useRefresh } from '../context/RefreshContext';
 import { API } from '../api';
 
 export function useBalanceSync() {
   const { user, refreshUser } = useAuth();
+  const { refreshTrigger } = useRefresh();
   const lastBalanceRef = useRef(0);
   const intervalRef = useRef(null);
 
@@ -12,6 +14,8 @@ export function useBalanceSync() {
 
     const syncBalance = async () => {
       try {
+        console.log('🔄 useBalanceSync: Checking for balance changes...');
+        
         // Get current balance from server
         const response = await fetch(`${API}/auth/me`, {
           credentials: 'include'
@@ -25,8 +29,10 @@ export function useBalanceSync() {
                 .reduce((sum, entry) => sum + entry.amount, 0)
             : 0;
 
-          // Check if balance changed
-          if (lastBalanceRef.current > 0 && currentBalance !== lastBalanceRef.current) {
+          console.log('🔄 useBalanceSync: Current balance:', currentBalance, 'Last balance:', lastBalanceRef.current);
+
+          // Always refresh user data to ensure it's up to date
+          if (lastBalanceRef.current !== currentBalance) {
             console.log('🔄 Balance changed detected:', {
               from: lastBalanceRef.current,
               to: currentBalance,
@@ -35,9 +41,12 @@ export function useBalanceSync() {
             
             // Refresh user data to update all components
             await refreshUser();
+            console.log('✅ useBalanceSync: User data refreshed');
           }
           
           lastBalanceRef.current = currentBalance;
+        } else {
+          console.error('❌ useBalanceSync: Failed to fetch user data:', response.status);
         }
       } catch (error) {
         console.error('❌ Balance sync error:', error);
@@ -47,19 +56,20 @@ export function useBalanceSync() {
     // Initial sync
     syncBalance();
 
-    // Set up interval for periodic sync
-    intervalRef.current = setInterval(syncBalance, 5000); // Check every 5 seconds
+    // Set up interval for periodic sync - check every 3 seconds for faster updates
+    intervalRef.current = setInterval(syncBalance, 3000);
 
     return () => {
       if (intervalRef.current) {
         clearInterval(intervalRef.current);
       }
     };
-  }, [user, refreshUser]);
+  }, [user, refreshUser, refreshTrigger]);
 
   return {
     syncBalance: async () => {
       if (user) {
+        console.log('🔄 useBalanceSync: Manual sync triggered');
         await refreshUser();
       }
     }

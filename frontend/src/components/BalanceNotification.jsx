@@ -13,12 +13,15 @@ export default function BalanceNotification() {
         .filter((entry) => !entry.expiresAt || new Date(entry.expiresAt) > new Date())
         .reduce((sum, entry) => sum + entry.amount, 0);
 
+      console.log('🔔 BalanceNotification: Current balance:', currentBalance, 'Last balance:', lastBalance);
+
       if (lastBalance > 0 && currentBalance !== lastBalance) {
         const difference = currentBalance - lastBalance;
         const message = difference > 0 
           ? `💰 Balance increased by ₹${difference.toLocaleString()}`
           : `💸 Balance decreased by ₹${Math.abs(difference).toLocaleString()}`;
         
+        console.log('🔔 BalanceNotification: Showing notification:', message);
         setNotificationMessage(message);
         setShowNotification(true);
         
