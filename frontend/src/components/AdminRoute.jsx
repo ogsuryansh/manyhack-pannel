@@ -35,6 +35,9 @@ export default function AdminRoute({ children }) {
             setIsAuthenticated(false);
           }
         } else {
+          // Handle 401 and other errors
+          const errorData = await res.json().catch(() => ({}));
+          console.error('Admin check failed:', errorData);
           localStorage.removeItem("adminUser");
           setIsAuthenticated(false);
         }

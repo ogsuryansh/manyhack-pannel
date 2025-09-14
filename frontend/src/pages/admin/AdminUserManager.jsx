@@ -37,13 +37,34 @@ export default function AdminUserManager() {
   useEffect(() => {
     setLoading(true);
     Promise.all([
-      fetch(`${API}/admin/users?limit=${pageSize}&skip=${page*pageSize}&search=${encodeURIComponent(debouncedSearch)}`, { credentials: 'include' }).then((res) => res.json()),
-      fetch(`${API}/products`, { credentials: 'include' }).then((res) => res.json()),
+      fetch(`${API}/admin/users?limit=${pageSize}&skip=${page*pageSize}&search=${encodeURIComponent(debouncedSearch)}`, { credentials: 'include' })
+        .then(async (res) => {
+          if (!res.ok) {
+            const errorData = await res.json().catch(() => ({}));
+            throw new Error(errorData.message || `HTTP error! status: ${res.status}`);
+          }
+          return res.json();
+        }),
+      fetch(`${API}/products`, { credentials: 'include' })
+        .then(async (res) => {
+          if (!res.ok) {
+            const errorData = await res.json().catch(() => ({}));
+            throw new Error(errorData.message || `HTTP error! status: ${res.status}`);
+          }
+          return res.json();
+        }),
     ]).then(([usersData, productsData]) => {
       setUsers(usersData.users || []);
       setTotal(usersData.total || 0);
-      setProducts(productsData);
+      setProducts(productsData || []);
       setLoading(false);
+    }).catch((error) => {
+      console.error('Error fetching data:', error);
+      setUsers([]);
+      setTotal(0);
+      setProducts([]);
+      setLoading(false);
+      setMessage({ type: "error", text: error.message || "Failed to load data" });
     });
   }, [page, debouncedSearch]);
 
