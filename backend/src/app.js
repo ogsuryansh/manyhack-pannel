@@ -108,8 +108,25 @@ const getSessionConfig = () => {
       collectionName: 'sessions',
       touchAfter: 24 * 3600, // lazy session update
       stringify: false, // Use default serialization
-      // Remove custom serialize/unserialize functions
-      // Remove TTL to prevent automatic cleanup
+      // MongoDB connection options to handle SSL issues
+      mongoOptions: {
+        useNewUrlParser: true,
+        useUnifiedTopology: true,
+        ssl: true,
+        tlsAllowInvalidCertificates: true, // Allow invalid certificates
+        tlsAllowInvalidHostnames: true, // Allow invalid hostnames
+        retryWrites: true,
+        w: 'majority',
+        // Connection pool options
+        maxPoolSize: 10,
+        minPoolSize: 1,
+        maxIdleTimeMS: 30000,
+        serverSelectionTimeoutMS: 10000, // Increased timeout
+        socketTimeoutMS: 45000,
+        // Retry options
+        retryReads: true,
+        retryWrites: true
+      }
     });
     console.log('✅ Session store created successfully');
   }
@@ -133,8 +150,15 @@ const getSessionConfig = () => {
   };
 };
 
-// Apply session middleware
+// Apply session middleware with error handling
 const sessionMiddleware = session(getSessionConfig());
+
+// Add error handling for session store
+sessionMiddleware.on('error', (err) => {
+  console.error('Session store error:', err);
+  // Don't crash the app, just log the error
+});
+
 app.use(sessionMiddleware);
 
 // Debug session middleware (disabled for production)

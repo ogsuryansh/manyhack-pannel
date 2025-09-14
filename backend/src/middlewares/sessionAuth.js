@@ -96,6 +96,16 @@ module.exports = async function (req, res, next) {
     next();
   } catch (err) {
     console.error('Session auth error:', err);
+    
+    // Handle MongoDB connection errors gracefully
+    if (err.name === 'MongoNetworkError' || err.message.includes('SSL') || err.message.includes('TLS')) {
+      console.error('MongoDB connection error detected, session may be unavailable');
+      return res.status(503).json({ 
+        message: "Service temporarily unavailable. Please try again in a moment.",
+        code: "SERVICE_UNAVAILABLE"
+      });
+    }
+    
     res.status(500).json({ message: "Server error" });
   }
 };
@@ -129,6 +139,16 @@ module.exports.adminAuth = async function (req, res, next) {
     next();
   } catch (err) {
     console.error('Admin session auth error:', err);
+    
+    // Handle MongoDB connection errors gracefully
+    if (err.name === 'MongoNetworkError' || err.message.includes('SSL') || err.message.includes('TLS')) {
+      console.error('MongoDB connection error detected, admin session may be unavailable');
+      return res.status(503).json({ 
+        message: "Service temporarily unavailable. Please try again in a moment.",
+        code: "SERVICE_UNAVAILABLE"
+      });
+    }
+    
     res.status(500).json({ 
       message: "Server error",
       error: process.env.NODE_ENV === 'production' ? 'Internal server error' : err.message
