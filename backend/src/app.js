@@ -122,11 +122,11 @@ const getSessionConfig = () => {
 
   return {
     secret: process.env.SESSION_SECRET || 'your-super-secret-session-key',
-    resave: true, // Always resave sessions to prevent corruption
-    saveUninitialized: true, // Save uninitialized sessions
+    resave: false, // Don't resave unchanged sessions
+    saveUninitialized: false, // Don't save uninitialized sessions
     store: sessionStore,
     name: 'sessionId', // Explicit session name
-    rolling: true, // Reset expiration on every request
+    rolling: false, // Don't reset expiration on every request
     cookie: {
       secure: process.env.NODE_ENV === 'production', // Use secure cookies in production
       httpOnly: true,

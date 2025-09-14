@@ -93,10 +93,6 @@ router.put("/:id/approve", async (req, res) => {
 
 router.post("/deduct-money", adminAuth, async (req, res) => {
   try {
-    // Maintain session
-    req.session.touch();
-    req.session.lastAccess = new Date();
-    
     const { userId, amount, note } = req.body;
     if (!userId || !amount || amount <= 0) {
       return res.status(400).json({ message: "Missing userId or amount" });

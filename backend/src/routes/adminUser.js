@@ -65,10 +65,6 @@ function recordAdminOperation(adminId, operationType, balanceChange = 0) {
 
 router.get("/", adminAuth, async (req, res) => {
   try {
-    // Maintain session
-    req.session.touch();
-    req.session.lastAccess = new Date();
-    
     const limit = parseInt(req.query.limit) || 10;
     const skip = parseInt(req.query.skip) || 0;
     const search = req.query.search ? req.query.search.trim() : "";
@@ -93,10 +89,6 @@ router.get("/", adminAuth, async (req, res) => {
 router.put("/:id/custom-prices", adminAuth, async (req, res) => {
   const { customPrices, balance, hiddenProducts } = req.body;
   try {
-    // Maintain session
-    req.session.touch();
-    req.session.lastAccess = new Date();
-    
     // Validate admin permissions
     if (!req.user || !req.user.isAdmin) {
       console.error("Unauthorized admin access attempt:", req.user?.id);

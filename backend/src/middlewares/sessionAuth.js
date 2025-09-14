@@ -28,16 +28,6 @@ module.exports = async function (req, res, next) {
       });
     }
     
-    // Check if session exists but has no userId (session corruption)
-    if (req.session && !req.session.userId) {
-      console.log('Session exists but corrupted - clearing session');
-      req.session.destroy();
-      return res.status(401).json({ 
-        message: "Session corrupted. Please login again.",
-        code: "SESSION_CORRUPTED"
-      });
-    }
-    
     // Check if no session at all
     if (!req.session || !req.session.userId) {
       console.log('No active session found');
@@ -198,11 +188,7 @@ module.exports.adminAuth = async function (req, res, next) {
       });
     }
 
-    // Ensure session is properly maintained (only if session exists)
-    if (req.session) {
-      req.session.touch(); // Mark session as modified
-      req.session.lastAccess = new Date(); // Update last access time
-    }
+    // Session is valid, continue
 
     // Add user info to request
     req.user = {
