@@ -24,6 +24,28 @@ export default function WalletHistoryPage() {
       });
   }, [user]);
 
+  // Refresh balance history when user data changes (e.g., after admin balance changes)
+  useEffect(() => {
+    if (user) {
+      const refreshHistory = () => {
+        fetch(`${API}/auth/balance-history`, {
+          credentials: 'include',
+        })
+          .then((res) => res.json())
+          .then((data) => {
+            setTransactions(Array.isArray(data) ? data : []);
+          })
+          .catch((error) => {
+            console.error('Error refreshing balance history:', error);
+          });
+      };
+
+      // Refresh every 30 seconds to catch admin changes
+      const interval = setInterval(refreshHistory, 30000);
+      return () => clearInterval(interval);
+    }
+  }, [user]);
+
   const moneyAdded = transactions
     .filter((t) => t.type === "topup" || t.type === "referral_reward")
     .reduce((sum, t) => sum + t.amount, 0);

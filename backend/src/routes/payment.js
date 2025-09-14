@@ -143,6 +143,21 @@ router.post("/deduct-money", adminAuth, async (req, res) => {
     createdAt: now,
   });
 
+  // Also create BalanceHistory entry
+  const BalanceHistory = require('../models/BalanceHistory');
+  await BalanceHistory.create({
+    userId,
+    amount: -amount, // Negative amount for deduction
+    type: 'admin_deduct',
+    description: `Admin deducted ₹${amount} from wallet${note ? ` - ${note}` : ''}`,
+    metadata: {
+      adminId: req.user.id,
+      adminAction: "manual_deduction",
+      note: note || '',
+      timestamp: now.toISOString()
+    }
+  });
+
   // Log the admin action for audit trail
   console.log(`ADMIN AUDIT: User ${req.user.id} deducted ₹${amount} from user ${userId}. Note: ${note || 'No note provided'}`);
 

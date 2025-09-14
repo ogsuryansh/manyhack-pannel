@@ -145,6 +145,20 @@ router.put("/:id/custom-prices", adminAuth, async (req, res) => {
           },
           createdAt: now,
         });
+
+        // Also create BalanceHistory entry
+        const BalanceHistory = require('../models/BalanceHistory');
+        await BalanceHistory.create({
+          userId: user._id,
+          amount: balance,
+          type: 'admin_add',
+          description: `Admin added ₹${balance} to wallet`,
+          metadata: {
+            adminId: req.user.id,
+            adminAction: "manual_addition",
+            timestamp: now.toISOString()
+          }
+        });
       } else {
         let toDeduct = Math.abs(balance);
         console.log(`ADMIN AUDIT: Admin ${req.user.id} deducting ₹${toDeduct} from user ${req.params.id} (${user.username || user.email})`);
@@ -187,6 +201,20 @@ router.put("/:id/custom-prices", adminAuth, async (req, res) => {
             timestamp: now.toISOString()
           },
           createdAt: now,
+        });
+
+        // Also create BalanceHistory entry
+        const BalanceHistory = require('../models/BalanceHistory');
+        await BalanceHistory.create({
+          userId: user._id,
+          amount: -Math.abs(balance), // Negative amount for deduction
+          type: 'admin_deduct',
+          description: `Admin deducted ₹${Math.abs(balance)} from wallet`,
+          metadata: {
+            adminId: req.user.id,
+            adminAction: "manual_deduction",
+            timestamp: now.toISOString()
+          }
         });
       }
     }

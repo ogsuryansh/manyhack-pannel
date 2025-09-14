@@ -281,21 +281,55 @@ exports.login = async (req, res) => {
 exports.getBalanceHistory = async (req, res) => {
   try {
     const BalanceHistory = require('../models/BalanceHistory');
+    const Payment = require('../models/Payment');
     const ReferralCode = require('../models/ReferralCode');
     
-    const history = await BalanceHistory.find({ userId: req.user.id })
-      .populate('referenceId', 'code description')
-      .sort({ createdAt: -1 })
-      .limit(50); // Last 50 transactions
+    // Get both BalanceHistory and Payment records
+    const [balanceHistory, payments] = await Promise.all([
+      BalanceHistory.find({ userId: req.user.id })
+        .populate('referenceId', 'code description')
+        .sort({ createdAt: -1 })
+        .limit(50),
+      Payment.find({ 
+        userId: req.user.id,
+        type: { $in: ['add_money', 'deduct_money'] }
+      })
+        .sort({ createdAt: -1 })
+        .limit(50)
+    ]);
     
-    // Process the history to include more details
-    const processedHistory = history.map(entry => ({
-      ...entry.toObject(),
+    // Process BalanceHistory entries
+    const processedBalanceHistory = balanceHistory.map(entry => ({
+      _id: entry._id,
+      amount: entry.amount,
+      type: entry.type,
+      description: entry.description,
+      createdAt: entry.createdAt,
       referralCode: entry.referenceId?.code || entry.metadata?.referralCode || 'N/A',
-      referralDescription: entry.referenceId?.description || 'N/A'
+      referralDescription: entry.referenceId?.description || 'N/A',
+      metadata: entry.metadata
     }));
     
-    res.json(processedHistory);
+    // Process Payment entries
+    const processedPayments = payments.map(payment => ({
+      _id: payment._id,
+      amount: payment.type === 'add_money' ? payment.amount : -payment.amount,
+      type: payment.type === 'add_money' ? 'topup' : 'admin_adjustment',
+      description: payment.type === 'add_money' 
+        ? `Top-up added to wallet${payment.meta?.offerHint ? ` (${payment.meta.offerHint})` : ''}`
+        : `Admin ${payment.meta?.adminAction || 'adjustment'}${payment.meta?.note ? ` - ${payment.meta.note}` : ''}`,
+      createdAt: payment.createdAt,
+      referralCode: 'N/A',
+      referralDescription: 'N/A',
+      metadata: payment.meta
+    }));
+    
+    // Combine and sort by creation date
+    const allHistory = [...processedBalanceHistory, ...processedPayments]
+      .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+      .slice(0, 50); // Limit to 50 most recent
+    
+    res.json(allHistory);
   } catch (err) {
     console.error('Error getting balance history:', err);
     res.status(500).json({ message: "Server error" });

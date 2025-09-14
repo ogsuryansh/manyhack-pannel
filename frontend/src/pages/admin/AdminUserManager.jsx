@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { API } from "../../api";
+import { useAuth } from "../../context/useAuth";
 
 function useDebounce(value, delay) {
   const [debounced, setDebounced] = useState(value);
@@ -11,6 +12,7 @@ function useDebounce(value, delay) {
 }
 
 export default function AdminUserManager() {
+  const { refreshUser } = useAuth();
   const [users, setUsers] = useState([]);
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -32,6 +34,23 @@ export default function AdminUserManager() {
   useEffect(() => {
     setPage(0);
   }, [debouncedSearch]);
+
+  // Function to refresh user data after balance changes
+  const refreshUserData = async () => {
+    try {
+      // Refresh the current user's data if they're logged in
+      await refreshUser();
+      
+      // Also refresh the users list to show updated balances
+      const usersRes = await fetch(`${API}/admin/users`, { credentials: 'include' });
+      if (usersRes.ok) {
+        const usersData = await usersRes.json();
+        setUsers(usersData.users || []);
+      }
+    } catch (error) {
+      console.error('Error refreshing user data:', error);
+    }
+  };
 
   // Fetch users and products with pagination and search
   useEffect(() => {
@@ -160,17 +179,13 @@ export default function AdminUserManager() {
           hiddenProducts,
         }),
       }
-    );
+      );
       
-    if (res.ok) {
-      setMessage({ type: "success", text: "User updated successfully!" });
-        // Refresh users list
-        const usersRes = await fetch(`${API}/admin/users`, { credentials: 'include' });
-        if (usersRes.ok) {
-          const usersData = await usersRes.json();
-          setUsers(usersData.users || []);
-        }
-    } else {
+      if (res.ok) {
+        setMessage({ type: "success", text: "User updated successfully!" });
+        // Refresh user data to reflect balance changes everywhere
+        await refreshUserData();
+      } else {
         const errorData = await res.json().catch(() => ({}));
         setMessage({ type: "error", text: errorData.message || "Failed to update user." });
       }
@@ -549,12 +564,8 @@ export default function AdminUserManager() {
                   
                   if (res.ok) {
                     setMessage({ type: "success", text: "User updated successfully!" });
-                    // Refresh users list
-                    const usersRes = await fetch(`${API}/admin/users`, { credentials: 'include' });
-                    if (usersRes.ok) {
-                      const usersData = await usersRes.json();
-                      setUsers(usersData.users || []);
-                    }
+                    // Refresh user data to reflect balance changes everywhere
+                    await refreshUserData();
                   } else {
                     const errorData = await res.json().catch(() => ({}));
                     setMessage({ type: "error", text: errorData.message || "Failed to update user." });

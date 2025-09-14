@@ -43,6 +43,19 @@ export default function Dashboard() {
     }).catch(() => setLoading(false));
   }, []);
 
+  // Refresh user data periodically to catch admin balance changes
+  useEffect(() => {
+    if (user) {
+      const refreshUserData = () => {
+        refreshUser();
+      };
+
+      // Refresh every 30 seconds to catch admin changes
+      const interval = setInterval(refreshUserData, 30000);
+      return () => clearInterval(interval);
+    }
+  }, [user, refreshUser]);
+
   useEffect(() => {
     fetch(`${API}/settings/upi`)
       .then((res) => res.json())
