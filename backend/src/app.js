@@ -107,24 +107,24 @@ const getSessionConfig = () => {
       mongoUrl: process.env.MONGO_URI || 'mongodb://localhost:27017/manyhackpanel',
       collectionName: 'sessions',
       touchAfter: 24 * 3600, // lazy session update
-      stringify: true // Use default JSON.stringify/unstringify
+      autoRemove: 'native', // Use native MongoDB TTL
+      autoRemoveInterval: 10 // Check for expired sessions every 10 minutes
     });
     console.log('✅ Session store created successfully');
   }
 
   return {
     secret: process.env.SESSION_SECRET || 'your-super-secret-session-key',
-    resave: false, // Changed to false to prevent unnecessary saves
-    saveUninitialized: false, // Changed to false to prevent empty sessions
+    resave: false, // Don't resave unchanged sessions
+    saveUninitialized: false, // Don't save uninitialized sessions
     store: sessionStore,
     name: 'sessionId', // Explicit session name
-    rolling: true, // Reset expiration on every request
+    rolling: false, // Don't reset expiration on every request
     cookie: {
-      secure: process.env.NODE_ENV === 'production', // Use secure cookies in production
+      secure: false, // Set to false for development
       httpOnly: true,
       maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
-      sameSite: 'none', // Use 'none' for cross-origin requests
-      domain: process.env.NODE_ENV === 'production' ? '.gaminggarage.store' : undefined,
+      sameSite: 'lax', // Use 'lax' for better compatibility
       path: '/', // Ensure cookie is available for all paths
       overwrite: true // Allow cookie overwriting
     }
