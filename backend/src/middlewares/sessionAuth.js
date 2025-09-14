@@ -15,8 +15,7 @@ module.exports = async function (req, res, next) {
     console.log('==========================');
     
     // Check if user is logged in via session
-    // TEMPORARILY DISABLED - Allow access even without proper session data
-    if (false && (!req.session || !req.session.userId)) {
+    if (!req.session || !req.session.userId) {
       console.log('No active session found - session exists:', !!req.session, 'userId:', req.session?.userId);
       return res.status(401).json({ 
         message: "No active session", 
@@ -71,8 +70,7 @@ module.exports = async function (req, res, next) {
     }
 
     // Check if user has an active session
-    // Temporarily disabled to allow users to access even without active session record
-    if (false && (!user.activeSession || !user.activeSession.deviceFingerprint)) {
+    if (!user.activeSession || !user.activeSession.deviceFingerprint) {
       console.log('No active session in user record or empty session - user can login');
       // Don't destroy session here, let the user login
       req.session.destroy();
@@ -86,8 +84,7 @@ module.exports = async function (req, res, next) {
     const currentDeviceInfo = getDeviceInfo(req, req.session.sessionId);
     
     // Check if current session matches the active session
-    // Temporarily disabled to prevent false logouts
-    if (false && user.activeSession.sessionId !== req.session.sessionId) {
+    if (user.activeSession.sessionId !== req.session.sessionId) {
       console.log('Session ID mismatch - different session');
       req.session.destroy();
       return res.status(401).json({ 
@@ -97,8 +94,7 @@ module.exports = async function (req, res, next) {
     }
 
     // Check if device fingerprint matches (prevents multiple tabs)
-    // Temporarily disabled to prevent false logouts due to IP changes
-    if (false && user.activeSession.deviceFingerprint !== currentDeviceInfo.deviceFingerprint) {
+    if (user.activeSession.deviceFingerprint !== currentDeviceInfo.deviceFingerprint) {
       console.log('Device fingerprint mismatch - different device/tab');
       req.session.destroy();
       return res.status(401).json({ 
@@ -209,7 +205,15 @@ module.exports.adminAuth = async function (req, res, next) {
 
       // Check if user is admin
       if (!user.isAdmin) {
+        console.error(`ADMIN AUDIT: Non-admin user ${req.session.userId} (${user.username || user.email}) attempted admin access`);
         return res.status(403).json({ message: "Admin access required" });
+      }
+
+      // Additional security: Check if admin user is still active
+      if (user.isBlocked || user.isDeleted) {
+        console.error(`ADMIN AUDIT: Blocked/deleted admin user ${req.session.userId} attempted admin access`);
+        req.session.destroy();
+        return res.status(403).json({ message: "Account is blocked or deleted" });
       }
     }
 

@@ -91,7 +91,7 @@ router.put("/:id/approve", async (req, res) => {
   res.json(payment);
 });
 
-router.post("/deduct-money", async (req, res) => {
+router.post("/deduct-money", adminAuth, async (req, res) => {
   const { userId, amount, note } = req.body;
   if (!userId || !amount || amount <= 0) {
     return res.status(400).json({ message: "Missing userId or amount" });
@@ -133,9 +133,18 @@ router.post("/deduct-money", async (req, res) => {
     amount,
     status: "approved",
     type: "deduct_money",
-    meta: { note, source: "admin" },
+    meta: { 
+      note, 
+      source: "admin",
+      adminId: req.user.id,
+      adminAction: "manual_deduction",
+      timestamp: now.toISOString()
+    },
     createdAt: now,
   });
+
+  // Log the admin action for audit trail
+  console.log(`ADMIN AUDIT: User ${req.user.id} deducted ₹${amount} from user ${userId}. Note: ${note || 'No note provided'}`);
 
   res.json({ message: "Money deducted", user });
 });
