@@ -141,9 +141,9 @@ module.exports.adminAuth = async function (req, res, next) {
     console.log('Session sessionId:', req.session?.sessionId);
     console.log('Session keys:', req.session ? Object.keys(req.session) : 'No session');
     
-    // Check if session cookie exists
-    if (!req.headers.cookie) {
-      console.log('❌ NO COOKIES FOUND IN REQUEST');
+    // Check if session cookie exists (but don't block if session exists)
+    if (!req.headers.cookie && !req.session) {
+      console.log('❌ NO COOKIES FOUND IN REQUEST AND NO SESSION');
       return res.status(401).json({ 
         message: "No cookies found - please log in again",
         debug: {
@@ -176,8 +176,16 @@ module.exports.adminAuth = async function (req, res, next) {
     if (!req.session.userId) {
       console.log('❌ NO USER ID IN SESSION');
       console.log('Session data:', JSON.stringify(req.session, null, 2));
+      
+      // If this is an admin request and no userId, try to reinitialize session
+      if (req.url.includes('/admin/') && req.session) {
+        console.log('Attempting to reinitialize admin session...');
+        // Don't destroy session immediately, let the frontend handle re-login
+      }
+      
       return res.status(401).json({ 
         message: "No active session - please log in again",
+        code: "SESSION_EXPIRED",
         debug: {
           url: req.url,
           method: req.method,

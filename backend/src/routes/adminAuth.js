@@ -75,4 +75,17 @@ router.get("/check", (req, res) => {
 router.post("/login", adminAuthController.adminLogin);
 router.post("/logout", adminAuth, adminAuthController.adminLogout);
 
+// Check session status
+router.get("/session-status", (req, res) => {
+  res.json({
+    sessionExists: !!req.session,
+    userId: req.session?.userId,
+    isAdmin: req.session?.isAdmin,
+    sessionId: req.sessionID,
+    sessionKeys: req.session ? Object.keys(req.session) : [],
+    cookies: req.headers.cookie ? 'Present' : 'Missing',
+    timestamp: new Date().toISOString()
+  });
+});
+
 module.exports = router;

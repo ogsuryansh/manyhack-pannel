@@ -134,18 +134,22 @@ const getSessionConfig = () => {
     name: 'sessionId', // Explicit session name
     rolling: true, // Reset expiration on every request
     cookie: {
-      secure: false, // Set to false for development and testing
+      secure: process.env.NODE_ENV === 'production', // Use secure cookies in production
       httpOnly: true,
       maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
-      sameSite: 'lax', // Use 'lax' for better compatibility
-      domain: undefined, // Don't set domain for better compatibility
-      path: '/' // Ensure cookie is available for all paths
+      sameSite: 'none', // Use 'none' for cross-origin requests
+      domain: process.env.NODE_ENV === 'production' ? '.gaminggarage.store' : undefined,
+      path: '/', // Ensure cookie is available for all paths
+      overwrite: true // Allow cookie overwriting
     }
   };
 };
 
 // Apply session middleware
 app.use(session(getSessionConfig()));
+
+// Session recovery middleware
+app.use(require('./middlewares/sessionRecovery'));
 
 // Session initialization middleware
 app.use((req, res, next) => {
