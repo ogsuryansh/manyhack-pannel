@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { API } from "../../api";
+import DeleteConfirmationModal from "../../components/DeleteConfirmationModal";
 
 export default function AdminKeyManager() {
   const [products, setProducts] = useState([]);
@@ -19,6 +20,7 @@ export default function AdminKeyManager() {
   const [message, setMessage] = useState({ type: "", text: "" });
   const [allStats, setAllStats] = useState({});
   const [deleteAllLoading, setDeleteAllLoading] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
 
   // Fetch all stats once
   useEffect(() => {
@@ -177,21 +179,17 @@ export default function AdminKeyManager() {
     setEditKeyValue("");
   };
 
-  // Delete all keys for selected product and duration
-  const handleDeleteAll = async () => {
+  // Show delete confirmation modal
+  const handleDeleteAll = () => {
     if (!selectedProduct || !selectedDuration) {
       setMessage({ type: "error", text: "Please select a product and duration first." });
       return;
     }
+    setShowDeleteModal(true);
+  };
 
-    const confirmMessage = `Are you sure you want to delete ALL keys for this product and duration?\n\nThis action cannot be undone!\n\nProduct: ${products.find(p => p._id === selectedProduct)?.name}\nDuration: ${selectedDuration}\n\nType "DELETE ALL" to confirm:`;
-    
-    const userInput = window.prompt(confirmMessage);
-    if (userInput !== "DELETE ALL") {
-      setMessage({ type: "info", text: "Delete all operation cancelled." });
-      return;
-    }
-
+  // Confirm delete all keys
+  const confirmDeleteAll = async () => {
     setDeleteAllLoading(true);
     setMessage({ type: "", text: "" });
 
@@ -223,6 +221,7 @@ export default function AdminKeyManager() {
       setMessage({ type: "error", text: "Network error. Please try again." });
     } finally {
       setDeleteAllLoading(false);
+      setShowDeleteModal(false);
     }
   };
 
@@ -436,6 +435,18 @@ export default function AdminKeyManager() {
           </tbody>
         </table>
       )}
+
+      {/* Delete Confirmation Modal */}
+      <DeleteConfirmationModal
+        isOpen={showDeleteModal}
+        onClose={() => setShowDeleteModal(false)}
+        onConfirm={confirmDeleteAll}
+        title="Delete All Keys"
+        message={`Are you sure you want to delete ALL keys for this product and duration?\n\nThis action cannot be undone!\n\nProduct: ${products.find(p => p._id === selectedProduct)?.name}\nDuration: ${selectedDuration}`}
+        confirmText="Delete All"
+        cancelText="Cancel"
+        isLoading={deleteAllLoading}
+      />
     </div>
   );
 }
