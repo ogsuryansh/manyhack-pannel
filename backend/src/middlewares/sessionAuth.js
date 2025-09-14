@@ -138,141 +138,43 @@ module.exports.adminAuth = async function (req, res, next) {
     console.log('Session ID from cookie:', req.sessionID);
     console.log('Session userId:', req.session?.userId);
     console.log('Session isAdmin:', req.session?.isAdmin);
-    console.log('Session sessionId:', req.session?.sessionId);
     console.log('Session keys:', req.session ? Object.keys(req.session) : 'No session');
-    
-    // Check if session cookie exists (but don't block if session exists)
-    if (!req.headers.cookie && !req.session) {
-      console.log('❌ NO COOKIES FOUND IN REQUEST AND NO SESSION');
-      return res.status(401).json({ 
-        message: "No cookies found - please log in again",
-        debug: {
-          url: req.url,
-          method: req.method,
-          origin: req.headers.origin,
-          userAgent: req.headers['user-agent'],
-          timestamp: new Date().toISOString()
-        }
-      });
-    }
     
     // Check if session exists
     if (!req.session) {
       console.log('❌ NO SESSION OBJECT FOUND');
       return res.status(401).json({ 
         message: "No session found - please log in again",
-        debug: {
-          url: req.url,
-          method: req.method,
-          origin: req.headers.origin,
-          sessionId: req.sessionID,
-          cookies: req.headers.cookie,
-          timestamp: new Date().toISOString()
-        }
+        code: "NO_SESSION"
       });
     }
     
     // Check if user is logged in via session
     if (!req.session.userId) {
       console.log('❌ NO USER ID IN SESSION');
-      console.log('Session data:', JSON.stringify(req.session, null, 2));
-      
-      // If this is an admin request and no userId, try to reinitialize session
-      if (req.url.includes('/admin/') && req.session) {
-        console.log('Attempting to reinitialize admin session...');
-        
-        // Check if this might be a valid admin session that got corrupted
-        if (req.session.isAdmin === true || req.session.sessionId) {
-          console.log('🔧 ADMIN AUTH: Found potential admin session data, attempting recovery...');
-          
-          // Try to restore admin session data
-          req.session.userId = 'admin';
-          req.session.isAdmin = true;
-          
-          // Ensure session has required fields
-          if (!req.session.sessionId) {
-            req.session.sessionId = req.sessionID;
-          }
-          
-          // Save the recovered session
-          req.session.save((err) => {
-            if (err) {
-              console.error('❌ ADMIN AUTH RECOVERY FAILED:', err);
-            } else {
-              console.log('✅ ADMIN AUTH RECOVERY SUCCESS: Admin session restored');
-              console.log('Recovered session data:', JSON.stringify(req.session, null, 2));
-            }
-          });
-          
-          // Continue with the request after recovery
-          console.log('✅ Admin session recovered, continuing with request');
-        } else {
-          console.log('🔧 ADMIN AUTH: No valid admin session data found');
-          return res.status(401).json({ 
-            message: "No active session - please log in again",
-            code: "SESSION_EXPIRED",
-            debug: {
-              url: req.url,
-              method: req.method,
-              origin: req.headers.origin,
-              sessionId: req.sessionID,
-              sessionKeys: req.session ? Object.keys(req.session) : 'No session',
-              cookies: req.headers.cookie,
-              timestamp: new Date().toISOString()
-            }
-          });
-        }
-      } else {
-        return res.status(401).json({ 
-          message: "No active session - please log in again",
-          code: "SESSION_EXPIRED",
-          debug: {
-            url: req.url,
-            method: req.method,
-            origin: req.headers.origin,
-            sessionId: req.sessionID,
-            sessionKeys: req.session ? Object.keys(req.session) : 'No session',
-            cookies: req.headers.cookie,
-            timestamp: new Date().toISOString()
-          }
-        });
-      }
+      return res.status(401).json({ 
+        message: "No active session - please log in again",
+        code: "SESSION_EXPIRED"
+      });
     }
     
-    console.log('✅ Session validation passed');
-
-    // For admin users, just check session data
-    if (req.session.userId === 'admin') {
-      console.log('Admin session validated');
-    } else {
-      // For regular users, check User model
-      const user = await User.findById(req.session.userId);
-      if (!user) {
-        req.session.destroy();
-        return res.status(401).json({ message: "User not found" });
-      }
-
-      // Check if user is admin
-      if (!user.isAdmin) {
-        console.error(`ADMIN AUDIT: Non-admin user ${req.session.userId} (${user.username || user.email}) attempted admin access`);
-        return res.status(403).json({ message: "Admin access required" });
-      }
-
-      // Additional security: Check if admin user is still active
-      if (user.isBlocked || user.isDeleted) {
-        console.error(`ADMIN AUDIT: Blocked/deleted admin user ${req.session.userId} attempted admin access`);
-        req.session.destroy();
-        return res.status(403).json({ message: "Account is blocked or deleted" });
-      }
+    // Check if this is an admin session
+    if (req.session.userId !== 'admin' && !req.session.isAdmin) {
+      console.log('❌ NOT AN ADMIN SESSION');
+      return res.status(403).json({ 
+        message: "Admin access required",
+        code: "ADMIN_REQUIRED"
+      });
     }
 
     // Add user info to request
     req.user = {
       id: req.session.userId,
-      isAdmin: req.session.isAdmin || (req.session.userId === 'admin'),
-      sessionId: req.session.sessionId
+      isAdmin: true,
+      sessionId: req.session.sessionId || req.sessionID
     };
 
+    console.log('✅ Admin authentication successful');
     console.log('========================\n');
     next();
   } catch (err) {

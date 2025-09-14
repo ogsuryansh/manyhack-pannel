@@ -115,16 +115,16 @@ const getSessionConfig = () => {
 
   return {
     secret: process.env.SESSION_SECRET || 'your-super-secret-session-key',
-    resave: false, // Don't resave unchanged sessions
-    saveUninitialized: false, // Don't save uninitialized sessions
+    resave: true, // Resave sessions to ensure they're saved
+    saveUninitialized: true, // Save uninitialized sessions
     store: sessionStore,
     name: 'sessionId', // Explicit session name
-    rolling: false, // Don't reset expiration on every request
+    rolling: true, // Reset expiration on every request
     cookie: {
-      secure: false, // Set to false for development
+      secure: process.env.NODE_ENV === 'production', // Use secure cookies in production
       httpOnly: true,
       maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
-      sameSite: 'lax', // Use 'lax' for better compatibility
+      sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax', // Use 'none' for production cross-origin
       path: '/', // Ensure cookie is available for all paths
       overwrite: true // Allow cookie overwriting
     }

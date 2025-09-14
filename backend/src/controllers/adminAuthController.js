@@ -73,32 +73,39 @@ exports.adminLogin = async (req, res) => {
       console.log('Session ID before save:', req.sessionID);
       console.log('Session data before save:', JSON.stringify(req.session, null, 2));
       
-      req.session.save((err) => {
-        if (err) {
-          console.error('❌ Session save error:', err);
-          console.error('Error details:', err.message, err.stack);
-          return res.status(500).json({ message: "Session save error" });
-        } else {
-          console.log('✅ Session saved successfully to MongoDB');
-          console.log('Session ID after save:', req.sessionID);
-          console.log('Session data after save:', JSON.stringify(req.session, null, 2));
-          
-          // Send success response
-          res.json({
-            message: "Admin login successful",
-            admin: { 
-              id: 'admin',
-              username, 
-              isAdmin: true 
-            },
-            sessionId: req.sessionID,
-            sessionData: {
-              userId: req.session.userId,
-              isAdmin: req.session.isAdmin,
-              sessionId: req.session.sessionId
-            }
-          });
-        }
+      // Use a promise-based approach for better error handling
+      new Promise((resolve, reject) => {
+        req.session.save((err) => {
+          if (err) {
+            console.error('❌ Session save error:', err);
+            console.error('Error details:', err.message, err.stack);
+            reject(err);
+          } else {
+            console.log('✅ Session saved successfully to MongoDB');
+            console.log('Session ID after save:', req.sessionID);
+            console.log('Session data after save:', JSON.stringify(req.session, null, 2));
+            resolve();
+          }
+        });
+      }).then(() => {
+        // Send success response
+        res.json({
+          message: "Admin login successful",
+          admin: { 
+            id: 'admin',
+            username, 
+            isAdmin: true 
+          },
+          sessionId: req.sessionID,
+          sessionData: {
+            userId: req.session.userId,
+            isAdmin: req.session.isAdmin,
+            sessionId: req.session.sessionId
+          }
+        });
+      }).catch((err) => {
+        console.error('❌ Session save failed:', err);
+        res.status(500).json({ message: "Session save error" });
       });
       
       // Note: Response is sent from within the session.save callback above
