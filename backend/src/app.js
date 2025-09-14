@@ -110,8 +110,6 @@ const getSessionConfig = () => {
       stringify: false, // Use default serialization
       // MongoDB connection options to handle SSL issues
       mongoOptions: {
-        useNewUrlParser: true,
-        useUnifiedTopology: true,
         ssl: true,
         tlsAllowInvalidCertificates: true, // Allow invalid certificates
         tlsAllowInvalidHostnames: true, // Allow invalid hostnames
@@ -150,16 +148,8 @@ const getSessionConfig = () => {
   };
 };
 
-// Apply session middleware with error handling
-const sessionMiddleware = session(getSessionConfig());
-
-// Add error handling for session store
-sessionMiddleware.on('error', (err) => {
-  console.error('Session store error:', err);
-  // Don't crash the app, just log the error
-});
-
-app.use(sessionMiddleware);
+// Apply session middleware
+app.use(session(getSessionConfig()));
 
 // Debug session middleware (disabled for production)
 // app.use((req, res, next) => {
