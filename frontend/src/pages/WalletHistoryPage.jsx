@@ -1,12 +1,15 @@
 import React, { useEffect, useState } from "react";
 import { useAuth } from "../context/useAuth";
 import { API } from "../api";
+import { useBalanceSync } from "../hooks/useBalanceSync";
 
 export default function WalletHistoryPage() {
   const { user } = useAuth();
+  const { syncBalance } = useBalanceSync();
   const [transactions, setTransactions] = useState([]);
   const [filter, setFilter] = useState("all");
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
 
   useEffect(() => {
     if (!user) return;
@@ -27,21 +30,27 @@ export default function WalletHistoryPage() {
   // Refresh balance history when user data changes (e.g., after admin balance changes)
   useEffect(() => {
     if (user) {
-      const refreshHistory = () => {
-        fetch(`${API}/auth/balance-history`, {
-          credentials: 'include',
-        })
-          .then((res) => res.json())
-          .then((data) => {
-            setTransactions(Array.isArray(data) ? data : []);
-          })
-          .catch((error) => {
-            console.error('Error refreshing balance history:', error);
+      const refreshHistory = async () => {
+        try {
+          console.log('🔄 WalletHistory: Refreshing balance history...');
+          const res = await fetch(`${API}/auth/balance-history`, {
+            credentials: 'include',
           });
+          
+          if (res.ok) {
+            const data = await res.json();
+            setTransactions(Array.isArray(data) ? data : []);
+            console.log('✅ WalletHistory: Balance history refreshed');
+          } else {
+            console.error('❌ WalletHistory: Failed to refresh balance history:', res.status);
+          }
+        } catch (error) {
+          console.error('❌ WalletHistory: Error refreshing balance history:', error);
+        }
       };
 
-      // Refresh every 30 seconds to catch admin changes
-      const interval = setInterval(refreshHistory, 30000);
+      // Refresh every 10 seconds to catch admin changes more quickly
+      const interval = setInterval(refreshHistory, 10000);
       return () => clearInterval(interval);
     }
   }, [user]);
@@ -57,6 +66,31 @@ export default function WalletHistoryPage() {
     .reduce((sum, t) => sum + t.amount, 0);
   const netBalance = moneyAdded - moneyUsed - moneyDeducted;
 
+  const handleManualRefresh = async () => {
+    setRefreshing(true);
+    try {
+      console.log('🔄 WalletHistory: Manual refresh...');
+      await syncBalance();
+      
+      // Also refresh the balance history specifically
+      const res = await fetch(`${API}/auth/balance-history`, {
+        credentials: 'include',
+      });
+      
+      if (res.ok) {
+        const data = await res.json();
+        setTransactions(Array.isArray(data) ? data : []);
+        console.log('✅ WalletHistory: Manual refresh completed');
+      } else {
+        console.error('❌ WalletHistory: Manual refresh failed:', res.status);
+      }
+    } catch (error) {
+      console.error('❌ WalletHistory: Manual refresh error:', error);
+    } finally {
+      setRefreshing(false);
+    }
+  };
+
   const filteredTx = transactions.filter((t) => {
     if (filter === "all") return true;
     if (filter === "credited") return t.type === "topup" || t.type === "referral_reward";
@@ -68,18 +102,31 @@ export default function WalletHistoryPage() {
     <div className="wallet-history-page">
       <h2 className="section-title" style={{ textAlign: "center" }}>Wallet History</h2>
       <div className="wallet-history-summary">
-        <button className="wallet-filter-btn">
-          Filter Transactions
-          <select
-            className="wallet-filter-select"
-            value={filter}
-            onChange={e => setFilter(e.target.value)}
+        <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+          <button className="wallet-filter-btn">
+            Filter Transactions
+            <select
+              className="wallet-filter-select"
+              value={filter}
+              onChange={e => setFilter(e.target.value)}
+            >
+              <option value="all">All</option>
+              <option value="credited">Credited</option>
+              <option value="debited">Debited</option>
+            </select>
+          </button>
+          <button
+            className="wallet-filter-btn"
+            onClick={handleManualRefresh}
+            disabled={refreshing}
+            style={{ 
+              backgroundColor: refreshing ? '#666' : '#007bff',
+              opacity: refreshing ? 0.7 : 1
+            }}
           >
-            <option value="all">All</option>
-            <option value="credited">Credited</option>
-            <option value="debited">Debited</option>
-          </select>
-        </button>
+            {refreshing ? 'Refreshing...' : '🔄 Refresh'}
+          </button>
+        </div>
         <div className="wallet-summary-cards">
           <div className="wallet-summary-card added">
             <div>Money Added</div>

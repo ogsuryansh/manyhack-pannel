@@ -6,9 +6,12 @@ import { useNavigate } from "react-router-dom";
 import { API } from "../api";
 import AddMoneyModal from "../components/AddMoneyModal";
 import TelegramButton from "../components/TelegramButton";
+import BalanceNotification from "../components/BalanceNotification";
+import { useBalanceSync } from "../hooks/useBalanceSync";
 
 export default function Dashboard() {
   const { user, refreshUser } = useAuth();
+  const { syncBalance } = useBalanceSync();
   const [products, setProducts] = useState([]);
   const [availableKeys, setAvailableKeys] = useState({});
   const [loading, setLoading] = useState(true);
@@ -16,6 +19,7 @@ export default function Dashboard() {
   const [upiId, setUpiId] = useState("");
   const [notice, setNotice] = useState("");
   const [paymentEnabled, setPaymentEnabled] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
 
   const navigate = useNavigate();
 
@@ -46,12 +50,18 @@ export default function Dashboard() {
   // Refresh user data periodically to catch admin balance changes
   useEffect(() => {
     if (user) {
-      const refreshUserData = () => {
-        refreshUser();
+      const refreshUserData = async () => {
+        try {
+          console.log('🔄 Dashboard: Refreshing user data...');
+          await refreshUser();
+          console.log('✅ Dashboard: User data refreshed');
+        } catch (error) {
+          console.error('❌ Dashboard: Error refreshing user data:', error);
+        }
       };
 
-      // Refresh every 30 seconds to catch admin changes
-      const interval = setInterval(refreshUserData, 30000);
+      // Refresh every 10 seconds to catch admin changes more quickly
+      const interval = setInterval(refreshUserData, 10000);
       return () => clearInterval(interval);
     }
   }, [user, refreshUser]);
@@ -82,6 +92,18 @@ export default function Dashboard() {
 
   const handleBuy = (product) => {
     navigate("/buy", { state: { selectedProduct: product.name } });
+  };
+
+  const handleManualRefresh = async () => {
+    setRefreshing(true);
+    try {
+      await syncBalance();
+      console.log('✅ Manual refresh completed');
+    } catch (error) {
+      console.error('❌ Manual refresh failed:', error);
+    } finally {
+      setRefreshing(false);
+    }
   };
 
   // Hide products for this user
@@ -117,12 +139,26 @@ export default function Dashboard() {
         <BalanceCard label="INR Balance" value={inrBalance} currency="INR" />
         <BalanceCard label="USD Balance" value={usdBalance} currency="USD" />
         {user && (
-          <button
-            className="add-money-btn"
-            onClick={() => setShowAddMoney(true)}
-          >
-            + Add Money
-          </button>
+          <>
+            <button
+              className="add-money-btn"
+              onClick={() => setShowAddMoney(true)}
+            >
+              + Add Money
+            </button>
+            <button
+              className="add-money-btn"
+              onClick={handleManualRefresh}
+              disabled={refreshing}
+              style={{ 
+                marginLeft: '10px', 
+                backgroundColor: refreshing ? '#666' : '#007bff',
+                opacity: refreshing ? 0.7 : 1
+              }}
+            >
+              {refreshing ? 'Refreshing...' : '🔄 Refresh'}
+            </button>
+          </>
         )}
       </div>
       <h2 className="section-title">Available Products</h2>
@@ -170,6 +206,7 @@ export default function Dashboard() {
         />
       )}
       {user && <TelegramButton />}
+      <BalanceNotification />
     </div>
   );
 }
