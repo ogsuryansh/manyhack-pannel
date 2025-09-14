@@ -107,32 +107,49 @@ const getSessionConfig = () => {
       mongoUrl: process.env.MONGO_URI || 'mongodb://localhost:27017/manyhackpanel',
       collectionName: 'sessions',
       touchAfter: 24 * 3600, // lazy session update
-      autoRemove: 'native', // Use native MongoDB TTL
-      autoRemoveInterval: 10 // Check for expired sessions every 10 minutes
+      stringify: true, // Use JSON stringify for session data
+      serialize: (session) => {
+        return JSON.stringify(session);
+      },
+      unserialize: (serialized) => {
+        return JSON.parse(serialized);
+      }
     });
     console.log('✅ Session store created successfully');
   }
 
   return {
     secret: process.env.SESSION_SECRET || 'your-super-secret-session-key',
-    resave: true, // Resave sessions to ensure they're saved
-    saveUninitialized: true, // Save uninitialized sessions
+    resave: false, // Don't resave unchanged sessions
+    saveUninitialized: false, // Don't save uninitialized sessions
     store: sessionStore,
     name: 'sessionId', // Explicit session name
-    rolling: true, // Reset expiration on every request
+    rolling: false, // Don't reset expiration on every request
     cookie: {
-      secure: process.env.NODE_ENV === 'production', // Use secure cookies in production
+      secure: false, // Set to false for development
       httpOnly: true,
       maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
-      sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax', // Use 'none' for production cross-origin
+      sameSite: 'lax', // Use 'lax' for better compatibility
       path: '/', // Ensure cookie is available for all paths
-      overwrite: true // Allow cookie overwriting
+      overwrite: true, // Allow cookie overwriting
+      domain: undefined // Don't set domain
     }
   };
 };
 
 // Apply session middleware
-app.use(session(getSessionConfig()));
+const sessionMiddleware = session(getSessionConfig());
+app.use(sessionMiddleware);
+
+// Debug session middleware
+app.use((req, res, next) => {
+  console.log('🔍 Session middleware debug:');
+  console.log('  - Session ID:', req.sessionID);
+  console.log('  - Session exists:', !!req.session);
+  console.log('  - Session keys:', req.session ? Object.keys(req.session) : 'No session');
+  console.log('  - Response headers before next:', res.getHeaders());
+  next();
+});
 
 // Session recovery middleware
 app.use(require('./middlewares/sessionRecovery'));

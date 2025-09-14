@@ -88,6 +88,10 @@ exports.adminLogin = async (req, res) => {
           }
         });
       }).then(() => {
+        // Debug: Check if session cookie is set
+        console.log('🔍 Response headers before sending:', res.getHeaders());
+        console.log('🔍 Session cookie should be set by express-session middleware');
+        
         // Send success response
         res.json({
           message: "Admin login successful",
