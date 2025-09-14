@@ -107,21 +107,7 @@ const getSessionConfig = () => {
       mongoUrl: process.env.MONGO_URI || 'mongodb://localhost:27017/manyhackpanel',
       collectionName: 'sessions',
       touchAfter: 24 * 3600, // lazy session update
-      stringify: false,
-      serialize: (session) => {
-        console.log('Serializing session:', Object.keys(session));
-        return JSON.stringify(session);
-      },
-      unserialize: (serialized) => {
-        try {
-          const parsed = JSON.parse(serialized);
-          console.log('Unserializing session:', Object.keys(parsed));
-          return parsed;
-        } catch (err) {
-          console.error('Session unserialize error:', err);
-          return {};
-        }
-      }
+      stringify: true // Use default JSON.stringify/unstringify
     });
     console.log('✅ Session store created successfully');
   }
