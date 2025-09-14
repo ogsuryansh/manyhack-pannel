@@ -185,6 +185,7 @@ export default function AdminKeyManager() {
       setMessage({ type: "error", text: "Please select a product and duration first." });
       return;
     }
+    console.log('Opening delete modal...');
     setShowDeleteModal(true);
   };
 
@@ -439,7 +440,10 @@ export default function AdminKeyManager() {
       {/* Delete Confirmation Modal */}
       <DeleteConfirmationModal
         isOpen={showDeleteModal}
-        onClose={() => setShowDeleteModal(false)}
+        onClose={() => {
+          console.log('Closing delete modal...');
+          setShowDeleteModal(false);
+        }}
         onConfirm={confirmDeleteAll}
         title="Delete All Keys"
         message={`Are you sure you want to delete ALL keys for this product and duration?\n\nThis action cannot be undone!\n\nProduct: ${products.find(p => p._id === selectedProduct)?.name}\nDuration: ${selectedDuration}`}
@@ -447,6 +451,16 @@ export default function AdminKeyManager() {
         cancelText="Cancel"
         isLoading={deleteAllLoading}
       />
+      
+      {/* Debug info */}
+      {process.env.NODE_ENV === 'development' && (
+        <div style={{ position: 'fixed', top: '10px', right: '10px', background: 'yellow', padding: '10px', zIndex: 9999 }}>
+          Modal State: {showDeleteModal ? 'OPEN' : 'CLOSED'}
+          <button onClick={() => setShowDeleteModal(true)} style={{ marginLeft: '10px' }}>
+            Test Modal
+          </button>
+        </div>
+      )}
     </div>
   );
 }
