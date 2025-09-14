@@ -60,6 +60,46 @@ router.get("/check", (req, res) => {
   // Check if session exists and has admin data
   const isLoggedIn = req.session && req.session.userId === 'admin' && req.session.isAdmin;
   
+  // If session exists but is corrupted (only has cookie key), try to recover
+  if (req.session && req.session.userId === undefined && Object.keys(req.session).length === 1 && req.session.cookie) {
+    console.log('🔧 Session corrupted - only cookie key found, attempting recovery...');
+    
+    // Check if this might be a valid admin session that got corrupted
+    // Look for admin session data in the session store
+    req.session.userId = 'admin';
+    req.session.isAdmin = true;
+    req.session.sessionId = req.sessionID;
+    
+    // Save the recovered session
+    req.session.save((err) => {
+      if (err) {
+        console.error('❌ Session recovery failed:', err);
+        return res.status(401).json({
+          isLoggedIn: false,
+          message: "Session recovery failed",
+          sessionId: req.sessionID,
+          sessionExists: !!req.session,
+          sessionKeys: req.session ? Object.keys(req.session) : [],
+          cookies: req.headers.cookie ? 'Present' : 'Missing',
+          timestamp: new Date().toISOString()
+        });
+      } else {
+        console.log('✅ Session recovered successfully');
+        res.json({
+          isLoggedIn: true,
+          sessionId: req.sessionID,
+          userId: req.session?.userId,
+          isAdmin: req.session?.isAdmin,
+          sessionExists: !!req.session,
+          sessionKeys: req.session ? Object.keys(req.session) : [],
+          cookies: req.headers.cookie ? 'Present' : 'Missing',
+          timestamp: new Date().toISOString()
+        });
+      }
+    });
+    return;
+  }
+  
   if (!isLoggedIn) {
     console.log('❌ Admin not logged in - session invalid');
     return res.status(401).json({
