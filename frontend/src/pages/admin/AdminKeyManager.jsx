@@ -179,14 +179,20 @@ export default function AdminKeyManager() {
     setEditKeyValue("");
   };
 
-  // Show delete confirmation modal
+  // Show delete confirmation modal - UPDATED VERSION
   const handleDeleteAll = () => {
+    console.log('=== DELETE ALL CLICKED ===');
+    console.log('Selected Product:', selectedProduct);
+    console.log('Selected Duration:', selectedDuration);
+    
     if (!selectedProduct || !selectedDuration) {
       setMessage({ type: "error", text: "Please select a product and duration first." });
       return;
     }
+    
     console.log('Opening delete modal...');
     setShowDeleteModal(true);
+    console.log('Modal state set to true');
   };
 
   // Confirm delete all keys
@@ -303,7 +309,7 @@ export default function AdminKeyManager() {
           style={{
             backgroundColor: "#ff4757",
             color: "white",
-            border: "none",
+            border: "3px solid #00ff00", // Green border to show new code
             padding: "12px 24px",
             borderRadius: "8px",
             cursor: deleteAllLoading ? "not-allowed" : "pointer",
@@ -320,7 +326,7 @@ export default function AdminKeyManager() {
               Deleting All Keys...
             </>
           ) : (
-            "🗑️ Delete All Keys"
+            "🗑️ Delete All Keys (NEW MODAL)"
           )}
         </button>
         <div style={{ 
