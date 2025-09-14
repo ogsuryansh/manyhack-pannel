@@ -88,9 +88,9 @@ exports.adminLogin = async (req, res) => {
           }
         });
       }).then(() => {
-        // Debug: Check if session cookie is set
-        console.log('🔍 Response headers before sending:', res.getHeaders());
-        console.log('🔍 Session cookie should be set by express-session middleware');
+        // Ensure session is properly maintained
+        req.session.touch(); // Mark session as modified
+        req.session.lastAccess = new Date(); // Update last access time
         
         // Send success response
         res.json({

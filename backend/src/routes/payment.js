@@ -92,10 +92,15 @@ router.put("/:id/approve", async (req, res) => {
 });
 
 router.post("/deduct-money", adminAuth, async (req, res) => {
-  const { userId, amount, note } = req.body;
-  if (!userId || !amount || amount <= 0) {
-    return res.status(400).json({ message: "Missing userId or amount" });
-  }
+  try {
+    // Maintain session
+    req.session.touch();
+    req.session.lastAccess = new Date();
+    
+    const { userId, amount, note } = req.body;
+    if (!userId || !amount || amount <= 0) {
+      return res.status(400).json({ message: "Missing userId or amount" });
+    }
   const user = await User.findById(userId);
   if (!user) return res.status(404).json({ message: "User not found" });
 
@@ -162,6 +167,10 @@ router.post("/deduct-money", adminAuth, async (req, res) => {
   console.log(`ADMIN AUDIT: User ${req.user.id} deducted ₹${amount} from user ${userId}. Note: ${note || 'No note provided'}`);
 
   res.json({ message: "Money deducted", user });
+  } catch (error) {
+    console.error('Error in deduct-money:', error);
+    res.status(500).json({ message: "Server error" });
+  }
 });
 
 router.put("/:id/reject", async (req, res) => {
