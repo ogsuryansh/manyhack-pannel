@@ -107,15 +107,9 @@ const getSessionConfig = () => {
       mongoUrl: process.env.MONGO_URI || 'mongodb://localhost:27017/manyhackpanel',
       collectionName: 'sessions',
       touchAfter: 24 * 3600, // lazy session update
-      stringify: true, // Use JSON stringify for session data
-      serialize: (session) => {
-        return JSON.stringify(session);
-      },
-      unserialize: (serialized) => {
-        return JSON.parse(serialized);
-      },
-      // Add TTL index for automatic cleanup
-      ttl: 7 * 24 * 60 * 60 // 7 days in seconds
+      stringify: false, // Use default serialization
+      // Remove custom serialize/unserialize functions
+      // Remove TTL to prevent automatic cleanup
     });
     console.log('✅ Session store created successfully');
   }
@@ -125,13 +119,13 @@ const getSessionConfig = () => {
     resave: false, // Don't resave unchanged sessions
     saveUninitialized: false, // Don't save uninitialized sessions
     store: sessionStore,
-    name: 'sessionId', // Explicit session name
+    name: 'connect.sid', // Use default session name
     rolling: false, // Don't reset expiration on every request
     cookie: {
-      secure: process.env.NODE_ENV === 'production', // Use secure cookies in production
+      secure: false, // Set to false for better compatibility
       httpOnly: true,
       maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
-      sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax', // Use 'none' for production cross-origin
+      sameSite: 'lax', // Use 'lax' for better compatibility
       path: '/', // Ensure cookie is available for all paths
       overwrite: true, // Allow cookie overwriting
       domain: undefined // Don't set domain

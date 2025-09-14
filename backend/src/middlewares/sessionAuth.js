@@ -4,33 +4,17 @@ const { getDeviceInfo } = require('../utils/deviceUtils');
 // Session-based authentication middleware
 module.exports = async function (req, res, next) {
   try {
-    console.log('=== SESSION AUTH DEBUG ===');
-    console.log('Request URL:', req.url);
-    console.log('Request method:', req.method);
-    console.log('Session exists:', !!req.session);
-    console.log('Session userId:', req.session?.userId);
-    console.log('Session sessionId:', req.session?.sessionId);
-    console.log('Session keys:', req.session ? Object.keys(req.session) : 'No session');
-    console.log('Session ID from req:', req.sessionID);
-    console.log('==========================');
+    // Simple session check - only log in development
+    if (process.env.NODE_ENV !== 'production') {
+      console.log('=== SESSION AUTH DEBUG ===');
+      console.log('Request URL:', req.url);
+      console.log('Session exists:', !!req.session);
+      console.log('Session userId:', req.session?.userId);
+      console.log('==========================');
+    }
     
     // Check if user is logged in via session
     if (!req.session || !req.session.userId) {
-      console.log('No active session found - session exists:', !!req.session, 'userId:', req.session?.userId);
-      return res.status(401).json({ 
-        message: "No active session", 
-        debug: {
-          sessionExists: !!req.session,
-          userId: req.session?.userId,
-          sessionId: req.session?.sessionId,
-          sessionKeys: req.session ? Object.keys(req.session) : 'No session'
-        }
-      });
-    }
-    
-    // Check if no session at all
-    if (!req.session || !req.session.userId) {
-      console.log('No active session found');
       return res.status(401).json({ 
         message: "No active session. Please login again.",
         code: "NO_SESSION"
@@ -119,76 +103,21 @@ module.exports = async function (req, res, next) {
 // Admin session middleware
 module.exports.adminAuth = async function (req, res, next) {
   try {
-    console.log('\n=== ADMIN AUTH DEBUG ===');
-    console.log('Request URL:', req.url);
-    console.log('Request method:', req.method);
-    console.log('Request origin:', req.headers.origin);
-    console.log('Request cookies:', req.headers.cookie);
-    console.log('Session exists:', !!req.session);
-    console.log('Session ID from cookie:', req.sessionID);
-    console.log('Session userId:', req.session?.userId);
-    console.log('Session isAdmin:', req.session?.isAdmin);
-    console.log('Session keys:', req.session ? Object.keys(req.session) : 'No session');
-    
-    // Check if session exists
-    if (!req.session) {
-      console.log('❌ NO SESSION OBJECT FOUND');
-      return res.status(401).json({ 
-        message: "No session found - please log in again",
-        code: "NO_SESSION"
-      });
-    }
-    
-    // TEMPORARY FIX: If session exists but is corrupted (only has cookie key), try to recover
-    if (req.session && req.session.userId === undefined && Object.keys(req.session).length === 1 && req.session.cookie) {
-      console.log('🔧 TEMPORARY FIX: Session corrupted - only cookie key found, attempting recovery...');
-      
-      // Restore admin session data
-      req.session.userId = 'admin';
-      req.session.isAdmin = true;
-      req.session.sessionId = req.sessionID;
-      
-      // Save the recovered session
-      req.session.save((err) => {
-        if (err) {
-          console.error('❌ Session recovery failed:', err);
-          return res.status(401).json({ 
-            message: "Session recovery failed - please log in again",
-            code: "SESSION_RECOVERY_FAILED"
-          });
-        } else {
-          console.log('✅ Session recovered successfully');
-          // Continue with the request
-          req.user = {
-            id: 'admin',
-            isAdmin: true,
-            sessionId: req.sessionID
-          };
-          next();
-        }
-      });
-      return;
-    }
-    
-    // Check if user is logged in via session
-    if (!req.session.userId) {
-      console.log('❌ NO USER ID IN SESSION');
+    // Simple admin session check
+    if (!req.session || !req.session.userId) {
       return res.status(401).json({ 
         message: "No active session - please log in again",
-        code: "SESSION_EXPIRED"
+        code: "NO_SESSION"
       });
     }
     
     // Check if this is an admin session
     if (req.session.userId !== 'admin' && !req.session.isAdmin) {
-      console.log('❌ NOT AN ADMIN SESSION');
       return res.status(403).json({ 
         message: "Admin access required",
         code: "ADMIN_REQUIRED"
       });
     }
-
-    // Session is valid, continue
 
     // Add user info to request
     req.user = {
@@ -197,8 +126,6 @@ module.exports.adminAuth = async function (req, res, next) {
       sessionId: req.session.sessionId || req.sessionID
     };
 
-    console.log('✅ Admin authentication successful');
-    console.log('========================\n');
     next();
   } catch (err) {
     console.error('Admin session auth error:', err);
