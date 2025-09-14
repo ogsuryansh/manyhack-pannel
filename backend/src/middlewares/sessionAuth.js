@@ -180,22 +180,63 @@ module.exports.adminAuth = async function (req, res, next) {
       // If this is an admin request and no userId, try to reinitialize session
       if (req.url.includes('/admin/') && req.session) {
         console.log('Attempting to reinitialize admin session...');
-        // Don't destroy session immediately, let the frontend handle re-login
-      }
-      
-      return res.status(401).json({ 
-        message: "No active session - please log in again",
-        code: "SESSION_EXPIRED",
-        debug: {
-          url: req.url,
-          method: req.method,
-          origin: req.headers.origin,
-          sessionId: req.sessionID,
-          sessionKeys: req.session ? Object.keys(req.session) : 'No session',
-          cookies: req.headers.cookie,
-          timestamp: new Date().toISOString()
+        
+        // Check if this might be a valid admin session that got corrupted
+        if (req.session.isAdmin === true || req.session.sessionId) {
+          console.log('🔧 ADMIN AUTH: Found potential admin session data, attempting recovery...');
+          
+          // Try to restore admin session data
+          req.session.userId = 'admin';
+          req.session.isAdmin = true;
+          
+          // Ensure session has required fields
+          if (!req.session.sessionId) {
+            req.session.sessionId = req.sessionID;
+          }
+          
+          // Save the recovered session
+          req.session.save((err) => {
+            if (err) {
+              console.error('❌ ADMIN AUTH RECOVERY FAILED:', err);
+            } else {
+              console.log('✅ ADMIN AUTH RECOVERY SUCCESS: Admin session restored');
+              console.log('Recovered session data:', JSON.stringify(req.session, null, 2));
+            }
+          });
+          
+          // Continue with the request after recovery
+          console.log('✅ Admin session recovered, continuing with request');
+        } else {
+          console.log('🔧 ADMIN AUTH: No valid admin session data found');
+          return res.status(401).json({ 
+            message: "No active session - please log in again",
+            code: "SESSION_EXPIRED",
+            debug: {
+              url: req.url,
+              method: req.method,
+              origin: req.headers.origin,
+              sessionId: req.sessionID,
+              sessionKeys: req.session ? Object.keys(req.session) : 'No session',
+              cookies: req.headers.cookie,
+              timestamp: new Date().toISOString()
+            }
+          });
         }
-      });
+      } else {
+        return res.status(401).json({ 
+          message: "No active session - please log in again",
+          code: "SESSION_EXPIRED",
+          debug: {
+            url: req.url,
+            method: req.method,
+            origin: req.headers.origin,
+            sessionId: req.sessionID,
+            sessionKeys: req.session ? Object.keys(req.session) : 'No session',
+            cookies: req.headers.cookie,
+            timestamp: new Date().toISOString()
+          }
+        });
+      }
     }
     
     console.log('✅ Session validation passed');

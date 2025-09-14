@@ -129,6 +129,7 @@ export default function AdminUserManager() {
 
   // Save custom price, add/deduct money, and hidden products
   const handleSave = async () => {
+    try {
     let customPricesToSave = editingUser.customPrices || [];
     if (selectedProduct && selectedDuration && customPrice !== "") {
       const idx = customPricesToSave.findIndex(
@@ -146,11 +147,13 @@ export default function AdminUserManager() {
         });
       }
     }
+      
     const res = await fetch(
       `${API}/admin/users/${editingUser._id}/custom-prices`,
       {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
+          credentials: 'include', // Important for session cookies
         body: JSON.stringify({
           customPrices: customPricesToSave,
           balance: addAmount ? Number(addAmount) : 0,
@@ -158,25 +161,48 @@ export default function AdminUserManager() {
         }),
       }
     );
+      
     if (res.ok) {
       setMessage({ type: "success", text: "User updated successfully!" });
+        // Refresh users list
+        const usersRes = await fetch(`${API}/admin/users`, { credentials: 'include' });
+        if (usersRes.ok) {
+          const usersData = await usersRes.json();
+          setUsers(usersData.users || []);
+        }
     } else {
-      setMessage({ type: "error", text: "Failed to update user." });
+        const errorData = await res.json().catch(() => ({}));
+        setMessage({ type: "error", text: errorData.message || "Failed to update user." });
+      }
+    } catch (error) {
+      console.error('Error updating user:', error);
+      setMessage({ type: "error", text: error.message || "Failed to update user." });
+    } finally {
+      setEditingUser(null);
     }
-    setEditingUser(null);
-    fetch(`${API}/admin/users`, { credentials: 'include' })
-      .then((res) => res.json())
-      .then((data) => setUsers(data));
   };
 
   // Delete a user
   const handleDeleteUser = async (userId) => {
     if (!window.confirm("Are you sure you want to delete this user?")) return;
-    await fetch(`${API}/admin/users/${userId}`, {
-      method: "DELETE",
-      credentials: 'include'
-    });
-    setUsers(users.filter((u) => u._id !== userId));
+    
+    try {
+      const res = await fetch(`${API}/admin/users/${userId}`, {
+        method: "DELETE",
+        credentials: 'include'
+      });
+      
+      if (res.ok) {
+        setUsers(users.filter((u) => u._id !== userId));
+        setMessage({ type: "success", text: "User deleted successfully!" });
+      } else {
+        const errorData = await res.json().catch(() => ({}));
+        setMessage({ type: "error", text: errorData.message || "Failed to delete user." });
+      }
+    } catch (error) {
+      console.error('Error deleting user:', error);
+      setMessage({ type: "error", text: error.message || "Failed to delete user." });
+    }
   };
 
   // Calculate wallet balance (non-expired)
@@ -505,28 +531,40 @@ export default function AdminUserManager() {
             <button
               className="admin-user-save-btn"
               onClick={async () => {
-                // Save all custom prices and hidden products in one go
-                const res = await fetch(
-                  `${API}/admin/users/${editingUser._id}/custom-prices`,
-                  {
-                    method: "PUT",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({
-                      customPrices: editingUser.customPrices,
-                      balance: addAmount ? Number(addAmount) : 0,
-                      hiddenProducts,
-                    }),
+                try {
+                  // Save all custom prices and hidden products in one go
+                  const res = await fetch(
+                    `${API}/admin/users/${editingUser._id}/custom-prices`,
+                    {
+                      method: "PUT",
+                      headers: { "Content-Type": "application/json" },
+                      credentials: 'include', // Important for session cookies
+                      body: JSON.stringify({
+                        customPrices: editingUser.customPrices,
+                        balance: addAmount ? Number(addAmount) : 0,
+                        hiddenProducts,
+                      }),
+                    }
+                  );
+                  
+                  if (res.ok) {
+                    setMessage({ type: "success", text: "User updated successfully!" });
+                    // Refresh users list
+                    const usersRes = await fetch(`${API}/admin/users`, { credentials: 'include' });
+                    if (usersRes.ok) {
+                      const usersData = await usersRes.json();
+                      setUsers(usersData.users || []);
+                    }
+                  } else {
+                    const errorData = await res.json().catch(() => ({}));
+                    setMessage({ type: "error", text: errorData.message || "Failed to update user." });
                   }
-                );
-                if (res.ok) {
-                  setMessage({ type: "success", text: "User updated successfully!" });
-                } else {
-                  setMessage({ type: "error", text: "Failed to update user." });
+                } catch (error) {
+                  console.error('Error updating user:', error);
+                  setMessage({ type: "error", text: error.message || "Failed to update user." });
+                } finally {
+                  setEditingUser(null);
                 }
-                setEditingUser(null);
-                fetch(`${API}/admin/users`, { credentials: 'include' })
-                  .then((res) => res.json())
-                  .then((data) => setUsers(data));
               }}
             >
               Save All
