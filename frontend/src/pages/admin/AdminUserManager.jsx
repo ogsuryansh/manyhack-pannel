@@ -17,6 +17,7 @@ export default function AdminUserManager() {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [editingUser, setEditingUser] = useState(null);
+  const [isSaving, setIsSaving] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState("");
   const [selectedDuration, setSelectedDuration] = useState("");
   const [customPrice, setCustomPrice] = useState("");
@@ -545,8 +546,11 @@ export default function AdminUserManager() {
             </div>
             <button
               className="admin-user-save-btn"
+              disabled={isSaving}
               onClick={async () => {
                 try {
+                  if (isSaving) return;
+                  setIsSaving(true);
                   // Save all custom prices and hidden products in one go
                   const res = await fetch(
                     `${API}/admin/users/${editingUser._id}/custom-prices`,
@@ -574,15 +578,17 @@ export default function AdminUserManager() {
                   console.error('Error updating user:', error);
                   setMessage({ type: "error", text: error.message || "Failed to update user." });
                 } finally {
+                  setIsSaving(false);
                   setEditingUser(null);
                 }
               }}
             >
-              Save All
+              {isSaving ? 'Saving…' : 'Save All'}
             </button>
             <button 
               className="admin-user-cancel-btn"
-              onClick={() => setEditingUser(null)}
+              onClick={() => { if (!isSaving) setEditingUser(null); }}
+              disabled={isSaving}
             >
               Cancel
             </button>
