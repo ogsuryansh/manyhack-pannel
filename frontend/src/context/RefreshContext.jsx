@@ -1,4 +1,4 @@
-import React, { createContext, useState, useCallback } from 'react';
+import React, { createContext, useState, useCallback, useContext } from 'react';
 
 export const RefreshContext = createContext();
 
@@ -15,4 +15,13 @@ export function RefreshProvider({ children }) {
       {children}
     </RefreshContext.Provider>
   );
+}
+
+// Convenience hook for consumers
+export function useRefresh() {
+  const context = useContext(RefreshContext);
+  if (!context) {
+    throw new Error('useRefresh must be used within a RefreshProvider');
+  }
+  return context;
 }
