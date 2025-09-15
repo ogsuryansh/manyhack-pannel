@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { API } from "../../api";
 import { useAuth } from "../../context/useAuth";
 
@@ -18,6 +18,7 @@ export default function AdminUserManager() {
   const [loading, setLoading] = useState(true);
   const [editingUser, setEditingUser] = useState(null);
   const [isSaving, setIsSaving] = useState(false);
+  const isSavingRef = useRef(false);
   const [selectedProduct, setSelectedProduct] = useState("");
   const [selectedDuration, setSelectedDuration] = useState("");
   const [customPrice, setCustomPrice] = useState("");
@@ -549,7 +550,8 @@ export default function AdminUserManager() {
               disabled={isSaving}
               onClick={async () => {
                 try {
-                  if (isSaving) return;
+                  if (isSavingRef.current) return;
+                  isSavingRef.current = true;
                   setIsSaving(true);
                   // Save all custom prices and hidden products in one go
                   const res = await fetch(
@@ -578,6 +580,7 @@ export default function AdminUserManager() {
                   console.error('Error updating user:', error);
                   setMessage({ type: "error", text: error.message || "Failed to update user." });
                 } finally {
+                  isSavingRef.current = false;
                   setIsSaving(false);
                   setEditingUser(null);
                 }
@@ -587,7 +590,7 @@ export default function AdminUserManager() {
             </button>
             <button 
               className="admin-user-cancel-btn"
-              onClick={() => { if (!isSaving) setEditingUser(null); }}
+              onClick={() => { if (!isSavingRef.current) setEditingUser(null); }}
               disabled={isSaving}
             >
               Cancel
