@@ -353,7 +353,7 @@ export default function AdminUserManager() {
         </tbody>
       </table>
 
-      <div style={{ marginTop: 16, textAlign: "center" }}>
+      <div style={{ marginTop: 16, marginBottom: 50, textAlign: "center" }}>
         <button 
           className="admin-user-action-btn"
           onClick={() => setPage(page-1)} 

@@ -52,9 +52,7 @@ export default function Dashboard() {
     if (user) {
       const refreshUserData = async () => {
         try {
-          console.log('🔄 Dashboard: Refreshing user data...');
           await refreshUser();
-          console.log('✅ Dashboard: User data refreshed');
         } catch (error) {
           console.error('❌ Dashboard: Error refreshing user data:', error);
         }
@@ -66,7 +64,6 @@ export default function Dashboard() {
       // Also refresh when page becomes visible (user switches back to tab)
       const handleVisibilityChange = () => {
         if (!document.hidden) {
-          console.log('🔄 Dashboard: Page became visible, refreshing data...');
           refreshUserData();
         }
       };
@@ -112,7 +109,6 @@ export default function Dashboard() {
     setRefreshing(true);
     try {
       await syncBalance();
-      console.log('✅ Manual refresh completed');
     } catch (error) {
       console.error('❌ Manual refresh failed:', error);
     } finally {

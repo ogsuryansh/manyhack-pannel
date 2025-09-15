@@ -11,7 +11,6 @@ const DeleteConfirmationModal = ({
   cancelText = "Cancel",
   isLoading = false 
 }) => {
-  console.log('DeleteConfirmationModal render - isOpen:', isOpen);
   if (!isOpen) return null;
 
   return (

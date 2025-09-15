@@ -16,6 +16,20 @@ export default function AdminLayout() {
   const navigate = useNavigate();
   const [sidebarOpen, setSidebarOpen] = useState(true);
 
+  // Ensure mobile starts with sidebar closed, desktop open
+  React.useEffect(() => {
+    const syncSidebarWithViewport = () => {
+      if (window.innerWidth <= 900) {
+        setSidebarOpen(false);
+      } else {
+        setSidebarOpen(true);
+      }
+    };
+    syncSidebarWithViewport();
+    window.addEventListener("resize", syncSidebarWithViewport);
+    return () => window.removeEventListener("resize", syncSidebarWithViewport);
+  }, []);
+
   const handleLogout = async () => {
     try {
       // Call backend logout to clear session
@@ -55,6 +69,11 @@ export default function AdminLayout() {
               to={tab.to}
               className={`admin-sidebar-link ${location.pathname === tab.to ? "active" : ""}`}
               title={sidebarOpen ? "" : tab.label}
+              onClick={() => {
+                if (window.innerWidth <= 900) {
+                  setSidebarOpen(false);
+                }
+              }}
             >
               <span className="admin-sidebar-icon">{tab.icon}</span>
               {sidebarOpen && <span className="admin-sidebar-text">{tab.label}</span>}
@@ -72,6 +91,22 @@ export default function AdminLayout() {
 
       {/* Main Content */}
       <div className={`admin-main-content ${sidebarOpen ? 'sidebar-open' : 'sidebar-closed'}`}>
+        {/* Mobile Header with Hamburger */}
+        <div className="admin-mobile-header">
+          <div className="admin-hamburger" onClick={() => setSidebarOpen(prev => !prev)}>
+            <div className="bar" />
+            <div className="bar" />
+            <div className="bar" />
+          </div>
+          <div className="admin-mobile-title">Admin Panel</div>
+        </div>
+        {/* Mobile overlay to close sidebar */}
+        {sidebarOpen && (
+          <div
+            className="admin-mobile-overlay"
+            onClick={() => setSidebarOpen(false)}
+          />
+        )}
         <div className="admin-content">
           <Outlet />
         </div>

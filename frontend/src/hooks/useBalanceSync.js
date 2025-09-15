@@ -14,7 +14,6 @@ export function useBalanceSync() {
 
     const syncBalance = async () => {
       try {
-        console.log('🔄 useBalanceSync: Checking for balance changes...');
         
         // Get current balance from server
         const response = await fetch(`${API}/auth/me`, {
@@ -29,19 +28,12 @@ export function useBalanceSync() {
                 .reduce((sum, entry) => sum + entry.amount, 0)
             : 0;
 
-          console.log('🔄 useBalanceSync: Current balance:', currentBalance, 'Last balance:', lastBalanceRef.current);
+          
 
           // Always refresh user data to ensure it's up to date
           if (lastBalanceRef.current !== currentBalance) {
-            console.log('🔄 Balance changed detected:', {
-              from: lastBalanceRef.current,
-              to: currentBalance,
-              difference: currentBalance - lastBalanceRef.current
-            });
-            
             // Refresh user data to update all components
             await refreshUser();
-            console.log('✅ useBalanceSync: User data refreshed');
           }
           
           lastBalanceRef.current = currentBalance;
@@ -69,7 +61,6 @@ export function useBalanceSync() {
   return {
     syncBalance: async () => {
       if (user) {
-        console.log('🔄 useBalanceSync: Manual sync triggered');
         await refreshUser();
       }
     }

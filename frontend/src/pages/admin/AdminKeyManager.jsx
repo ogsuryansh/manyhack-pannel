@@ -181,18 +181,11 @@ export default function AdminKeyManager() {
 
   // Show delete confirmation modal - UPDATED VERSION
   const handleDeleteAll = () => {
-    console.log('=== DELETE ALL CLICKED ===');
-    console.log('Selected Product:', selectedProduct);
-    console.log('Selected Duration:', selectedDuration);
-    
     if (!selectedProduct || !selectedDuration) {
       setMessage({ type: "error", text: "Please select a product and duration first." });
       return;
     }
-    
-    console.log('Opening delete modal...');
     setShowDeleteModal(true);
-    console.log('Modal state set to true');
   };
 
   // Confirm delete all keys
@@ -447,7 +440,6 @@ export default function AdminKeyManager() {
       <DeleteConfirmationModal
         isOpen={showDeleteModal}
         onClose={() => {
-          console.log('Closing delete modal...');
           setShowDeleteModal(false);
         }}
         onConfirm={confirmDeleteAll}
@@ -458,15 +450,7 @@ export default function AdminKeyManager() {
         isLoading={deleteAllLoading}
       />
       
-      {/* Debug info */}
-      {process.env.NODE_ENV === 'development' && (
-        <div style={{ position: 'fixed', top: '10px', right: '10px', background: 'yellow', padding: '10px', zIndex: 9999 }}>
-          Modal State: {showDeleteModal ? 'OPEN' : 'CLOSED'}
-          <button onClick={() => setShowDeleteModal(true)} style={{ marginLeft: '10px' }}>
-            Test Modal
-          </button>
-        </div>
-      )}
+      {/* Debug info removed */}
     </div>
   );
 }

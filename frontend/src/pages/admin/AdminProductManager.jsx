@@ -191,51 +191,53 @@ export default function AdminProductManager() {
       {loading ? (
         <div>Loading...</div>
       ) : (
-        <table className="admin-product-table">
-          <thead>
-            <tr>
-              <th>Name</th>
-              <th>Description</th>
-              <th>Durations & Prices</th>
-              <th>Hot</th>
-              <th>Keys</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {products.map((p) => (
-              <tr key={p._id}>
-                <td>{p.name}</td>
-                <td>{p.description}</td>
-                <td>
-                  {p.prices.map((pr, i) => (
-                    <div key={i}>
-                      {pr.duration}: ₹{pr.price}
-                    </div>
-                  ))}
-                </td>
-                <td>{p.hot ? "Yes" : "No"}</td>
-                <td>
-                  <span>View in Key Manager</span>
-                </td>
-                <td>
-                  <button
-                    className="admin-product-btn"
-                    onClick={() => handleEdit(p)}
-                  >
-                    Edit
-                  </button>
-                  <button
-                    className="admin-product-btn admin-product-btn-delete"
-                    onClick={() => handleDelete(p._id)}
-                  >
-                    Delete
-                  </button>
-                </td>
+        <div className="admin-product-table-container">
+          <table className="admin-product-table">
+            <thead>
+              <tr>
+                <th>Name</th>
+                <th>Description</th>
+                <th>Durations & Prices</th>
+                <th>Hot</th>
+                <th>Keys</th>
+                <th>Actions</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {products.map((p) => (
+                <tr key={p._id}>
+                  <td>{p.name}</td>
+                  <td>{p.description}</td>
+                  <td>
+                    {p.prices.map((pr, i) => (
+                      <div key={i}>
+                        {pr.duration}: ₹{pr.price}
+                      </div>
+                    ))}
+                  </td>
+                  <td>{p.hot ? "Yes" : "No"}</td>
+                  <td>
+                    <span>View in Key Manager</span>
+                  </td>
+                  <td>
+                    <button
+                      className="admin-product-btn"
+                      onClick={() => handleEdit(p)}
+                    >
+                      Edit
+                    </button>
+                    <button
+                      className="admin-product-btn admin-product-btn-delete"
+                      onClick={() => handleDelete(p._id)}
+                    >
+                      Delete
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       )}
     </div>
   );

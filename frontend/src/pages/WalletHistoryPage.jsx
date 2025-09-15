@@ -32,7 +32,6 @@ export default function WalletHistoryPage() {
     if (user) {
       const refreshHistory = async () => {
         try {
-          console.log('🔄 WalletHistory: Refreshing balance history...');
           const res = await fetch(`${API}/auth/balance-history`, {
             credentials: 'include',
           });
@@ -44,9 +43,8 @@ export default function WalletHistoryPage() {
             // Only update if transactions actually changed
             if (JSON.stringify(newTransactions) !== JSON.stringify(transactions)) {
               setTransactions(newTransactions);
-              console.log('✅ WalletHistory: Balance history updated with', newTransactions.length, 'transactions');
             } else {
-              console.log('🔄 WalletHistory: No changes in balance history');
+              
             }
           } else {
             console.error('❌ WalletHistory: Failed to refresh balance history:', res.status);
@@ -62,7 +60,6 @@ export default function WalletHistoryPage() {
       // Also refresh when page becomes visible (user switches back to tab)
       const handleVisibilityChange = () => {
         if (!document.hidden) {
-          console.log('🔄 WalletHistory: Page became visible, refreshing history...');
           refreshHistory();
         }
       };
@@ -90,7 +87,6 @@ export default function WalletHistoryPage() {
   const handleManualRefresh = async () => {
     setRefreshing(true);
     try {
-      console.log('🔄 WalletHistory: Manual refresh...');
       await syncBalance();
       
       // Also refresh the balance history specifically
@@ -101,7 +97,6 @@ export default function WalletHistoryPage() {
       if (res.ok) {
         const data = await res.json();
         setTransactions(Array.isArray(data) ? data : []);
-        console.log('✅ WalletHistory: Manual refresh completed');
       } else {
         console.error('❌ WalletHistory: Manual refresh failed:', res.status);
       }

@@ -123,7 +123,7 @@ export default function AdminDashboard() {
             value={siteName}
             onChange={e => setSiteName(e.target.value)}
             placeholder="Website Name"
-            style={{marginLeft: 8, minWidth: 200}}
+            style={{marginLeft: 8}}
           />
         </label>
         <label style={{marginLeft: 16}}>
@@ -133,7 +133,7 @@ export default function AdminDashboard() {
             value={siteTitle}
             onChange={e => setSiteTitle(e.target.value)}
             placeholder="Website Title"
-            style={{marginLeft: 8, minWidth: 260}}
+            style={{marginLeft: 8}}
           />
         </label>
         <button className="admin-notice-save-btn" style={{marginLeft: 16}} onClick={handleSiteSave}>
