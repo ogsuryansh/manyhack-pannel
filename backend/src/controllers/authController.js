@@ -336,31 +336,17 @@ exports.getBalanceHistory = async (req, res) => {
   }
 };
 
-// Reset device lock for user (with password verification)
+// Reset device lock for user (authenticated endpoint)
 exports.resetDeviceLock = async (req, res) => {
   try {
-    const { username, password } = req.body;
+    // User is already authenticated via sessionAuth middleware
+    const userId = req.user.id;
     
-    if (!username || !password) {
-      return res.status(400).json({ 
-        message: "Username and password are required." 
-      });
-    }
-    
-    // Find user by username
-    const user = await User.findOne({ username });
+    // Find user by ID (more secure than username lookup)
+    const user = await User.findById(userId);
     if (!user) {
-      return res.status(400).json({ 
-        message: "Invalid username or password." 
-      });
-    }
-    
-    // Verify password
-    const bcrypt = require('bcryptjs');
-    const isMatch = await bcrypt.compare(password, user.password);
-    if (!isMatch) {
-      return res.status(400).json({ 
-        message: "Invalid username or password." 
+      return res.status(404).json({ 
+        message: "User not found." 
       });
     }
     
@@ -377,27 +363,34 @@ exports.resetDeviceLock = async (req, res) => {
       });
     }
     
-    // Check if 24 hours have passed since device lock was created
+    // Check if 1 minute has passed since device lock was created (for testing)
     const lockTime = new Date(user.deviceLock.lockedAt);
     const now = new Date();
-    const hoursSinceLock = (now - lockTime) / (1000 * 60 * 60); // Convert to hours
+    const minutesSinceLock = Math.floor((now - lockTime) / (1000 * 60)); // Convert to minutes using integer math
     
-    if (hoursSinceLock < 24) {
-      const remainingHours = Math.ceil(24 - hoursSinceLock);
+    if (minutesSinceLock < 1) {
+      const remainingMinutes = 1 - minutesSinceLock;
       return res.status(400).json({ 
-        message: `Device lock can only be reset after 24 hours. Please wait ${remainingHours} more hour(s).`,
+        message: `Device lock can only be reset after 1 minute. Please wait ${remainingMinutes} more minute(s).`,
         code: "RESET_COOLDOWN",
-        remainingHours: remainingHours,
+        remainingMinutes: remainingMinutes,
         lockedAt: user.deviceLock.lockedAt
       });
     }
     
-    // Clear device lock
+    // Clear both device lock and active session for complete reset
     await User.findByIdAndUpdate(user._id, {
-      $unset: { deviceLock: 1 }
+      $unset: { 
+        deviceLock: 1,
+        activeSession: 1
+      }
     });
     
-    console.log('Device lock reset for user:', user.username, 'after 24+ hours');
+    // Security event logging
+    console.log(`[SECURITY] Device lock reset for user: ${user.username} (ID: ${user._id}) after ${minutesSinceLock} minutes`);
+    console.log(`[SECURITY] Reset requested from IP: ${req.ip || req.connection.remoteAddress}`);
+    console.log(`[SECURITY] User Agent: ${req.headers['user-agent'] || 'Unknown'}`);
+    
     res.json({ 
       message: "Device lock reset successfully. You can now login on other devices.",
       success: true
@@ -423,17 +416,17 @@ exports.getDeviceStatus = async (req, res) => {
     }
     
     let canReset = false;
-    let remainingHours = 0;
+    let remainingMinutes = 0;
     
     if (user.deviceLock && user.deviceLock.isLocked) {
       const lockTime = new Date(user.deviceLock.lockedAt);
       const now = new Date();
-      const hoursSinceLock = (now - lockTime) / (1000 * 60 * 60);
+      const minutesSinceLock = Math.floor((now - lockTime) / (1000 * 60));
       
-      if (hoursSinceLock >= 24) {
+      if (minutesSinceLock >= 1) {
         canReset = true;
       } else {
-        remainingHours = Math.ceil(24 - hoursSinceLock);
+        remainingMinutes = 1 - minutesSinceLock;
       }
     }
     
@@ -443,7 +436,7 @@ exports.getDeviceStatus = async (req, res) => {
       isLocked: user.deviceLock ? user.deviceLock.isLocked : false,
       lockedAt: user.deviceLock ? user.deviceLock.lockedAt : null,
       canReset: canReset,
-      remainingHours: remainingHours
+      remainingMinutes: remainingMinutes
     });
   } catch (err) {
     console.error('Get device status error:', err);

@@ -27,7 +27,7 @@ export default function LoginPage() {
       navigate("/"); // Redirect to dashboard
     } catch (err) {
       if (err.message.includes("already logged in") || err.message.includes("device lock")) {
-        setError("You are already logged in on another device. Please reset device lock from your current device first (available after 24 hours).");
+        setError("You are already logged in on another device. Please reset device lock from your current device first (available after 1 minute).");
       } else {
         setError(err.message);
       }

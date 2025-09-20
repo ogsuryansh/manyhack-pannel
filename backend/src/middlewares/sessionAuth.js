@@ -60,6 +60,7 @@ module.exports = async function (req, res, next) {
     // Check if current session matches the active session
     if (user.activeSession.sessionId !== req.session.sessionId) {
       console.log('Session ID mismatch - different session');
+      console.log(`[SECURITY] Session mismatch detected for user ${user.username}: stored=${user.activeSession.sessionId}, current=${req.session.sessionId}`);
       req.session.destroy();
       return res.status(401).json({ 
         message: "Login detected on another device. Please login again.",
@@ -70,6 +71,8 @@ module.exports = async function (req, res, next) {
     // Check if device fingerprint matches (prevents multiple tabs)
     if (user.activeSession.deviceFingerprint !== currentDeviceInfo.deviceFingerprint) {
       console.log('Device fingerprint mismatch - different device/tab');
+      console.log(`[SECURITY] Device fingerprint mismatch for user ${user.username}: stored=${user.activeSession.deviceFingerprint}, current=${currentDeviceInfo.deviceFingerprint}`);
+      console.log(`[SECURITY] IP: ${req.ip || req.connection.remoteAddress}, User-Agent: ${req.headers['user-agent'] || 'Unknown'}`);
       req.session.destroy();
       return res.status(401).json({ 
         message: "Login detected on another device. Please login again.",

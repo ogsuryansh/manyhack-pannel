@@ -43,9 +43,9 @@ function getDeviceInfo(req, existingSessionId = null) {
   const userAgent = req.headers['user-agent'] || 'Unknown';
   const ipAddress = getClientIP(req);
   
-  // Use a more stable device fingerprint that doesn't change with IP variations
-  // Only use user agent for fingerprinting, not IP (IP can change with load balancers)
-  const deviceFingerprint = generateDeviceFingerprint(userAgent, 'stable');
+  // Generate device fingerprint using both user agent and IP for better security
+  // This prevents easy spoofing by just changing user agent
+  const deviceFingerprint = generateDeviceFingerprint(userAgent, ipAddress);
   
   // Reuse existing session ID if provided, otherwise generate new one
   const sessionId = existingSessionId || generateSessionId();
