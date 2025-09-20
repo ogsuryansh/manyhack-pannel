@@ -336,17 +336,31 @@ exports.getBalanceHistory = async (req, res) => {
   }
 };
 
-// Reset device lock for user (authenticated endpoint)
+// Reset device lock for user (with password verification for security)
 exports.resetDeviceLock = async (req, res) => {
   try {
-    // User is already authenticated via sessionAuth middleware
-    const userId = req.user.id;
+    const { username, password } = req.body;
     
-    // Find user by ID (more secure than username lookup)
-    const user = await User.findById(userId);
+    if (!username || !password) {
+      return res.status(400).json({ 
+        message: "Username and password are required for security verification." 
+      });
+    }
+    
+    // Find user by username
+    const user = await User.findOne({ username });
     if (!user) {
-      return res.status(404).json({ 
-        message: "User not found." 
+      return res.status(400).json({ 
+        message: "Invalid username or password." 
+      });
+    }
+    
+    // Verify password for security
+    const bcrypt = require('bcryptjs');
+    const isMatch = await bcrypt.compare(password, user.password);
+    if (!isMatch) {
+      return res.status(400).json({ 
+        message: "Invalid username or password." 
       });
     }
     

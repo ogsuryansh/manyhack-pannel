@@ -42,7 +42,7 @@ export default function LoginPage() {
       navigate("/"); // Redirect to dashboard
     } catch (err) {
       if (err.message.includes("already logged in") || err.message.includes("device lock")) {
-        setError("You are already logged in on another device. Please reset device lock from your current device first (available after 1 minute).");
+        setError("You are already logged in on another device. Please use the 'Reset Device Lock' button below (available after 1 minute).");
       } else {
         setError(err.message);
       }
@@ -81,7 +81,7 @@ export default function LoginPage() {
         // If login fails due to device lock, try to reset
         if (loginError.message.includes("already logged in") || loginError.message.includes("device lock")) {
           try {
-            const resetResult = await resetDeviceLock();
+            const resetResult = await resetDeviceLock(form.username, form.password);
             setResetMessage(resetResult.message || "Device lock reset successfully! You can now login on other devices.");
             setError(""); // Clear any login errors
           } catch (resetError) {

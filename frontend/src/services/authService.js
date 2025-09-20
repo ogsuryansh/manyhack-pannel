@@ -103,12 +103,13 @@ export async function testApiConnection() {
 }
 
 // Reset device lock
-export async function resetDeviceLock() {
+export async function resetDeviceLock(username, password) {
   try {
     const res = await fetch(`${API_URL}/reset-device-lock`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       credentials: 'include',
+      body: JSON.stringify({ username, password })
     });
     
     const contentType = res.headers.get('content-type');
