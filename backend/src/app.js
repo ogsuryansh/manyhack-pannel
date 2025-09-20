@@ -83,14 +83,6 @@ app.use(express.json());
 // Request logging middleware
 app.use((req, res, next) => {
   if (process.env.NODE_ENV !== 'production') {
-    console.log('\n=== REQUEST DEBUG ===');
-    console.log('Method:', req.method);
-    console.log('URL:', req.url);
-    console.log('Headers:', JSON.stringify(req.headers, null, 2));
-    console.log('Body:', req.body);
-    console.log('====================');
-  } else {
-    // Minimal logging in production
     console.log(`${req.method} ${req.url} - Origin: ${req.headers.origin || 'none'}`);
   }
   next();
@@ -182,18 +174,7 @@ app.use(session(getSessionConfig()));
 //   next();
 // });
 
-// Session debugging middleware (only in development)
-if (process.env.NODE_ENV !== 'production') {
-  app.use((req, res, next) => {
-    console.log('\n=== SESSION MIDDLEWARE DEBUG ===');
-    console.log('Session ID:', req.sessionID);
-    console.log('Session exists:', !!req.session);
-    console.log('Session keys:', req.session ? Object.keys(req.session) : 'No session');
-    console.log('Cookies in request:', req.headers.cookie);
-    console.log('================================\n');
-    next();
-  });
-}
+// Session debugging middleware removed for cleaner logs
 
 // Connect to MongoDB
 connectToDatabase().then(() => {

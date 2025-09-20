@@ -233,10 +233,10 @@ exports.login = async (req, res) => {
       
       const isNewLock = !user.deviceLock || !user.deviceLock.lockedAt;
       
-      console.log(`[DEVICE_LOCK] User: ${user.username}`);
-      console.log(`[DEVICE_LOCK] Existing lock time: ${user.deviceLock?.lockedAt || 'None'}`);
-      console.log(`[DEVICE_LOCK] Using lock time: ${existingLockTime}`);
-      console.log(`[DEVICE_LOCK] Is new lock: ${isNewLock}`);
+      // Only log in development
+      if (process.env.NODE_ENV !== 'production') {
+        console.log(`[DEVICE_LOCK] User: ${user.username}, New lock: ${isNewLock}`);
+      }
       
       updateData.deviceLock = {
         isLocked: true,
@@ -390,28 +390,22 @@ exports.resetDeviceLock = async (req, res) => {
       });
     }
     
-    // Check if 1 minute has passed since device lock was created (for testing)
+    // Check if 24 hours have passed since device lock was created
     const lockTime = new Date(user.deviceLock.lockedAt);
     const now = new Date();
-    const minutesSinceLock = Math.floor((now - lockTime) / (1000 * 60)); // Convert to minutes using integer math
-    const secondsSinceLock = Math.floor((now - lockTime) / 1000);
+    const hoursSinceLock = Math.floor((now - lockTime) / (1000 * 60 * 60)); // Convert to hours using integer math
+    const minutesSinceLock = Math.floor((now - lockTime) / (1000 * 60));
     
-    console.log(`[DEVICE_RESET] User: ${user.username}`);
-    console.log(`[DEVICE_RESET] Lock time: ${lockTime.toISOString()}`);
-    console.log(`[DEVICE_RESET] Current time: ${now.toISOString()}`);
-    console.log(`[DEVICE_RESET] Minutes since lock: ${minutesSinceLock}`);
-    console.log(`[DEVICE_RESET] Seconds since lock: ${secondsSinceLock}`);
-    
-    if (minutesSinceLock < 1) {
-      const remainingSeconds = 60 - (secondsSinceLock % 60);
-      const remainingMinutes = 1 - minutesSinceLock;
+    if (hoursSinceLock < 24) {
+      const remainingHours = 24 - hoursSinceLock;
+      const remainingMinutes = 60 - (minutesSinceLock % 60);
       return res.status(400).json({ 
-        message: `Device lock can only be reset after 1 minute from first login. Please wait ${remainingMinutes} minute(s) and ${remainingSeconds} second(s).`,
+        message: `Device lock can only be reset after 24 hours from first login. Please wait ${remainingHours} hour(s) and ${remainingMinutes} minute(s).`,
         code: "RESET_COOLDOWN",
+        remainingHours: remainingHours,
         remainingMinutes: remainingMinutes,
-        remainingSeconds: remainingSeconds,
         lockedAt: user.deviceLock.lockedAt,
-        canResetAt: new Date(lockTime.getTime() + 60000).toISOString()
+        canResetAt: new Date(lockTime.getTime() + 24 * 60 * 60 * 1000).toISOString()
       });
     }
     
@@ -424,9 +418,7 @@ exports.resetDeviceLock = async (req, res) => {
     });
     
     // Security event logging
-    console.log(`[SECURITY] Device lock reset for user: ${user.username} (ID: ${user._id}) after ${minutesSinceLock} minutes`);
-    console.log(`[SECURITY] Reset requested from IP: ${req.ip || req.connection.remoteAddress}`);
-    console.log(`[SECURITY] User Agent: ${req.headers['user-agent'] || 'Unknown'}`);
+    console.log(`[SECURITY] Device lock reset for user: ${user.username} after ${hoursSinceLock} hours`);
     
     res.json({ 
       message: "Device lock reset successfully. You can now login on other devices.",
@@ -458,25 +450,24 @@ exports.getDeviceStatus = async (req, res) => {
     if (user.deviceLock && user.deviceLock.isLocked) {
       const lockTime = new Date(user.deviceLock.lockedAt);
       const now = new Date();
+      const hoursSinceLock = Math.floor((now - lockTime) / (1000 * 60 * 60));
       const minutesSinceLock = Math.floor((now - lockTime) / (1000 * 60));
-      const secondsSinceLock = Math.floor((now - lockTime) / 1000);
       
-      if (minutesSinceLock >= 1) {
+      if (hoursSinceLock >= 24) {
         canReset = true;
       } else {
-        const remainingSeconds = 60 - (secondsSinceLock % 60);
-        remainingMinutes = 1 - minutesSinceLock;
+        const remainingHours = 24 - hoursSinceLock;
+        const remainingMinutes = 60 - (minutesSinceLock % 60);
         
-        // Add seconds info for better UX
         res.json({
           isAdmin: false,
           deviceLock: user.deviceLock,
           isLocked: user.deviceLock ? user.deviceLock.isLocked : false,
           lockedAt: user.deviceLock ? user.deviceLock.lockedAt : null,
           canReset: canReset,
+          remainingHours: remainingHours,
           remainingMinutes: remainingMinutes,
-          remainingSeconds: remainingSeconds,
-          canResetAt: new Date(lockTime.getTime() + 60000).toISOString()
+          canResetAt: new Date(lockTime.getTime() + 24 * 60 * 60 * 1000).toISOString()
         });
         return;
       }
