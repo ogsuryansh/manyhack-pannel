@@ -278,13 +278,23 @@ router.post("/buy", sessionAuth, async (req, res) => {
     await Payment.create({
       userId: user._id,
       productId,
+      productName: product.name,
       duration,
+      quantity,
       amount: totalPrice,
+      unitPrice: unitPrice,
+      totalPrice: totalPrice,
       status: "approved",
       type: "buy_key",
+      description: `Purchased ${quantity} ${product.name} key(s) for ${duration}`,
+      paymentMethod: "wallet",
       meta: {
-        quantity,
         assignedKeyIds: availableKeys.map((k) => k._id),
+        keyExpiryDate: new Date(now.getTime() + parseDuration(duration)),
+        source: "user",
+        ipAddress: req.ip || req.connection.remoteAddress,
+        userAgent: req.get('User-Agent'),
+        referrer: req.get('Referer')
       },
       createdAt: now,
     });

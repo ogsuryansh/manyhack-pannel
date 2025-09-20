@@ -7,6 +7,7 @@ const adminTabs = [
   { label: "User Manager", to: "/admin/user-manager", icon: "👥" },
   { label: "Key Manager", to: "/admin/key-manager", icon: "🔑" }, 
   { label: "Payment Manager", to: "/admin/payment-manager", icon: "💳" },
+  { label: "Purchases", to: "/admin/purchases", icon: "🛒" },
   { label: "Top-Up Plan Manager", to: "/admin/topup-plan-manager", icon: "💰" },
   { label: "Referral Manager", to: "/admin/referral-manager", icon: "🔗" },
 ];

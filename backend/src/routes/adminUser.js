@@ -135,13 +135,21 @@ router.put("/:id/custom-prices", adminAuth, async (req, res) => {
         await Payment.create({
           userId: user._id,
           amount: balance,
+          unitPrice: balance,
+          totalPrice: balance,
           status: "approved",
           type: "add_money",
+          description: `Admin added ₹${balance} to wallet`,
+          paymentMethod: "admin_action",
+          processedBy: req.user.id,
+          processedAt: now,
           meta: { 
             source: "admin",
             adminId: req.user.id,
             adminAction: "manual_addition",
-            timestamp: now.toISOString()
+            timestamp: now.toISOString(),
+            ipAddress: req.ip || req.connection.remoteAddress,
+            userAgent: req.get('User-Agent')
           },
           createdAt: now,
         });

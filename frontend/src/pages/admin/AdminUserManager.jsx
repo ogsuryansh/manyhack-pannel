@@ -23,7 +23,6 @@ export default function AdminUserManager() {
   const [selectedDuration, setSelectedDuration] = useState("");
   const [customPrice, setCustomPrice] = useState("");
   const [addAmount, setAddAmount] = useState("");
-  const [userPurchases, setUserPurchases] = useState({});
   const [userContacts, setUserContacts] = useState({});
   const [hiddenProducts, setHiddenProducts] = useState([]);
   const [message, setMessage] = useState({ type: "", text: "" });
@@ -89,19 +88,9 @@ export default function AdminUserManager() {
     });
   }, [page, debouncedSearch]);
 
-  // Fetch purchases and contact for each user
+  // Fetch contact for each user
   useEffect(() => {
     users.forEach((user) => {
-      fetch(`${API}/keys/user/${user._id}`, { credentials: 'include' })
-        .then((res) => (res.ok ? res.json() : []))
-        .then((keys) => {
-          setUserPurchases((prev) => ({
-            ...prev,
-            [user._id]: Array.isArray(keys)
-              ? keys.map((k) => k.productId?.name || "NA")
-              : [],
-          }));
-        });
       fetch(`${API}/payments/user/${user._id}`, { credentials: 'include' })
         .then((res) => (res.ok ? res.json() : []))
         .then((payments) => {
@@ -274,7 +263,6 @@ export default function AdminUserManager() {
                 <th>Username</th>
                 <th>Register Time</th>
                 <th>Total Balance</th>
-                <th>Purchases</th>
                 <th>Contact</th>
                 <th>Actions</th>
               </tr>
@@ -282,7 +270,7 @@ export default function AdminUserManager() {
             <tbody>
               {users.length === 0 && (
                 <tr>
-                  <td colSpan={8} style={{ textAlign: "center" }}>
+                  <td colSpan={7} style={{ textAlign: "center" }}>
                     No users found.
                   </td>
                 </tr>
@@ -298,11 +286,6 @@ export default function AdminUserManager() {
                       : "NA"}
                   </td>
                   <td>₹{getWalletBalance(user)}</td>
-                  <td>
-                    {userPurchases[user._id] && userPurchases[user._id].length > 0
-                      ? userPurchases[user._id].join(", ")
-                      : "NA"}
-                  </td>
                   <td>{userContacts[user._id] || "NA"}</td>
                   <td>
                     <button 

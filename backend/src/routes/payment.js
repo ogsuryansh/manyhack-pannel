@@ -38,6 +38,119 @@ router.get("/", async (req, res) => {
   }
 });
 
+// Get all purchases with detailed information for admin
+router.get("/purchases", adminAuth, async (req, res) => {
+  try {
+    const limit = parseInt(req.query.limit) || 50;
+    const skip = parseInt(req.query.skip) || 0;
+    const search = req.query.search ? req.query.search.trim() : "";
+    const status = req.query.status || "";
+    const type = req.query.type || "";
+    
+    // Build filter
+    let filter = {};
+    
+    // Search filter
+    if (search) {
+      const users = await User.find({
+        $or: [
+          { username: { $regex: search, $options: "i" } },
+          { email: { $regex: search, $options: "i" } },
+        ],
+      }).select('_id');
+      filter.userId = { $in: users.map(u => u._id) };
+    }
+    
+    // Status filter
+    if (status) {
+      filter.status = status;
+    }
+    
+    // Type filter
+    if (type) {
+      filter.type = type;
+    }
+    
+    const [purchases, total] = await Promise.all([
+      Payment.find(filter)
+        .populate("userId", "username email referralCode")
+        .populate({ 
+          path: "productId", 
+          select: "name description", 
+          strictPopulate: false 
+        })
+        .populate("processedBy", "username")
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(limit)
+        .lean(),
+      Payment.countDocuments(filter),
+    ]);
+    
+    // Process purchases to include all necessary details
+    const processedPurchases = purchases.map(purchase => {
+      const user = purchase.userId;
+      const product = purchase.productId;
+      
+      return {
+        _id: purchase._id,
+        // User Information
+        username: user?.username || "N/A",
+        email: user?.email || "N/A",
+        referralCode: user?.referralCode || "N/A",
+        
+        // Product Information
+        productName: purchase.productName || product?.name || "N/A",
+        productDescription: product?.description || "N/A",
+        duration: purchase.duration || "N/A",
+        quantity: purchase.quantity || 1,
+        
+        // Financial Information
+        amount: purchase.amount || 0,
+        unitPrice: purchase.unitPrice || 0,
+        totalPrice: purchase.totalPrice || purchase.amount || 0,
+        
+        // Payment Details
+        paymentMethod: purchase.paymentMethod || "N/A",
+        
+        // Status and Type
+        status: purchase.status || "N/A",
+        type: purchase.type || "N/A",
+        
+        // Additional Information
+        description: purchase.description || "N/A",
+        notes: purchase.notes || "N/A",
+        
+        // Admin Information
+        processedBy: purchase.processedBy?.username || "N/A",
+        processedAt: purchase.processedAt || "N/A",
+        
+        // Metadata
+        meta: purchase.meta || {},
+        
+        // Timestamps
+        createdAt: purchase.createdAt,
+        updatedAt: purchase.updatedAt
+      };
+    });
+    
+    // Calculate total revenue
+    const totalRevenue = await Payment.aggregate([
+      { $match: { ...filter, status: "approved" } },
+      { $group: { _id: null, total: { $sum: "$amount" } } }
+    ]);
+    
+    res.json({ 
+      purchases: processedPurchases, 
+      total, 
+      totalRevenue: totalRevenue[0]?.total || 0 
+    });
+  } catch (err) {
+    console.error("Error fetching purchases:", err);
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
 router.post("/add-money", sessionAuth, async (req, res) => {
   // Check if user is admin - admin users cannot add money
   if (req.user.id === 'admin' || req.user.isAdmin) {
@@ -50,11 +163,21 @@ router.post("/add-money", sessionAuth, async (req, res) => {
   const payment = new Payment({
     userId: req.user.id,
     amount,
-    utr,
-    payerName,
+    unitPrice: amount,
+    totalPrice: amount,
+    utr: utr || "N/A",
+    payerName: payerName || "N/A",
     status: "pending",
     type: "add_money",
-    meta,
+    description: `Add money request for ₹${amount}`,
+    paymentMethod: "bank_transfer",
+    meta: {
+      ...meta,
+      source: "user",
+      ipAddress: req.ip || req.connection.remoteAddress,
+      userAgent: req.get('User-Agent'),
+      referrer: req.get('Referer')
+    },
   });
   await payment.save();
   res.json({ message: "Add money request submitted", payment });
@@ -132,14 +255,22 @@ router.post("/deduct-money", adminAuth, async (req, res) => {
   await Payment.create({
     userId,
     amount,
+    unitPrice: amount,
+    totalPrice: amount,
     status: "approved",
     type: "deduct_money",
+    description: `Admin deducted ₹${amount} from wallet${note ? ` - ${note}` : ''}`,
+    paymentMethod: "admin_action",
+    processedBy: req.user.id,
+    processedAt: now,
     meta: { 
       note, 
       source: "admin",
       adminId: req.user.id,
       adminAction: "manual_deduction",
-      timestamp: now.toISOString()
+      timestamp: now.toISOString(),
+      ipAddress: req.ip || req.connection.remoteAddress,
+      userAgent: req.get('User-Agent')
     },
     createdAt: now,
   });
@@ -293,9 +424,25 @@ router.post("/topup", sessionAuth, async (req, res) => {
     await Payment.create({
       userId: user._id,
       amount: plan.amount,
+      unitPrice: plan.amount,
+      totalPrice: plan.amount,
       status: "approved",
-      type: "add_money",
-      meta: { planId, credited: plan.bonus },
+      type: "topup",
+      description: `Top-up with ${plan.name} plan`,
+      paymentMethod: "topup_plan",
+      meta: { 
+        planId, 
+        credited: plan.bonus,
+        topupPlan: {
+          name: plan.name,
+          amount: plan.amount,
+          bonus: plan.bonus
+        },
+        source: "user",
+        ipAddress: req.ip || req.connection.remoteAddress,
+        userAgent: req.get('User-Agent'),
+        referrer: req.get('Referer')
+      },
       createdAt: new Date(),
     });
     res.json({ message: "Wallet credited", bonus: plan.bonus });
