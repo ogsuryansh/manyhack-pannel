@@ -1,6 +1,6 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { login as apiLogin } from "../services/authService";
+import { login as apiLogin, resetDeviceLock, testApiConnection } from "../services/authService";
 import { useAuth } from "../context/useAuth";
 import { API } from "../api";
 export default function LoginPage() {
@@ -11,6 +11,21 @@ export default function LoginPage() {
   const [resetMessage, setResetMessage] = useState("");
   const navigate = useNavigate();
   const { login } = useAuth();
+
+  // Test API connection on component mount
+  useEffect(() => {
+    const testConnection = async () => {
+      const result = await testApiConnection();
+      if (!result.success) {
+        console.error('API connection test failed:', result.error);
+        setError(`API connection failed: ${result.error}`);
+      } else {
+        console.log('API connection test successful:', result.data);
+      }
+    };
+    
+    testConnection();
+  }, []);
 
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
@@ -50,29 +65,35 @@ export default function LoginPage() {
     setResetMessage("");
 
     try {
-      const response = await fetch(`${API}/auth/reset-device-lock`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        credentials: 'include',
-        body: JSON.stringify({
-          username: form.username,
-          password: form.password
-        })
-      });
+      // First test API connection
+      const apiTest = await testApiConnection();
+      if (!apiTest.success) {
+        setResetMessage(`API connection failed: ${apiTest.error}`);
+        return;
+      }
 
-      const data = await response.json();
-
-      if (response.ok) {
-        setResetMessage("Device lock reset successfully! You can now login on other devices.");
+      // Try to login first to establish session
+      try {
+        await apiLogin(form.username, form.password);
+        setResetMessage("Login successful! Device lock will be reset automatically.");
         setError(""); // Clear any login errors
-      } else {
-        setResetMessage(data.message || 'Failed to reset device lock');
+      } catch (loginError) {
+        // If login fails due to device lock, try to reset
+        if (loginError.message.includes("already logged in") || loginError.message.includes("device lock")) {
+          try {
+            const resetResult = await resetDeviceLock();
+            setResetMessage(resetResult.message || "Device lock reset successfully! You can now login on other devices.");
+            setError(""); // Clear any login errors
+          } catch (resetError) {
+            setResetMessage(`Reset failed: ${resetError.message}`);
+          }
+        } else {
+          setResetMessage(`Login failed: ${loginError.message}`);
+        }
       }
     } catch (error) {
-      console.error('Error resetting device lock:', error);
-      setResetMessage('Network error. Please try again.');
+      console.error('Error in device reset process:', error);
+      setResetMessage(`Error: ${error.message}`);
     } finally {
       setResetLoading(false);
     }
