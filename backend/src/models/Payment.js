@@ -58,7 +58,7 @@ const paymentSchema = new mongoose.Schema({
     
     // For admin actions
     source: String, // "admin", "user", "system"
-    adminId: mongoose.Schema.Types.ObjectId,
+    adminId: mongoose.Schema.Types.Mixed, // Can be ObjectId or string for admin
     adminAction: String,
     timestamp: String,
     
