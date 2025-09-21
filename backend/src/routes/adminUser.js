@@ -141,11 +141,11 @@ router.put("/:id/custom-prices", adminAuth, async (req, res) => {
           type: "add_money",
           description: `Admin added ₹${balance} to wallet`,
           paymentMethod: "admin_action",
-          processedBy: req.user.id,
+          processedBy: req.user.id === 'admin' ? null : req.user.id, // Handle admin string ID
           processedAt: now,
           meta: { 
             source: "admin",
-            adminId: req.user.id,
+            adminId: req.user.id === 'admin' ? 'admin' : req.user.id, // Store as string for admin
             adminAction: "manual_addition",
             timestamp: now.toISOString(),
             ipAddress: req.ip || req.connection.remoteAddress,
@@ -162,7 +162,7 @@ router.put("/:id/custom-prices", adminAuth, async (req, res) => {
           type: 'admin_add',
           description: `Admin added ₹${balance} to wallet`,
           metadata: {
-            adminId: req.user.id,
+            adminId: req.user.id === 'admin' ? 'admin' : req.user.id, // Store as string for admin
             adminAction: "manual_addition",
             timestamp: now.toISOString()
           }
@@ -202,11 +202,15 @@ router.put("/:id/custom-prices", adminAuth, async (req, res) => {
           amount: Math.abs(balance),
           status: "approved",
           type: "deduct_money",
+          processedBy: req.user.id === 'admin' ? null : req.user.id, // Handle admin string ID
+          processedAt: now,
           meta: { 
             source: "admin",
-            adminId: req.user.id,
+            adminId: req.user.id === 'admin' ? 'admin' : req.user.id, // Store as string for admin
             adminAction: "manual_deduction",
-            timestamp: now.toISOString()
+            timestamp: now.toISOString(),
+            ipAddress: req.ip || req.connection.remoteAddress,
+            userAgent: req.get('User-Agent')
           },
           createdAt: now,
         });
@@ -219,7 +223,7 @@ router.put("/:id/custom-prices", adminAuth, async (req, res) => {
           type: 'admin_deduct',
           description: `Admin deducted ₹${Math.abs(balance)} from wallet`,
           metadata: {
-            adminId: req.user.id,
+            adminId: req.user.id === 'admin' ? 'admin' : req.user.id, // Store as string for admin
             adminAction: "manual_deduction",
             timestamp: now.toISOString()
           }

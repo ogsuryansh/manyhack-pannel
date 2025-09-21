@@ -261,12 +261,12 @@ router.post("/deduct-money", adminAuth, async (req, res) => {
     type: "deduct_money",
     description: `Admin deducted ₹${amount} from wallet${note ? ` - ${note}` : ''}`,
     paymentMethod: "admin_action",
-    processedBy: req.user.id,
+    processedBy: req.user.id === 'admin' ? null : req.user.id, // Handle admin string ID
     processedAt: now,
     meta: { 
       note, 
       source: "admin",
-      adminId: req.user.id,
+      adminId: req.user.id === 'admin' ? 'admin' : req.user.id, // Store as string for admin
       adminAction: "manual_deduction",
       timestamp: now.toISOString(),
       ipAddress: req.ip || req.connection.remoteAddress,
@@ -283,7 +283,7 @@ router.post("/deduct-money", adminAuth, async (req, res) => {
     type: 'admin_deduct',
     description: `Admin deducted ₹${amount} from wallet${note ? ` - ${note}` : ''}`,
     metadata: {
-      adminId: req.user.id,
+      adminId: req.user.id === 'admin' ? 'admin' : req.user.id, // Store as string for admin
       adminAction: "manual_deduction",
       note: note || '',
       timestamp: now.toISOString()

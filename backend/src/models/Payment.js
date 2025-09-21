@@ -37,7 +37,11 @@ const paymentSchema = new mongoose.Schema({
   notes: { type: String, default: "N/A" },
   
   // Admin Information
-  processedBy: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
+  processedBy: { 
+    type: mongoose.Schema.Types.ObjectId, 
+    ref: "User", 
+    default: null 
+  },
   processedAt: { type: Date },
   
   // Metadata for additional details
